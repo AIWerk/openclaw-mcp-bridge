@@ -1,0 +1,80 @@
+{
+  "id": "mcp-client",
+  "name": "mcp-client",
+  "version": "1.0.0",
+  "entryPoint": "index.ts",
+  "configSchema": {
+    "servers": {
+      "type": "object",
+      "description": "Map of MCP server configurations",
+      "patternProperties": {
+        "^[a-zA-Z0-9_-]+$": {
+          "type": "object",
+          "properties": {
+            "transport": {
+              "type": "string",
+              "enum": ["sse", "stdio"],
+              "description": "Transport type: SSE (HTTP Server-Sent Events) or stdio (subprocess)"
+            },
+            "url": {
+              "type": "string",
+              "description": "Endpoint URL for SSE transport"
+            },
+            "headers": {
+              "type": "object",
+              "description": "HTTP headers for SSE transport (supports ${ENV_VAR} substitution)",
+              "patternProperties": {
+                "^.*$": { "type": "string" }
+              }
+            },
+            "command": {
+              "type": "string", 
+              "description": "Command to execute for stdio transport"
+            },
+            "args": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Command arguments for stdio transport"
+            },
+            "env": {
+              "type": "object",
+              "description": "Environment variables for stdio transport (supports ${ENV_VAR} substitution)",
+              "patternProperties": {
+                "^.*$": { "type": "string" }
+              }
+            }
+          },
+          "required": ["transport"],
+          "oneOf": [
+            {
+              "properties": { "transport": { "const": "sse" } },
+              "required": ["url"]
+            },
+            {
+              "properties": { "transport": { "const": "stdio" } },
+              "required": ["command"]
+            }
+          ]
+        }
+      }
+    },
+    "toolPrefix": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to prefix tool names with server name (e.g. 'apify_search_tool')"
+    },
+    "reconnectIntervalMs": {
+      "type": "number",
+      "default": 30000,
+      "minimum": 1000,
+      "description": "Auto-reconnect interval in milliseconds"
+    },
+    "connectionTimeoutMs": {
+      "type": "number", 
+      "default": 10000,
+      "minimum": 1000,
+      "description": "Initial connection timeout in milliseconds"
+    }
+  },
+  "required": ["servers"]
+}

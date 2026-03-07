@@ -1,0 +1,31 @@
+{
+  "plugins": {
+    "entries": {
+      "mcp-client": {
+        "enabled": true,
+        "config": {
+          "servers": {
+            "apify": {
+              "transport": "sse",
+              "url": "https://mcp.apify.com/sse",
+              "headers": {
+                "Authorization": "Bearer ${APIFY_TOKEN}"
+              }
+            },
+            "filesystem": {
+              "transport": "stdio",
+              "command": "npx",
+              "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"],
+              "env": {
+                "DEBUG": "1"
+              }
+            }
+          },
+          "toolPrefix": true,
+          "reconnectIntervalMs": 30000,
+          "connectionTimeoutMs": 10000
+        }
+      }
+    }
+  }
+}
