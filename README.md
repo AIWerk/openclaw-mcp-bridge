@@ -13,8 +13,14 @@ Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) ser
 
 ## Quick Install
 
+**Linux / macOS:**
 ```bash
 curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.sh | bash
+```
+
+**Windows (PowerShell):**
+```powershell
+irm https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.ps1 | iex
 ```
 
 This clones the plugin, adds it to your `openclaw.json`, and you're ready to configure servers.
@@ -111,7 +117,8 @@ See [MCP Server Registry](https://github.com/modelcontextprotocol/servers) for m
 | `schema-convert.ts` | JSON Schema → TypeBox conversion |
 | `types.ts` | TypeScript interfaces |
 | `openclaw.plugin.json` | Plugin metadata + config schema |
-| `install.sh` | One-command installer |
+| `install.sh` | Linux/macOS installer |
+| `install.ps1` | Windows PowerShell installer |
 
 ## Troubleshooting
 
