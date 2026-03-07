@@ -1,137 +1,140 @@
 # OpenClaw MCP Client Plugin
 
-An OpenClaw plugin that acts as an MCP (Model Context Protocol) client, connecting to external MCP servers and exposing their tools as native OpenClaw agent tools.
+Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server into OpenClaw — tools are automatically discovered and registered as native agent tools via `registerTool()`.
 
 ## Features
 
-- **SSE Transport**: Connect to MCP servers via HTTP Server-Sent Events
-- **Stdio Transport**: Connect to local MCP servers via subprocess stdio
-- **Tool Registration**: Automatically exposes MCP server tools as OpenClaw tools
-- **Schema Conversion**: Converts JSON Schema to TypeBox schemas for parameter validation
-- **Error Handling**: Graceful error handling that doesn't crash the gateway
-- **Environment Variables**: Support for environment variable substitution in configuration
-- **Auto-reconnection**: Automatic reconnection on connection loss
+- **SSE + Stdio transports** — connect to remote (HTTP SSE) or local (subprocess) MCP servers
+- **Auto-discovery** — `tools/list` → all tools registered as native OpenClaw tools
+- **Schema conversion** — JSON Schema → TypeBox, with multi-fallback import strategy
+- **Reconnection** — auto-reconnect with full protocol re-initialization + tool re-registration
+- **Memory-safe** — pending requests are cleaned up on reconnect, no leaked timeouts
+- **Env var substitution** — `${APIFY_TOKEN}` in headers/env config
+
+## Quick Install
+
+```bash
+curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.sh | bash
+```
+
+This clones the plugin, adds it to your `openclaw.json`, and you're ready to configure servers.
 
 ## Configuration
 
-Add to your `~/.openclaw/openclaw.json`:
+Edit `~/.openclaw/openclaw.json` → `plugins.entries.mcp-client.config.servers`:
+
+### SSE server (remote)
 
 ```json
 {
-  "plugins": {
-    "entries": {
-      "mcp-client": {
-        "enabled": true,
-        "config": {
-          "servers": {
-            "apify": {
-              "transport": "sse",
-              "url": "https://mcp.apify.com/sse",
-              "headers": {
-                "Authorization": "Bearer ${APIFY_TOKEN}"
-              }
-            },
-            "filesystem": {
-              "transport": "stdio",
-              "command": "npx",
-              "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]
-            }
-          },
-          "toolPrefix": true,
-          "reconnectIntervalMs": 30000,
-          "connectionTimeoutMs": 10000
-        }
-      }
+  "my-server": {
+    "transport": "sse",
+    "url": "https://mcp.example.com/sse",
+    "headers": {
+      "Authorization": "Bearer ${MY_TOKEN}"
     }
   }
 }
 ```
 
-### Configuration Options
+### Stdio server (local)
 
-- **servers**: Map of server configurations
-  - **transport**: `"sse"` or `"stdio"`
-  - **url**: Endpoint URL (for SSE transport)
-  - **headers**: HTTP headers (for SSE transport, supports `${ENV_VAR}` substitution)
-  - **command/args/env**: Process configuration (for stdio transport)
-- **toolPrefix**: Whether to prefix tool names with server name (default: true)
-- **reconnectIntervalMs**: Auto-reconnect interval (default: 30000)
-- **connectionTimeoutMs**: Initial connection timeout (default: 10000)
-
-## Environment Variables
-
-Set environment variables for authentication tokens:
-```bash
-export APIFY_TOKEN=your_token_here
-```
-
-Then use in configuration:
 ```json
 {
-  "headers": {
-    "Authorization": "Bearer ${APIFY_TOKEN}"
+  "notion": {
+    "transport": "stdio",
+    "command": "npx",
+    "args": ["-y", "@notionhq/notion-mcp-server"],
+    "env": {
+      "NOTION_API_KEY": "${NOTION_API_KEY}"
+    }
   }
 }
 ```
 
-## Tool Naming
+### Full config options
 
-With `toolPrefix: true` (default), MCP tools are exposed as:
-- `apify_google_maps_scraper` (for `google_maps_scraper` tool from `apify` server)
-- `filesystem_read_file` (for `read_file` tool from `filesystem` server)
+| Option | Default | Description |
+|---|---|---|
+| `toolPrefix` | `true` | Prefix tool names with server name (e.g. `myserver_search`) |
+| `reconnectIntervalMs` | `30000` | Auto-reconnect interval |
+| `connectionTimeoutMs` | `10000` | Initial connection timeout |
+| `requestTimeoutMs` | `60000` | Tool call / request timeout |
 
-With `toolPrefix: false`, tools keep their original names (risk of conflicts).
+After configuring, restart the gateway:
 
-## Architecture
+```bash
+openclaw gateway restart
+```
+
+## How it works
 
 ```
-MCP Server              OpenClaw Plugin         Agent
+MCP Server              Plugin                  Agent
 ┌─────────────┐        ┌─────────────────┐     ┌──────────┐
-│ tools/list   │◄──────│ mcp-client       │────►│ Jerome   │
-│ tools/call   │◄──────│ plugin           │     │ uses the │
-│ SSE/stdio    │       │ registerTool()   │     │ tools    │
-└─────────────┘        └─────────────────┘     └──────────┘
+│ tools/list   │◄──────│ mcp-client       │────►│ uses the │
+│ tools/call   │◄──────│ registerTool()   │     │ tools    │
+│ SSE/stdio    │       └─────────────────┘     └──────────┘
+└─────────────┘
 ```
 
-## File Structure
+1. Plugin connects to each configured MCP server
+2. Sends `initialize` + `notifications/initialized` (MCP handshake)
+3. Calls `tools/list` to discover available tools
+4. Converts JSON Schema → TypeBox and registers each tool via `api.registerTool()`
+5. Tool calls are proxied as `tools/call` JSON-RPC requests
 
-- `index.ts` - Main plugin entry point
-- `types.ts` - TypeScript type definitions  
-- `transport-sse.ts` - Server-Sent Events transport implementation
-- `transport-stdio.ts` - Subprocess stdio transport implementation
-- `schema-convert.ts` - JSON Schema to TypeBox conversion utilities
-- `openclaw.plugin.json` - Plugin metadata and configuration schema
+On connection loss: auto-reconnect → full re-handshake → re-register tools.
 
-## Installation
+## Compatible MCP servers
 
-The plugin is already installed. To activate:
+Any MCP-compliant server works. Some tested examples:
 
-1. Add configuration to `~/.openclaw/openclaw.json`
-2. Set required environment variables 
-3. Restart the OpenClaw gateway: `openclaw gateway restart`
+| Server | Transport | Auth |
+|---|---|---|
+| [Apify](https://mcp.apify.com) | SSE | Bearer token |
+| [@notionhq/notion-mcp-server](https://npmjs.com/package/@notionhq/notion-mcp-server) | stdio | API key via env |
+| [@modelcontextprotocol/server-filesystem](https://github.com/modelcontextprotocol/servers) | stdio | none |
+| [@modelcontextprotocol/server-github](https://github.com/modelcontextprotocol/servers) | stdio | GitHub token |
 
-## Supported MCP Servers
+See [MCP Server Registry](https://github.com/modelcontextprotocol/servers) for more.
 
-- **Apify**: Web scraping and automation tools
-- **@modelcontextprotocol/server-filesystem**: File system operations
-- **@modelcontextprotocol/server-git**: Git repository operations  
-- **@modelcontextprotocol/server-sqlite**: SQLite database operations
+> **Note:** If OpenClaw already has a native plugin for a service (e.g. Notion, Apify), prefer the native plugin — it's faster and better integrated. Use this plugin for servers without native OpenClaw support.
 
-See [MCP Server Registry](https://github.com/modelcontextprotocol/servers) for more servers.
+## File structure
+
+| File | Purpose |
+|---|---|
+| `index.ts` | Main plugin — server init, tool registration, execution |
+| `transport-sse.ts` | SSE transport (HTTP Server-Sent Events) |
+| `transport-stdio.ts` | Stdio transport (subprocess) |
+| `schema-convert.ts` | JSON Schema → TypeBox conversion |
+| `types.ts` | TypeScript interfaces |
+| `openclaw.plugin.json` | Plugin metadata + config schema |
+| `install.sh` | One-command installer |
 
 ## Troubleshooting
 
-Check OpenClaw logs for connection status:
 ```bash
-openclaw gateway logs | grep mcp-client
+# Check connection status
+journalctl --user -u openclaw-gateway.service | grep mcp-client
+
+# Expected output on success:
+# [mcp-client] Connected to server: myserver
+# [mcp-client] Server myserver initialized, registered N tools
 ```
 
 Common issues:
-- Invalid environment variable substitution
-- MCP server not responding on configured endpoint
-- Network connectivity issues for SSE transport
-- Missing dependencies for stdio transport
+- **"No servers configured"** — add at least one server to config
+- **Tool name conflicts** — the MCP server exposes tools that overlap with native OpenClaw plugins. Remove the MCP server or disable the native plugin.
+- **SSE timeout** — check URL and auth token
+- **Stdio crash** — ensure `npx` / command is available and the package exists
 
-## Development
+## Requirements
 
-Based on the MCP Client Plugin Spec v1.0. See `~/clawd/docs/mcp-client-plugin-spec.md` for detailed implementation requirements.
+- OpenClaw 2026.3.x+
+- Node.js 22+
+
+## License
+
+MIT
