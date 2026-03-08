@@ -111,9 +111,9 @@ MCP Server              Plugin                  Agent
 
 On connection loss: auto-reconnect → full re-handshake → re-register tools.
 
-## Compatible MCP servers
+## Example MCP servers
 
-Any MCP-compliant server works. Some tested examples:
+Any MCP-compliant server should work. Here are some examples (not all tested by us):
 
 | Server | Transport | Auth |
 |---|---|---|
@@ -121,10 +121,12 @@ Any MCP-compliant server works. Some tested examples:
 | [@notionhq/notion-mcp-server](https://npmjs.com/package/@notionhq/notion-mcp-server) | stdio | API key via env |
 | [@modelcontextprotocol/server-filesystem](https://github.com/modelcontextprotocol/servers) | stdio | none |
 | [@modelcontextprotocol/server-github](https://github.com/modelcontextprotocol/servers) | stdio | GitHub token |
+| [Swiggy](https://mcp.swiggy.com/food) | streamable-http | none |
+| [Zomato](https://mcp-server.zomato.com/mcp) | streamable-http | none |
 
-See [MCP Server Registry](https://github.com/modelcontextprotocol/servers) for more.
+See [MCP Server Registry](https://registry.modelcontextprotocol.io) and [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) for more.
 
-> **Note:** If OpenClaw already has a native plugin for a service (e.g. Notion, Apify), prefer the native plugin — it's faster and better integrated. Use this plugin for servers without native OpenClaw support.
+> **Note:** If OpenClaw already has a native plugin for a service, prefer the native plugin — it's faster and better integrated. Use this plugin for servers without native OpenClaw support.
 
 ## File structure
 
