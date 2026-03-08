@@ -3,18 +3,18 @@ import assert from "node:assert/strict";
 import {
   convertJsonSchemaToTypeBox,
   createToolParameters,
-  __setTypeBoxMissingForTests
+  typeBoxLoader,
+  resetTypeBoxCache
 } from "../schema-convert.ts";
+import * as schemaConvert from "../schema-convert.ts";
 
 test("converts string schema", async () => {
-  __setTypeBoxMissingForTests(false);
   const schema = await convertJsonSchemaToTypeBox({ type: "string", minLength: 1 });
   assert.equal(schema.type, "string");
   assert.equal(schema.minLength, 1);
 });
 
 test("converts number schema", async () => {
-  __setTypeBoxMissingForTests(false);
   const schema = await convertJsonSchemaToTypeBox({ type: "number", minimum: 2, maximum: 5 });
   assert.equal(schema.type, "number");
   assert.equal(schema.minimum, 2);
@@ -22,7 +22,6 @@ test("converts number schema", async () => {
 });
 
 test("converts object schema", async () => {
-  __setTypeBoxMissingForTests(false);
   const schema = await convertJsonSchemaToTypeBox({
     type: "object",
     properties: {
@@ -38,14 +37,12 @@ test("converts object schema", async () => {
 });
 
 test("converts array schema", async () => {
-  __setTypeBoxMissingForTests(false);
   const schema = await convertJsonSchemaToTypeBox({ type: "array", items: { type: "string" } });
   assert.equal(schema.type, "array");
   assert.equal(schema.items.type, "string");
 });
 
 test("converts anyOf schema", async () => {
-  __setTypeBoxMissingForTests(false);
   const schema = await convertJsonSchemaToTypeBox({
     anyOf: [{ type: "string" }, { type: "number" }]
   });
@@ -57,11 +54,19 @@ test("converts anyOf schema", async () => {
 });
 
 test("falls back when TypeBox is missing", async () => {
-  __setTypeBoxMissingForTests(true);
-  const schema = await convertJsonSchemaToTypeBox({ type: "string" });
-  const params = await createToolParameters({ type: "object" });
-  __setTypeBoxMissingForTests(false);
+  // Inject a loader that simulates missing TypeBox
+  schemaConvert.typeBoxLoader = async () => null;
+  resetTypeBoxCache();
 
-  assert.equal(schema.type, "any");
-  assert.equal(params.type, "any");
+  try {
+    const schema = await convertJsonSchemaToTypeBox({ type: "string" });
+    const params = await createToolParameters({ type: "object" });
+
+    assert.equal(schema.type, "any");
+    assert.equal(params.type, "any");
+  } finally {
+    // Restore default loader
+    schemaConvert.typeBoxLoader = null;
+    resetTypeBoxCache();
+  }
 });

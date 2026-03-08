@@ -2,7 +2,9 @@ type TSchema = any;
 type TypeBoxMod = { Type: any } | null;
 
 let cachedTypeBoxPromise: Promise<TypeBoxMod> | null = null;
-let forceTypeBoxMissingForTests = false;
+
+// Overridable loader for dependency injection (used by tests)
+export let typeBoxLoader: (() => Promise<TypeBoxMod>) | null = null;
 
 async function getTypeBox(): Promise<TypeBoxMod> {
   if (cachedTypeBoxPromise) {
@@ -11,8 +13,8 @@ async function getTypeBox(): Promise<TypeBoxMod> {
 
   cachedTypeBoxPromise = (async () => {
     try {
-      if (forceTypeBoxMissingForTests) {
-        throw new Error("TypeBox forced missing for tests");
+      if (typeBoxLoader) {
+        return typeBoxLoader();
       }
       const mod: any = await import("@sinclair/typebox");
       const Type = mod?.Type ?? mod?.default?.Type;
@@ -26,6 +28,10 @@ async function getTypeBox(): Promise<TypeBoxMod> {
   })();
 
   return cachedTypeBoxPromise;
+}
+
+export function resetTypeBoxCache(): void {
+  cachedTypeBoxPromise = null;
 }
 
 async function anyFallback(): Promise<TSchema> {
@@ -154,7 +160,4 @@ export async function createToolParameters(inputSchema: any): Promise<TSchema> {
   });
 }
 
-export function __setTypeBoxMissingForTests(missing: boolean): void {
-  forceTypeBoxMissingForTests = missing;
-  cachedTypeBoxPromise = null;
-}
+
