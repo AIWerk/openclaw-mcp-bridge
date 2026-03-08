@@ -95,7 +95,7 @@ export class SseTransport implements McpTransport {
           // Update event type BEFORE processing data lines
           if (trimmed.startsWith("event: ")) {
             currentEvent = trimmed.substring(7).trim();
-            this.processEventLine(line, currentEvent);
+            // event: lines only set the type — no processEventLine needed
           } else if (trimmed === "") {
             this.processEventLine(line, currentEvent);
             currentEvent = ""; // Reset only after processing completed event

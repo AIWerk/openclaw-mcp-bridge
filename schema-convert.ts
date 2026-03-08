@@ -59,11 +59,21 @@ export async function convertJsonSchemaToTypeBox(schema: any, depth = 0): Promis
       return Type.Any();
     }
 
-    if (Array.isArray(schema.anyOf) && schema.anyOf.length > 0) {
+    // anyOf and oneOf both map to Type.Union (TypeBox doesn't distinguish)
+    const unionSource = schema.anyOf || schema.oneOf;
+    if (Array.isArray(unionSource) && unionSource.length > 0) {
       const variants = await Promise.all(
-        schema.anyOf.map((item: any) => convertJsonSchemaToTypeBox(item, depth + 1))
+        unionSource.map((item: any) => convertJsonSchemaToTypeBox(item, depth + 1))
       );
       return Type.Union(variants);
+    }
+
+    // allOf maps to Type.Intersect
+    if (Array.isArray(schema.allOf) && schema.allOf.length > 0) {
+      const parts = await Promise.all(
+        schema.allOf.map((item: any) => convertJsonSchemaToTypeBox(item, depth + 1))
+      );
+      return Type.Intersect(parts);
     }
 
     switch (schema.type) {

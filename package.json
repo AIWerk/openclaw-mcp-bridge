@@ -12,5 +12,8 @@
   },
   "dependencies": {
     "@sinclair/typebox": "^0.34.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0"
   }
 }
