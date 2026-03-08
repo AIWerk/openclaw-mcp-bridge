@@ -53,6 +53,13 @@ openclaw gateway restart
 journalctl --user -u openclaw-gateway.service | grep "notion"
 ```
 
+## Windows
+
+OpenClaw runs on Windows (WSL2 recommended). Adapt paths:
+- Config: `%USERPROFILE%\.openclaw\openclaw.json`
+- Logs: `openclaw gateway logs` (no journalctl)
+- `pip`/`npm`/`npx` commands work the same on Windows
+
 ## Notes
 - Uses `npx` — no global install needed, downloads automatically on first run
 - First start may be slow (~10s) as npx downloads the package

@@ -60,6 +60,13 @@ journalctl --user -u openclaw-gateway.service | grep "hetzner"
 # Expected: Server hetzner initialized, registered 30 tools
 ```
 
+## Windows
+
+OpenClaw runs on Windows (WSL2 recommended). Adapt paths:
+- Config: `%USERPROFILE%\.openclaw\openclaw.json`
+- Logs: `openclaw gateway logs` (no journalctl)
+- `pip`/`npm`/`npx` commands work the same on Windows
+
 ## Notes
 - Requires Python 3.11+
 - The token needs Read & Write permissions for full functionality

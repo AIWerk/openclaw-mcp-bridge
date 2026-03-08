@@ -60,6 +60,13 @@ journalctl --user -u openclaw-gateway.service | grep "apify"
 # Expected: Server apify initialized, registered 8 tools
 ```
 
+## Windows
+
+OpenClaw runs on Windows (WSL2 recommended). Adapt paths:
+- Config: `%USERPROFILE%\.openclaw\openclaw.json`
+- Logs: `openclaw gateway logs` (no journalctl)
+- `pip`/`npm`/`npx` commands work the same on Windows
+
 ## Notes
 - Apify is a hosted service — no local software needed
 - Free tier available (limited usage), paid plans for more

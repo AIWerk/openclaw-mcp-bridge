@@ -54,6 +54,13 @@ journalctl --user -u openclaw-gateway.service | grep "hostinger"
 # Expected: Server hostinger initialized, registered 119 tools
 ```
 
+## Windows
+
+OpenClaw runs on Windows (WSL2 recommended). Adapt paths:
+- Config: `%USERPROFILE%\.openclaw\openclaw.json`
+- Logs: `openclaw gateway logs` (no journalctl)
+- `pip`/`npm`/`npx` commands work the same on Windows
+
 ## Notes
 - Requires Node.js 24+ (according to Hostinger docs, but works with Node 22)
 - Source: [hostinger-api-mcp on npm](https://www.npmjs.com/package/hostinger-api-mcp)

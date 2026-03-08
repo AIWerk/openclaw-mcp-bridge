@@ -48,6 +48,13 @@ openclaw gateway restart
 journalctl --user -u openclaw-gateway.service | grep "filesystem"
 ```
 
+## Windows
+
+OpenClaw runs on Windows (WSL2 recommended). Adapt paths:
+- Config: `%USERPROFILE%\.openclaw\openclaw.json`
+- Logs: `openclaw gateway logs` (no journalctl)
+- `pip`/`npm`/`npx` commands work the same on Windows
+
 ## Notes
 - Uses `npx` — no global install needed
 - **Security:** The server only has access to the directory you specify in the args
