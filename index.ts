@@ -11,6 +11,48 @@ import { StdioTransport } from "./transport-stdio.js";
 import { StreamableHttpTransport } from "./transport-streamable-http.js";
 import { createToolParameters, setSchemaLogger } from "./schema-convert.js";
 
+function isNameTaken(name: string, localNames: Set<string>, globalNames: Set<string>): boolean {
+  return localNames.has(name) || globalNames.has(name);
+}
+
+export function pickRegisteredToolName(
+  serverName: string,
+  toolName: string,
+  toolPrefix: boolean | undefined,
+  localNames: Set<string>,
+  globalNames: Set<string>,
+  logger?: { warn: (...args: any[]) => void }
+): string {
+  const baseName = toolPrefix !== false
+    ? `${serverName}_${toolName}`
+    : toolName;
+  const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
+
+  let candidate = sanitizedBaseName;
+  if (toolPrefix === false && isNameTaken(candidate, localNames, globalNames)) {
+    const prefixedName = `${serverName}_${toolName}`.replace(/[^a-zA-Z0-9_]/g, "_");
+    logger?.warn(
+      `[mcp-client] Global tool name collision detected for "${sanitizedBaseName}". Auto-prefixing with server name: "${prefixedName}"`
+    );
+    candidate = prefixedName;
+  }
+
+  const uniqueBase = candidate;
+  let suffix = 2;
+  while (isNameTaken(candidate, localNames, globalNames)) {
+    candidate = `${uniqueBase}_${suffix}`;
+    suffix += 1;
+  }
+
+  if (candidate !== uniqueBase) {
+    logger?.warn(
+      `[mcp-client] Tool name collision after sanitization on server ${serverName}: "${uniqueBase}" -> "${candidate}"`
+    );
+  }
+
+  return candidate;
+}
+
 export default function activate(api: any) {
   const config = (api.pluginConfig ?? {}) as McpClientConfig;
   setSchemaLogger(api.logger);
@@ -30,19 +72,24 @@ export default function activate(api: any) {
     const results = await Promise.allSettled(
       serverEntries.map(async ([serverName, serverConfig]) => {
         api.logger.info(`[mcp-client] Connecting to server: ${serverName} (${serverConfig.transport}: ${serverConfig.url || serverConfig.command})`);
-        await initializeServer(serverName, serverConfig);
+        await initializeServer(serverName, serverConfig, false);
         return serverName;
       })
     );
 
     let succeeded = 0;
     let failed = 0;
+    const successfulConnections: McpServerConnection[] = [];
 
     results.forEach((result, idx) => {
       const serverName = serverEntries[idx][0];
       if (result.status === "fulfilled") {
         succeeded += 1;
         api.logger.info(`[mcp-client] Startup success: ${serverName}`);
+        const conn = connections.get(serverName);
+        if (conn) {
+          successfulConnections.push(conn);
+        }
       } else {
         failed += 1;
         const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
@@ -50,45 +97,17 @@ export default function activate(api: any) {
       }
     });
 
+    // Register all tools sequentially after discovery to avoid cross-server name race conditions.
+    for (const connection of successfulConnections) {
+      await registerServerTools(connection);
+      connection.isInitialized = true;
+      api.logger.info(`[mcp-client] Server ${connection.name} initialized, registered ${connection.tools.length} tools`);
+    }
+
     api.logger.info(`[mcp-client] Server startup complete: ${succeeded} succeeded, ${failed} failed`);
   }
 
-  function isNameTaken(name: string, localNames: Set<string>): boolean {
-    return localNames.has(name) || globalRegisteredToolNames.has(name);
-  }
-
-  function pickRegisteredToolName(connection: McpServerConnection, mcpTool: McpTool, localNames: Set<string>): string {
-    const baseName = config.toolPrefix !== false
-      ? `${connection.name}_${mcpTool.name}`
-      : mcpTool.name;
-    const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
-
-    let candidate = sanitizedBaseName;
-    if (config.toolPrefix === false && isNameTaken(candidate, localNames)) {
-      const prefixedName = `${connection.name}_${mcpTool.name}`.replace(/[^a-zA-Z0-9_]/g, "_");
-      api.logger.warn(
-        `[mcp-client] Global tool name collision detected for "${sanitizedBaseName}". Auto-prefixing with server name: "${prefixedName}"`
-      );
-      candidate = prefixedName;
-    }
-
-    const uniqueBase = candidate;
-    let suffix = 2;
-    while (isNameTaken(candidate, localNames)) {
-      candidate = `${uniqueBase}_${suffix}`;
-      suffix += 1;
-    }
-
-    if (candidate !== uniqueBase) {
-      api.logger.warn(
-        `[mcp-client] Tool name collision after sanitization on server ${connection.name}: "${uniqueBase}" -> "${candidate}"`
-      );
-    }
-
-    return candidate;
-  }
-
-  async function initializeServer(name: string, serverConfig: McpServerConfig): Promise<void> {
+  async function initializeServer(name: string, serverConfig: McpServerConfig, registerTools = true): Promise<void> {
     let transport: McpTransport;
 
     // Create connection object first (needed for reconnect callback)
@@ -118,7 +137,7 @@ export default function activate(api: any) {
         
         await initializeProtocol(connection);
         await discoverTools(connection);
-        registerServerTools(connection);
+        await registerServerTools(connection);
 
         connection.isInitialized = true;
         api.logger.info(`[mcp-client] Server ${name} re-initialized, registered ${connection.tools.length} tools`);
@@ -161,12 +180,12 @@ export default function activate(api: any) {
       
       // Get available tools
       await discoverTools(connection);
-      
-      // Register tools with OpenClaw
-      registerServerTools(connection);
-
-      connection.isInitialized = true;
-      api.logger.info(`[mcp-client] Server ${name} initialized, registered ${connection.tools.length} tools`);
+      if (registerTools) {
+        // Register tools with OpenClaw
+        await registerServerTools(connection);
+        connection.isInitialized = true;
+        api.logger.info(`[mcp-client] Server ${name} initialized, registered ${connection.tools.length} tools`);
+      }
       
     } catch (error) {
       api.logger.error(`[mcp-client] Failed to initialize server ${name}:`, error);
@@ -233,14 +252,21 @@ export default function activate(api: any) {
     connection.tools = allTools;
   }
 
-  function registerServerTools(connection: McpServerConnection): void {
+  async function registerServerTools(connection: McpServerConnection): Promise<void> {
     for (const oldName of connection.registeredToolNames) {
       globalRegisteredToolNames.delete(oldName);
     }
 
     const usedToolNames = new Set<string>();
     const nextToolRegistrations = connection.tools.map((mcpTool) => {
-      const registeredName = pickRegisteredToolName(connection, mcpTool, usedToolNames);
+      const registeredName = pickRegisteredToolName(
+        connection.name,
+        mcpTool.name,
+        config.toolPrefix,
+        usedToolNames,
+        globalRegisteredToolNames,
+        api.logger
+      );
       usedToolNames.add(registeredName);
       return { mcpTool, registeredName };
     });
@@ -270,7 +296,7 @@ export default function activate(api: any) {
 
     for (const { mcpTool, registeredName } of nextToolRegistrations) {
       try {
-        const actualName = registerMcpTool(connection, mcpTool, registeredName);
+        const actualName = await registerMcpTool(connection, mcpTool, registeredName);
         connection.registeredToolNames.push(actualName);
         globalRegisteredToolNames.add(actualName);
       } catch (error) {
@@ -279,14 +305,14 @@ export default function activate(api: any) {
     }
   }
 
-  function registerMcpTool(connection: McpServerConnection, mcpTool: McpTool, validToolName: string): string {
+  async function registerMcpTool(connection: McpServerConnection, mcpTool: McpTool, validToolName: string): Promise<string> {
     // Create tool description (truncate for label)
     const label = mcpTool.description.length > 80 
       ? mcpTool.description.substring(0, 77) + "..."
       : mcpTool.description;
 
     // Convert JSON Schema to TypeBox schema
-    const parameters = createToolParameters(mcpTool.inputSchema);
+    const parameters = await createToolParameters(mcpTool.inputSchema);
 
     // Register the tool with OpenClaw
     api.registerTool({

@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.2] - 2026-03-08
+
+### Changed
+- `schema-convert.ts`: Replaced CJS `require()` TypeBox loading with cached async ESM `import("@sinclair/typebox")` via `getTypeBox()`, and routed all `Type.*` usage through that module with fallback-to-`Any` handling when TypeBox is unavailable.
+- `schema-convert.ts`: Added `anyOf` conversion support and created node built-in tests in `tests/schema-convert.test.ts` for string, number, object, array, union, and missing-TypeBox fallback behavior.
+- `index.ts`: Removed cross-server startup registration race by keeping connection/discovery parallel but registering tools sequentially after all server initialization settles.
+- `transport-sse.ts`: Fixed SSE blank-line event boundary ordering so completed events are processed before `currentEvent` reset.
+- Added `tests/collision.test.ts`, `tests/env-resolve.test.ts`, `tsconfig.json`, and package test script (`npx tsx tests/*.test.ts`) for collision and env-resolution validation.
+
 ## [1.4.0] - 2026-03-08
 
 ### Changed

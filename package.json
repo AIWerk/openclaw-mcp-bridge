@@ -7,6 +7,9 @@
     "type": "git",
     "url": "https://github.com/AIWerk/openclaw-mcp-bridge"
   },
+  "scripts": {
+    "test": "npx tsx tests/*.test.ts"
+  },
   "dependencies": {
     "@sinclair/typebox": "^0.34.0"
   }

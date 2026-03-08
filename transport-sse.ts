@@ -95,10 +95,13 @@ export class SseTransport implements McpTransport {
           // Update event type BEFORE processing data lines
           if (trimmed.startsWith("event: ")) {
             currentEvent = trimmed.substring(7).trim();
+            this.processEventLine(line, currentEvent);
           } else if (trimmed === "") {
-            currentEvent = ""; // Reset on blank line (SSE event boundary)
+            this.processEventLine(line, currentEvent);
+            currentEvent = ""; // Reset only after processing completed event
+          } else {
+            this.processEventLine(line, currentEvent);
           }
-          this.processEventLine(line, currentEvent);
         }
       }
     } catch (error) {

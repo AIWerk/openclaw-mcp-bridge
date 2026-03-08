@@ -1,60 +1,40 @@
-import fs from "fs";
-import path from "path";
-
-// Multiple fallback strategies for TypeBox import
-// Note: Dynamic require() used intentionally — TypeBox path varies by host environment
-// and synchronous resolution is needed at module load time (ESM dynamic import is async)
-let Type: any;
-try {
-  // Strategy 1: Try normal require first
-  Type = require("@sinclair/typebox").Type;
-} catch (error) {
-  try {
-    // Strategy 2: Try resolving from process.cwd()
-    const typeboxPath = require.resolve("@sinclair/typebox", { paths: [process.cwd()] });
-    Type = require(typeboxPath).Type;
-  } catch (error2) {
-    try {
-      // Strategy 3: Resolve from __dirname, then walk parent directories
-      const searchPaths: string[] = [__dirname];
-      let currentDir = __dirname;
-
-      while (true) {
-        const parentDir = path.dirname(currentDir);
-        if (parentDir === currentDir) {
-          break;
-        }
-        currentDir = parentDir;
-        searchPaths.push(currentDir);
-      }
-
-      let found = false;
-      for (const basePath of searchPaths) {
-        try {
-          const localNodeModulesPath = path.join(basePath, "node_modules");
-          const typeboxPkgPath = path.join(localNodeModulesPath, "@sinclair", "typebox", "package.json");
-          if (!fs.existsSync(typeboxPkgPath)) {
-            continue;
-          }
-
-          const typeboxPath = require.resolve("@sinclair/typebox", { paths: [basePath, localNodeModulesPath] });
-          Type = require(typeboxPath).Type;
-          found = true;
-          break;
-        } catch (e) {
-          // Continue to next path
-        }
-      }
-      
-      if (!found) {
-        throw new Error("TypeBox not found from __dirname parent search paths");
-      }
-    } catch (error3) {
-      throw new Error(`Failed to import TypeBox: ${error3.message}. Original errors: ${error.message}, ${error2.message}`);
-    }
-  }
-}
 type TSchema = any;
+type TypeBoxMod = { Type: any } | null;
+
+let cachedTypeBoxPromise: Promise<TypeBoxMod> | null = null;
+let forceTypeBoxMissingForTests = false;
+
+async function getTypeBox(): Promise<TypeBoxMod> {
+  if (cachedTypeBoxPromise) {
+    return cachedTypeBoxPromise;
+  }
+
+  cachedTypeBoxPromise = (async () => {
+    try {
+      if (forceTypeBoxMissingForTests) {
+        throw new Error("TypeBox forced missing for tests");
+      }
+      const mod: any = await import("@sinclair/typebox");
+      const Type = mod?.Type ?? mod?.default?.Type;
+      if (!Type) {
+        throw new Error("TypeBox module missing Type export");
+      }
+      return { Type };
+    } catch (error) {
+      return null;
+    }
+  })();
+
+  return cachedTypeBoxPromise;
+}
+
+async function anyFallback(): Promise<TSchema> {
+  const typeBox = await getTypeBox();
+  if (typeBox?.Type) {
+    return typeBox.Type.Any();
+  }
+  return { type: "any" };
+}
 
 // Logger can be injected via setSchemaLogger(); defaults to console
 let schemaLogger: { warn: (...args: any[]) => void } = console;
@@ -62,76 +42,93 @@ export function setSchemaLogger(logger: { warn: (...args: any[]) => void }): voi
   schemaLogger = logger;
 }
 
-export function convertJsonSchemaToTypeBox(schema: any, depth = 0): TSchema {
-  if (depth > 10) {
-    schemaLogger.warn("[mcp-client] JSON schema depth limit exceeded (>10), falling back to Type.Any()");
-    return Type.Any();
+export async function convertJsonSchemaToTypeBox(schema: any, depth = 0): Promise<TSchema> {
+  const typeBox = await getTypeBox();
+  const Type = typeBox?.Type;
+  if (!Type) {
+    return anyFallback();
   }
 
-  if (!schema || typeof schema !== "object") {
-    return Type.Any();
-  }
-
-  // Handle type property
-  switch (schema.type) {
-    case "string":
-      if (schema.enum) {
-        return Type.Union(schema.enum.map((value: string) => Type.Literal(value)));
-      }
-      const stringOptions: any = {};
-      if (schema.minLength !== undefined) stringOptions.minLength = schema.minLength;
-      if (schema.maxLength !== undefined) stringOptions.maxLength = schema.maxLength;
-      if (schema.pattern !== undefined) stringOptions.pattern = schema.pattern;
-      return Type.String(stringOptions);
-    
-    case "number":
-    case "integer":
-      const numberOptions: any = {};
-      if (schema.minimum !== undefined) numberOptions.minimum = schema.minimum;
-      if (schema.maximum !== undefined) numberOptions.maximum = schema.maximum;
-      return Type.Number(numberOptions);
-    
-    case "boolean":
-      return Type.Boolean();
-    
-    case "array":
-      if (schema.items) {
-        return Type.Array(convertJsonSchemaToTypeBox(schema.items, depth + 1));
-      }
-      return Type.Array(Type.Any());
-    
-    case "object":
-      if (schema.properties) {
-        const propertyEntries = Object.entries(schema.properties);
-        if (propertyEntries.length > 100) {
-          schemaLogger.warn("[mcp-client] JSON schema object has too many properties (>100), falling back to Type.Any()");
-          return Type.Any();
-        }
-
-        const properties: Record<string, TSchema> = {};
-        const requiredSet = new Set<string>(
-          Array.isArray(schema.required) ? schema.required : []
-        );
-
-        for (const [key, value] of propertyEntries) {
-          const converted = convertJsonSchemaToTypeBox(value as any, depth + 1);
-          properties[key] = requiredSet.has(key) ? converted : Type.Optional(converted);
-        }
-
-        return Type.Object(properties);
-      }
-      return Type.Object({});
-    
-    case "null":
-      return Type.Null();
-    
-    default:
-      // Unknown type or no type specified
+  try {
+    if (depth > 10) {
+      schemaLogger.warn("[mcp-client] JSON schema depth limit exceeded (>10), falling back to Type.Any()");
       return Type.Any();
+    }
+
+    if (!schema || typeof schema !== "object") {
+      return Type.Any();
+    }
+
+    if (Array.isArray(schema.anyOf) && schema.anyOf.length > 0) {
+      const variants = await Promise.all(
+        schema.anyOf.map((item: any) => convertJsonSchemaToTypeBox(item, depth + 1))
+      );
+      return Type.Union(variants);
+    }
+
+    switch (schema.type) {
+      case "string": {
+        if (schema.enum) {
+          return Type.Union(schema.enum.map((value: string) => Type.Literal(value)));
+        }
+        const stringOptions: any = {};
+        if (schema.minLength !== undefined) stringOptions.minLength = schema.minLength;
+        if (schema.maxLength !== undefined) stringOptions.maxLength = schema.maxLength;
+        if (schema.pattern !== undefined) stringOptions.pattern = schema.pattern;
+        return Type.String(stringOptions);
+      }
+      case "number":
+      case "integer": {
+        const numberOptions: any = {};
+        if (schema.minimum !== undefined) numberOptions.minimum = schema.minimum;
+        if (schema.maximum !== undefined) numberOptions.maximum = schema.maximum;
+        return Type.Number(numberOptions);
+      }
+      case "boolean":
+        return Type.Boolean();
+      case "array":
+        if (schema.items) {
+          return Type.Array(await convertJsonSchemaToTypeBox(schema.items, depth + 1));
+        }
+        return Type.Array(Type.Any());
+      case "object":
+        if (schema.properties) {
+          const propertyEntries = Object.entries(schema.properties);
+          if (propertyEntries.length > 100) {
+            schemaLogger.warn("[mcp-client] JSON schema object has too many properties (>100), falling back to Type.Any()");
+            return Type.Any();
+          }
+
+          const properties: Record<string, TSchema> = {};
+          const requiredSet = new Set<string>(
+            Array.isArray(schema.required) ? schema.required : []
+          );
+
+          for (const [key, value] of propertyEntries) {
+            const converted = await convertJsonSchemaToTypeBox(value as any, depth + 1);
+            properties[key] = requiredSet.has(key) ? converted : Type.Optional(converted);
+          }
+          return Type.Object(properties);
+        }
+        return Type.Object({});
+      case "null":
+        return Type.Null();
+      default:
+        return Type.Any();
+    }
+  } catch (error) {
+    schemaLogger.warn("[mcp-client] Failed to convert JSON schema, falling back to Type.Any()");
+    return Type.Any();
   }
 }
 
-export function createToolParameters(inputSchema: any): TSchema {
+export async function createToolParameters(inputSchema: any): Promise<TSchema> {
+  const typeBox = await getTypeBox();
+  const Type = typeBox?.Type;
+  if (!Type) {
+    return anyFallback();
+  }
+
   if (!inputSchema) {
     return Type.Object({});
   }
@@ -143,6 +140,11 @@ export function createToolParameters(inputSchema: any): TSchema {
 
   // If it's not an object, wrap it in an object
   return Type.Object({
-    input: convertJsonSchemaToTypeBox(inputSchema, 0)
+    input: await convertJsonSchemaToTypeBox(inputSchema, 0)
   });
+}
+
+export function __setTypeBoxMissingForTests(missing: boolean): void {
+  forceTypeBoxMissingForTests = missing;
+  cachedTypeBoxPromise = null;
 }
