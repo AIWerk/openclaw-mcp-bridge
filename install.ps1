@@ -1,5 +1,5 @@
 # OpenClaw MCP Client Plugin - Windows Installer
-# Usage: irm https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.ps1 | iex
+# Usage: irm https://raw.githubusercontent.com/AIWerk/openclaw-mcp-bridge/master/install.ps1 | iex
 $ErrorActionPreference = "Stop"
 
 $PluginDir = "$env:USERPROFILE\.openclaw\extensions\mcp-client"
@@ -17,7 +17,7 @@ if (Test-Path "$PluginDir\.git") {
     Write-Host "📥 Cloning plugin..."
     $parent = Split-Path $PluginDir -Parent
     if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
-    git clone https://github.com/AIWerk/openclaw-mcp-client.git $PluginDir
+    git clone https://github.com/AIWerk/openclaw-mcp-bridge.git $PluginDir
 }
 
 # 2. Add to openclaw.json if not already present
