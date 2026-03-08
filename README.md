@@ -4,6 +4,7 @@ Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) ser
 
 **Tested in production with:**
 - [Apify](https://mcp.apify.com) — 8 tools (web scraping, actor management) via Streamable HTTP
+- [GitHub](https://github.com/github/github-mcp-server) — 41 tools (repos, issues, PRs, CI/CD) via Stdio (Docker)
 - [Hetzner Cloud](https://github.com/dkruyt/mcp-hetzner) — 30 tools (server/volume/firewall management) via Stdio
 - [Hostinger](https://www.npmjs.com/package/hostinger-api-mcp) — 119 tools (hosting management) via Stdio
 
@@ -133,7 +134,43 @@ pip install git+https://github.com/dkruyt/mcp-hetzner.git
 [mcp-client] Server hetzner initialized, registered 30 tools
 ```
 
+### Example 3: GitHub (Stdio via Docker)
 
+Manage GitHub repositories, issues, PRs, and CI/CD through natural language.
+
+**1. Install:**
+```bash
+docker pull ghcr.io/github/github-mcp-server
+```
+
+**2. Get a Personal Access Token:** [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
+
+**3. Add to `.env`:**
+```
+GITHUB_MCP_TOKEN=ghp_your_token_here
+```
+
+**4. Add to `openclaw.json`:**
+```json
+"github": {
+  "transport": "stdio",
+  "command": "docker",
+  "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"],
+  "env": {
+    "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_MCP_TOKEN}"
+  }
+}
+```
+
+**5. Restart:** `openclaw gateway restart`
+
+**Expected output:**
+```
+[mcp-client] Connected to server: github
+[mcp-client] Server github initialized, registered 41 tools
+```
+
+Now your agent can use tools like `github_list_issues`, `github_create_pull_request`, `github_search_code`, etc.
 
 ## Configuration Reference
 
@@ -144,7 +181,7 @@ All server configs go under `plugins.entries.mcp-client.config.servers` in `open
 | Transport | Use case | Example servers |
 |---|---|---|
 | **`streamable-http`** | Remote API with single POST endpoint | Apify, Smithery Connect |
-| **`stdio`** | Local subprocess, npm packages | Hetzner, Hostinger |
+| **`stdio`** | Local subprocess, npm/Docker | GitHub, Hetzner, Hostinger |
 | **`sse`** | Remote Server-Sent Events (legacy) | Custom MCP servers |
 
 ### Server config options
@@ -152,13 +189,13 @@ All server configs go under `plugins.entries.mcp-client.config.servers` in `open
 ```json
 {
   "my-server": {
-    "transport": "streamable-http",     // Required: "sse" | "stdio" | "streamable-http"
-    "url": "https://...",               // Required for sse/streamable-http
-    "command": "mcp-hetzner",           // Required for stdio
-    "args": [],                         // Optional: command arguments (stdio)
-    "headers": {},                      // Optional: HTTP headers (sse/streamable-http)
-    "env": {},                          // Optional: environment variables (stdio)
-    "framing": "auto"                   // Optional: "auto" | "lsp" | "newline" (stdio only)
+    "transport": "streamable-http",
+    "url": "https://...",
+    "command": "mcp-hetzner",
+    "args": [],
+    "headers": {},
+    "env": {},
+    "framing": "auto"
   }
 }
 ```
@@ -237,109 +274,32 @@ journalctl --user -u openclaw-gateway.service | grep mcp-client
 | "Stdio startup stdout readiness timed out" | Normal for some servers — they don't emit stdout before init |
 | Streamable HTTP parse error | Server may use chunked streaming (not yet supported) |
 
-## File structure
-
-| File | Purpose |
-|---|---|
-| `index.ts` | Main plugin — server lifecycle, tool registration, execution |
-| `transport-sse.ts` | SSE transport (Server-Sent Events) |
-| `transport-stdio.ts` | Stdio transport (subprocess, LSP/newline framing) |
-| `transport-streamable-http.ts` | Streamable HTTP transport (POST, SSE response parsing) |
-| `schema-convert.ts` | JSON Schema → TypeBox conversion with injectable logger |
-| `types.ts` | TypeScript interfaces |
-| `openclaw.plugin.json` | Plugin metadata + config schema |
-
 ## Server Catalog
 
-This plugin includes a server installer system with pre-configured setups for popular MCP servers. Each server in the `servers/` directory comes with:
-
-- `config.json` — OpenClaw configuration ready to merge
-- `install.sh` — Setup script for dependencies
-- `env_vars` — Required environment variables list
-- `README.md` — Server description and usage
+Pre-configured setups for popular MCP servers. Each server in `servers/` includes config, install script, env vars list, and docs.
 
 ### Available servers
 
 | Server | Transport | Tools | Install | Token |
 |---|---|---|---|---|
 | [apify](servers/apify/) | streamable-http | 8 | Hosted — nothing to install | [Get token](https://console.apify.com/account/integrations) |
+| [github](servers/github/) | stdio | 41 | `docker pull ghcr.io/github/github-mcp-server` | [Create PAT](https://github.com/settings/personal-access-tokens/new) |
 | [hetzner](servers/hetzner/) | stdio | 30 | `pip install git+https://github.com/dkruyt/mcp-hetzner.git` | [Get token](https://console.hetzner.cloud) → Security → API Tokens |
 | [hostinger](servers/hostinger/) | stdio | 119 | `npm install -g hostinger-api-mcp` | Hostinger dashboard → API Token |
 
-Or use the installer for any of these: `./install-server.sh apify`
-
-### Using the installer
-
-**List available servers:**
-```bash
-./list-servers.sh
-```
-
-**Install a server:**
-```bash
-./install-server.sh <server-name>
-```
-
-**Preview what would happen:**
-```bash
-./install-server.sh <server-name> --dry-run
-```
-
-Example:
-```bash
-cd ~/.openclaw/extensions/mcp-client
-./list-servers.sh
-./install-server.sh apify
-openclaw gateway restart
-```
-
-The installer will:
-1. Run the server's installation script
-2. Check for required environment variables in `~/.openclaw/.env`
-3. Prompt for missing tokens/keys
-4. Merge the configuration into `~/.openclaw/openclaw.json`
-5. Tell you to restart the gateway
-
-### Available servers
-
-| Server | Transport | Tools | Description |
-|---|---|---|---|
-| **apify** | streamable-http | 8 | Web scraping and automation platform |
-| **hetzner** | stdio | 30 | Hetzner Cloud infrastructure management |
-| **hostinger** | stdio | 119 | Web hosting and domain management |
+Use the installer: `./install-server.sh <server-name>` (or `--dry-run` to preview)
 
 ### Contributing new servers
 
-To add a new MCP server to the catalog:
-
-1. **Create the server directory:**
-   ```bash
-   mkdir servers/my-server
-   ```
-
-2. **Add the required files:**
-   - `config.json` — OpenClaw config (with `${VARIABLE}` substitution)
-   - `install.sh` — Installation steps (make executable)
-   - `env_vars` — Required variables, one per line
-   - `README.md` — Brief description and setup instructions
-
-3. **Test the installer:**
-   ```bash
-   ./install-server.sh my-server --dry-run
-   ./install-server.sh my-server
-   ```
-
-4. **Submit a Pull Request** with your new server directory.
-
-The installer scripts handle JSON merging, environment variable checking, and configuration validation automatically.
+1. Create `servers/my-server/` with `config.json`, `install.sh`, `env_vars`, `README.md`
+2. Test: `./install-server.sh my-server --dry-run`
+3. Submit a Pull Request
 
 ## Uninstall
 
 ```bash
-# 1. Remove from openclaw.json (delete the mcp-client entry under plugins.entries)
-# 2. Delete the plugin
 rm -rf ~/.openclaw/extensions/mcp-client
-# 3. Restart
+# Remove mcp-client from openclaw.json plugins.entries
 openclaw gateway restart
 ```
 
@@ -347,7 +307,6 @@ openclaw gateway restart
 
 - OpenClaw 2026.3.x+
 - Node.js 22+
-- **TypeBox** — provided by OpenClaw runtime (no separate install needed)
 
 ## License
 
