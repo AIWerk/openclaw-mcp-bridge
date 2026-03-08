@@ -1,4 +1,4 @@
-import { McpTransport, McpRequest, McpResponse, McpServerConfig } from "./types.js";
+import { McpTransport, McpRequest, McpResponse, McpServerConfig, nextRequestId } from "./types.js";
 
 export class SseTransport implements McpTransport {
   private config: McpServerConfig;
@@ -6,7 +6,6 @@ export class SseTransport implements McpTransport {
   private endpointUrl: string | null = null;
   private connected = false;
   private pendingRequests = new Map<number, { resolve: Function; reject: Function; timeout: NodeJS.Timeout }>();
-  private nextId = 1;
   private logger: any;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private sseAbortController: AbortController | null = null;
@@ -130,8 +129,15 @@ export class SseTransport implements McpTransport {
           // Relative URL — resolve against base
           const base = new URL(this.config.url!);
           this.endpointUrl = `${base.origin}${data}`;
-        } else {
+        } else if (data.startsWith("http")) {
+          if (!this.isSameOrigin(data)) {
+            this.logger.warn(`[mcp-client] Rejected SSE endpoint with mismatched origin: ${data}`);
+            return;
+          }
           this.endpointUrl = data;
+        } else {
+          this.logger.warn(`[mcp-client] Rejected SSE endpoint with unsupported URL format: ${data}`);
+          return;
         }
         this.logger.info(`[mcp-client] SSE endpoint URL received: ${this.endpointUrl}`);
         if (this._onEndpointReceived) {
@@ -194,7 +200,7 @@ export class SseTransport implements McpTransport {
       throw new Error("SSE transport not connected or no endpoint URL");
     }
 
-    const id = this.nextId++;
+    const id = nextRequestId();
     const requestWithId = { ...request, id };
 
     return new Promise((resolve, reject) => {
@@ -230,6 +236,19 @@ export class SseTransport implements McpTransport {
           reject(error);
         });
     });
+  }
+
+  private isSameOrigin(url: string): boolean {
+    try {
+      if (!this.config.url) {
+        return false;
+      }
+      const incoming = new URL(url);
+      const base = new URL(this.config.url);
+      return incoming.origin === base.origin;
+    } catch (error) {
+      return false;
+    }
   }
 
   private resolveHeaders(headers: Record<string, string>): Record<string, string> {

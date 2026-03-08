@@ -1,10 +1,10 @@
-import { 
-  McpClientConfig, 
-  McpServerConfig, 
-  McpServerConnection, 
-  McpTransport, 
+import {
+  McpClientConfig,
+  McpServerConfig,
+  McpServerConnection,
+  McpTransport,
   McpTool,
-  McpRequest 
+  McpRequest
 } from "./types.js";
 import { SseTransport } from "./transport-sse.js";
 import { StdioTransport } from "./transport-stdio.js";
@@ -111,14 +111,13 @@ export default function activate(api: any) {
     // Send initialize request
     const initRequest: McpRequest = {
       jsonrpc: "2.0",
-      id: 0, // overridden by sendRequest
       method: "initialize",
       params: {
         protocolVersion: "2024-11-05",
         capabilities: {},
         clientInfo: {
           name: "openclaw-mcp-client",
-          version: "1.2.0"
+          version: "1.3.0"
         }
       }
     };
@@ -143,7 +142,6 @@ export default function activate(api: any) {
     while (true) {
       const listRequest: McpRequest = {
         jsonrpc: "2.0",
-        id: 0, // overridden by sendRequest
         method: "tools/list",
         ...(cursor ? { params: { cursor } } : {})
       };
@@ -168,12 +166,30 @@ export default function activate(api: any) {
   }
 
   function registerServerTools(connection: McpServerConnection): void {
-    const nextToolNames = connection.tools.map((mcpTool) => {
-      const toolName = config.toolPrefix !== false 
-        ? `${connection.name}_${mcpTool.name}` 
+    const usedToolNames = new Set<string>();
+    const nextToolRegistrations = connection.tools.map((mcpTool) => {
+      const toolName = config.toolPrefix !== false
+        ? `${connection.name}_${mcpTool.name}`
         : mcpTool.name;
-      return toolName.replace(/[^a-zA-Z0-9_]/g, '_');
+      const sanitizedBaseName = toolName.replace(/[^a-zA-Z0-9_]/g, "_");
+      let uniqueName = sanitizedBaseName;
+      let suffix = 2;
+
+      while (usedToolNames.has(uniqueName)) {
+        uniqueName = `${sanitizedBaseName}_${suffix}`;
+        suffix += 1;
+      }
+
+      if (uniqueName !== sanitizedBaseName) {
+        api.logger.warn(
+          `[mcp-client] Tool name collision after sanitization on server ${connection.name}: "${sanitizedBaseName}" -> "${uniqueName}"`
+        );
+      }
+
+      usedToolNames.add(uniqueName);
+      return { mcpTool, registeredName: uniqueName };
     });
+    const nextToolNames = nextToolRegistrations.map((entry) => entry.registeredName);
 
     const oldToolNames = connection.registeredToolNames;
     if (oldToolNames.length > 0) {
@@ -197,25 +213,17 @@ export default function activate(api: any) {
 
     connection.registeredToolNames = [];
 
-    for (const mcpTool of connection.tools) {
+    for (const { mcpTool, registeredName } of nextToolRegistrations) {
       try {
-        const registeredName = registerMcpTool(connection, mcpTool);
-        connection.registeredToolNames.push(registeredName);
+        const actualName = registerMcpTool(connection, mcpTool, registeredName);
+        connection.registeredToolNames.push(actualName);
       } catch (error) {
         api.logger.error(`[mcp-client] Failed to register tool ${mcpTool.name}:`, error);
       }
     }
   }
 
-  function registerMcpTool(connection: McpServerConnection, mcpTool: McpTool): string {
-    // Generate tool name with optional prefix
-    const toolName = config.toolPrefix !== false 
-      ? `${connection.name}_${mcpTool.name}` 
-      : mcpTool.name;
-
-    // Validate tool name (alphanumeric + underscore only)
-    const validToolName = toolName.replace(/[^a-zA-Z0-9_]/g, '_');
-
+  function registerMcpTool(connection: McpServerConnection, mcpTool: McpTool, validToolName: string): string {
     // Create tool description (truncate for label)
     const label = mcpTool.description.length > 80 
       ? mcpTool.description.substring(0, 77) + "..."
@@ -267,7 +275,6 @@ export default function activate(api: any) {
 
       const callRequest: McpRequest = {
         jsonrpc: "2.0",
-        id: 0, // overridden by sendRequest
         method: "tools/call",
         params: {
           name: toolName,

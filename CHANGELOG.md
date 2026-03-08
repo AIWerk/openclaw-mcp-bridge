@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.0] - 2026-03-08
+
+### Changed
+- `transport-stdio.ts`: Added dual framing support for stdout parsing with auto-detected mode lock (`auto` -> `lsp` or `newline`) and full `Content-Length` frame handling for LSP-style stdio servers.
+- `transport-sse.ts`: Hardened SSE `event: endpoint` handling by validating absolute endpoint origins against configured server origin and rejecting mismatches with warning logs.
+- `schema-convert.ts`: Added schema recursion and size guards (max depth 10, max object properties 100) with fallback to `Type.Any()` and warnings for untrusted schemas.
+- `index.ts`: Added sanitized tool-name collision handling with numeric suffixes (e.g., `_2`) and warning logs when collisions are detected.
+- `types.ts`, `index.ts`, and all transports: Centralized JSON-RPC request ID generation via shared `nextRequestId()` utility and removed per-transport counters and caller `id: 0` placeholders.
+
 ## [1.2.0] - 2026-03-08
 
 ### Changed

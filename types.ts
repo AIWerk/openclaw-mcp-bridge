@@ -25,9 +25,15 @@ export interface McpTool {
 
 export interface McpRequest {
   jsonrpc: "2.0";
-  id: number;
+  id?: number;
   method: string;
   params?: any;
+}
+
+let globalRequestId = 1;
+
+export function nextRequestId(): number {
+  return globalRequestId++;
 }
 
 export interface McpResponse {

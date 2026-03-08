@@ -1,11 +1,10 @@
-import { McpTransport, McpRequest, McpResponse, McpServerConfig } from "./types.js";
+import { McpTransport, McpRequest, McpResponse, McpServerConfig, nextRequestId } from "./types.js";
 
 export class StreamableHttpTransport implements McpTransport {
   private config: McpServerConfig;
   private clientConfig: any;
   private connected = false;
   private pendingRequests = new Map<number, { resolve: Function; reject: Function; timeout: NodeJS.Timeout }>();
-  private nextId = 1;
   private logger: any;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private onReconnected?: () => Promise<void>;
@@ -36,7 +35,7 @@ export class StreamableHttpTransport implements McpTransport {
       throw new Error("Streamable HTTP transport not connected");
     }
 
-    const id = this.nextId++;
+    const id = nextRequestId();
     const requestWithId = { ...request, id };
 
     return new Promise((resolve, reject) => {

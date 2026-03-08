@@ -1,5 +1,5 @@
 import { spawn, ChildProcess } from "child_process";
-import { McpTransport, McpRequest, McpResponse, McpServerConfig } from "./types.js";
+import { McpTransport, McpRequest, McpResponse, McpServerConfig, nextRequestId } from "./types.js";
 
 export class StdioTransport implements McpTransport {
   private config: McpServerConfig;
@@ -7,11 +7,12 @@ export class StdioTransport implements McpTransport {
   private process: ChildProcess | null = null;
   private connected = false;
   private pendingRequests = new Map<number, { resolve: Function; reject: Function; timeout: NodeJS.Timeout }>();
-  private nextId = 1;
   private logger: any;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private onReconnected?: () => Promise<void>;
   private backoffDelay = 0;
+  private framingMode: "auto" | "lsp" | "newline" = "auto";
+  private stdoutBuffer = Buffer.alloc(0);
 
   constructor(config: McpServerConfig, clientConfig: any, logger: any, onReconnected?: () => Promise<void>) {
     this.config = config;
@@ -50,23 +51,11 @@ export class StdioTransport implements McpTransport {
       throw new Error("Failed to create process pipes");
     }
 
-    // Setup stdout handler for JSON-RPC responses
-    let buffer = "";
+    this.framingMode = "auto";
+    this.stdoutBuffer = Buffer.alloc(0);
     this.process.stdout.on("data", (data: Buffer) => {
-      buffer += data.toString();
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || ""; // Keep partial line in buffer
-
-      for (const line of lines) {
-        if (line.trim()) {
-          try {
-            const message = JSON.parse(line.trim());
-            this.handleMessage(message);
-          } catch (error) {
-            this.logger.debug("Failed to parse stdout JSON:", line);
-          }
-        }
-      }
+      this.stdoutBuffer = Buffer.concat([this.stdoutBuffer, data]);
+      this.processStdoutBuffer();
     });
 
     // Setup stderr handler for debugging
@@ -181,7 +170,7 @@ export class StdioTransport implements McpTransport {
       throw new Error("Stdio transport not connected");
     }
 
-    const id = this.nextId++;
+    const id = nextRequestId();
     const requestWithId = { ...request, id };
 
     return new Promise((resolve, reject) => {
@@ -202,6 +191,101 @@ export class StdioTransport implements McpTransport {
         reject(error);
       }
     });
+  }
+
+  private processStdoutBuffer(): void {
+    while (true) {
+      if (this.framingMode === "auto") {
+        const bufferText = this.stdoutBuffer.toString("utf8");
+        if (bufferText.includes("Content-Length:")) {
+          this.framingMode = "lsp";
+        } else if (this.stdoutBuffer.includes(0x0a)) {
+          this.framingMode = "newline";
+        } else {
+          return;
+        }
+      }
+
+      if (this.framingMode === "lsp") {
+        const consumed = this.parseLspMessageFromBuffer();
+        if (!consumed) {
+          return;
+        }
+        continue;
+      }
+
+      const consumed = this.parseNewlineMessageFromBuffer();
+      if (!consumed) {
+        return;
+      }
+    }
+  }
+
+  private parseNewlineMessageFromBuffer(): boolean {
+    const newlineIndex = this.stdoutBuffer.indexOf(0x0a);
+    if (newlineIndex === -1) {
+      return false;
+    }
+
+    const lineBuffer = this.stdoutBuffer.subarray(0, newlineIndex);
+    this.stdoutBuffer = this.stdoutBuffer.subarray(newlineIndex + 1);
+
+    const line = lineBuffer.toString("utf8").trim();
+    if (!line) {
+      return true;
+    }
+
+    try {
+      const message = JSON.parse(line);
+      this.handleMessage(message);
+    } catch (error) {
+      this.logger.debug("Failed to parse stdout JSON:", line);
+    }
+    return true;
+  }
+
+  private parseLspMessageFromBuffer(): boolean {
+    const separator = Buffer.from("\r\n\r\n");
+    let headerEndIndex = this.stdoutBuffer.indexOf(separator);
+    let headerLength = separator.length;
+
+    if (headerEndIndex === -1) {
+      const altSeparator = Buffer.from("\n\n");
+      headerEndIndex = this.stdoutBuffer.indexOf(altSeparator);
+      headerLength = altSeparator.length;
+    }
+
+    if (headerEndIndex === -1) {
+      return false;
+    }
+
+    const headerText = this.stdoutBuffer.subarray(0, headerEndIndex).toString("utf8");
+    const contentLengthMatch = headerText.match(/Content-Length:\s*(\d+)/i);
+    if (!contentLengthMatch) {
+      this.logger.warn("[mcp-client] Missing Content-Length in LSP-framed stdout message; dropping malformed frame");
+      this.stdoutBuffer = this.stdoutBuffer.subarray(headerEndIndex + headerLength);
+      return true;
+    }
+
+    const contentLength = Number.parseInt(contentLengthMatch[1], 10);
+    const bodyStart = headerEndIndex + headerLength;
+    const bodyEnd = bodyStart + contentLength;
+
+    if (this.stdoutBuffer.length < bodyEnd) {
+      return false;
+    }
+
+    const body = this.stdoutBuffer.subarray(bodyStart, bodyEnd).toString("utf8");
+    this.stdoutBuffer = this.stdoutBuffer.subarray(bodyEnd);
+
+    try {
+      const message = JSON.parse(body);
+      this.handleMessage(message);
+    } catch (error) {
+      this.logger.debug("Failed to parse LSP stdout JSON:", body);
+    }
+
+    return true;
   }
 
   private resolveEnv(env: Record<string, string>): Record<string, string> {

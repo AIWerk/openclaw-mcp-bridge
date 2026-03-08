@@ -54,7 +54,12 @@ try {
 }
 type TSchema = any;
 
-export function convertJsonSchemaToTypeBox(schema: any): TSchema {
+export function convertJsonSchemaToTypeBox(schema: any, depth = 0): TSchema {
+  if (depth > 10) {
+    console.warn("[mcp-client] JSON schema depth limit exceeded (>10), falling back to Type.Any()");
+    return Type.Any();
+  }
+
   if (!schema || typeof schema !== "object") {
     return Type.Any();
   }
@@ -83,19 +88,25 @@ export function convertJsonSchemaToTypeBox(schema: any): TSchema {
     
     case "array":
       if (schema.items) {
-        return Type.Array(convertJsonSchemaToTypeBox(schema.items));
+        return Type.Array(convertJsonSchemaToTypeBox(schema.items, depth + 1));
       }
       return Type.Array(Type.Any());
     
     case "object":
       if (schema.properties) {
+        const propertyEntries = Object.entries(schema.properties);
+        if (propertyEntries.length > 100) {
+          console.warn("[mcp-client] JSON schema object has too many properties (>100), falling back to Type.Any()");
+          return Type.Any();
+        }
+
         const properties: Record<string, TSchema> = {};
         const requiredSet = new Set<string>(
           Array.isArray(schema.required) ? schema.required : []
         );
 
-        for (const [key, value] of Object.entries(schema.properties)) {
-          const converted = convertJsonSchemaToTypeBox(value as any);
+        for (const [key, value] of propertyEntries) {
+          const converted = convertJsonSchemaToTypeBox(value as any, depth + 1);
           properties[key] = requiredSet.has(key) ? converted : Type.Optional(converted);
         }
 
@@ -119,11 +130,11 @@ export function createToolParameters(inputSchema: any): TSchema {
 
   // If the inputSchema is already a proper object schema, convert it
   if (inputSchema.type === "object") {
-    return convertJsonSchemaToTypeBox(inputSchema);
+    return convertJsonSchemaToTypeBox(inputSchema, 0);
   }
 
   // If it's not an object, wrap it in an object
   return Type.Object({
-    input: convertJsonSchemaToTypeBox(inputSchema)
+    input: convertJsonSchemaToTypeBox(inputSchema, 0)
   });
 }
