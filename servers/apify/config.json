@@ -1,0 +1,7 @@
+{
+  "transport": "streamable-http",
+  "url": "https://mcp.apify.com",
+  "headers": {
+    "Authorization": "Bearer ${APIFY_TOKEN}"
+  }
+}

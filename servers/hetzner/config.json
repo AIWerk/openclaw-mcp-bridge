@@ -1,0 +1,7 @@
+{
+  "transport": "stdio",
+  "command": "mcp-hetzner",
+  "env": {
+    "HCLOUD_TOKEN": "${HETZNER_API_TOKEN}"
+  }
+}

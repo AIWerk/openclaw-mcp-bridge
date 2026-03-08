@@ -1,0 +1,7 @@
+{
+  "transport": "stdio",
+  "command": "hostinger-api-mcp",
+  "env": {
+    "API_TOKEN": "${HOSTINGER_API_TOKEN}"
+  }
+}

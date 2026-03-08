@@ -278,6 +278,82 @@ journalctl --user -u openclaw-gateway.service | grep mcp-client
 | `types.ts` | TypeScript interfaces |
 | `openclaw.plugin.json` | Plugin metadata + config schema |
 
+## Server Catalog
+
+This plugin includes a server installer system with pre-configured setups for popular MCP servers. Each server in the `servers/` directory comes with:
+
+- `config.json` — OpenClaw configuration ready to merge
+- `install.sh` — Setup script for dependencies
+- `env_vars` — Required environment variables list
+- `README.md` — Server description and usage
+
+### Using the installer
+
+**List available servers:**
+```bash
+./list-servers.sh
+```
+
+**Install a server:**
+```bash
+./install-server.sh <server-name>
+```
+
+**Preview what would happen:**
+```bash
+./install-server.sh <server-name> --dry-run
+```
+
+Example:
+```bash
+cd ~/.openclaw/extensions/mcp-client
+./list-servers.sh
+./install-server.sh apify
+openclaw gateway restart
+```
+
+The installer will:
+1. Run the server's installation script
+2. Check for required environment variables in `~/.openclaw/.env`
+3. Prompt for missing tokens/keys
+4. Merge the configuration into `~/.openclaw/openclaw.json`
+5. Tell you to restart the gateway
+
+### Available servers
+
+| Server | Transport | Tools | Description |
+|---|---|---|---|
+| **apify** | streamable-http | 8 | Web scraping and automation platform |
+| **hetzner** | stdio | 30 | Hetzner Cloud infrastructure management |
+| **hostinger** | stdio | 119 | Web hosting and domain management |
+| **notion** | stdio | 6+ | Official Notion workspace integration |
+| **filesystem** | stdio | 6+ | Local file system access |
+
+### Contributing new servers
+
+To add a new MCP server to the catalog:
+
+1. **Create the server directory:**
+   ```bash
+   mkdir servers/my-server
+   ```
+
+2. **Add the required files:**
+   - `config.json` — OpenClaw config (with `${VARIABLE}` substitution)
+   - `install.sh` — Installation steps (make executable)
+   - `env_vars` — Required variables, one per line
+   - `README.md` — Brief description and setup instructions
+
+3. **Test the installer:**
+   ```bash
+   ./install-server.sh my-server --dry-run
+   ./install-server.sh my-server
+   ```
+
+4. **Submit a Pull Request** with your new server directory.
+
+The installer scripts handle JSON merging, environment variable checking, and configuration validation automatically.
+
 ## Uninstall
 
 ```bash
