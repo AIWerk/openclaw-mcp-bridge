@@ -289,13 +289,15 @@ This plugin includes a server installer system with pre-configured setups for po
 
 ### Available servers
 
-| Server | Transport | Tools | Description |
-|---|---|---|---|
-| [apify](servers/apify/) | streamable-http | 8 | Web scraping and automation (search actors, call actors, fetch docs) |
-| [hetzner](servers/hetzner/) | stdio | 30 | Cloud infrastructure (servers, volumes, firewalls, SSH keys) |
-| [hostinger](servers/hostinger/) | stdio | 119 | Web hosting management (domains, hosting, emails) |
-| [notion](servers/notion/) | stdio | — | Notion workspace (pages, databases, blocks) |
-| [filesystem](servers/filesystem/) | stdio | — | Local file access (read, write, manage files) |
+| Server | Transport | Tools | Install | Token |
+|---|---|---|---|---|
+| [apify](servers/apify/) | streamable-http | 8 | Hosted — nothing to install | [Get token](https://console.apify.com/account/integrations) |
+| [hetzner](servers/hetzner/) | stdio | 30 | `pip install git+https://github.com/dkruyt/mcp-hetzner.git` | [Get token](https://console.hetzner.cloud) → Security → API Tokens |
+| [hostinger](servers/hostinger/) | stdio | 119 | `npm install -g hostinger-api-mcp` | Hostinger dashboard → API Token |
+| [notion](servers/notion/) | stdio | — | Uses npx (auto-download) | [Create integration](https://www.notion.so/my-integrations) |
+| [filesystem](servers/filesystem/) | stdio | — | Uses npx (auto-download) | No token needed |
+
+Or use the installer for any of these: `./install-server.sh apify`
 
 ### Using the installer
 
