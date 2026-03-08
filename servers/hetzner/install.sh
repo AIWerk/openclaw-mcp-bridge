@@ -215,10 +215,16 @@ PY
 
 echo "Updated ${OPENCLAW_JSON} for server ${SERVER_NAME}"
 
-systemctl --user restart openclaw-gateway 2>/dev/null || echo "Restart gateway manually"
-sleep 5
-if journalctl --user -u openclaw-gateway --since "10 sec ago" --no-pager 2>/dev/null | grep -qi "$SERVER_NAME"; then
-  echo "${SERVER_TITLE} server appears in recent gateway logs."
+echo ""
+read -r -p "Restart gateway now? [Y/n] " RESTART_ANSWER
+if [ -z "$RESTART_ANSWER" ] || [ "$RESTART_ANSWER" = "Y" ] || [ "$RESTART_ANSWER" = "y" ]; then
+  systemctl --user restart openclaw-gateway 2>/dev/null || echo "⚠️  Could not restart automatically. Run: systemctl --user restart openclaw-gateway"
+  sleep 5
+  if journalctl --user -u openclaw-gateway --since "10 sec ago" --no-pager 2>/dev/null | grep -qi "$SERVER_NAME"; then
+    echo "✅ ${SERVER_TITLE} MCP Server installed and running!"
+  else
+    echo "✅ Installed. Check gateway logs to verify: journalctl --user -u openclaw-gateway -f"
+  fi
 else
-  echo "${SERVER_TITLE} install completed, but no recent log match found. Verify gateway logs manually."
+  echo "⏭️  Skipped restart. Run manually: systemctl --user restart openclaw-gateway"
 fi
