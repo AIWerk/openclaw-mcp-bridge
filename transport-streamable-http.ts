@@ -212,18 +212,20 @@ export class StreamableHttpTransport implements McpTransport {
       return;
     }
 
-    const headers = this.resolveHeaders(this.config.headers || {});
     try {
-      const optionsResponse = await fetch(this.config.url, { method: "OPTIONS", headers });
+      // OPTIONS preflight without auth headers (standard CORS behavior)
+      const optionsResponse = await fetch(this.config.url, { method: "OPTIONS" });
       if (optionsResponse.ok) {
         return;
       }
+      // Fallback: HEAD with auth headers
+      const headers = this.resolveHeaders(this.config.headers || {});
       const headResponse = await fetch(this.config.url, { method: "HEAD", headers });
       if (!headResponse.ok) {
-        this.logger.warn(`[mcp-client] Streamable HTTP probe warning for ${this.config.url}: OPTIONS ${optionsResponse.status}, HEAD ${headResponse.status}`);
+        this.logger.warn(`[mcp-client] Streamable HTTP server probe: OPTIONS ${optionsResponse.status}, HEAD ${headResponse.status} (non-blocking, connection continues)`);
       }
     } catch (error: any) {
-      this.logger.warn(`[mcp-client] Streamable HTTP probe warning for ${this.config.url}: ${error?.message || error}`);
+      this.logger.warn(`[mcp-client] Streamable HTTP server probe failed (non-blocking): ${error?.message || error}`);
     }
   }
 

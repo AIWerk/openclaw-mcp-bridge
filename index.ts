@@ -185,7 +185,7 @@ export default function activate(api: any) {
         capabilities: {},
         clientInfo: {
           name: "openclaw-mcp-bridge",
-          version: "1.3.4"
+          version: "1.4.0"
         }
       }
     };
