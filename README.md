@@ -287,6 +287,16 @@ This plugin includes a server installer system with pre-configured setups for po
 - `env_vars` — Required environment variables list
 - `README.md` — Server description and usage
 
+### Available servers
+
+| Server | Transport | Tools | Description |
+|---|---|---|---|
+| [apify](servers/apify/) | streamable-http | 8 | Web scraping and automation (search actors, call actors, fetch docs) |
+| [hetzner](servers/hetzner/) | stdio | 30 | Cloud infrastructure (servers, volumes, firewalls, SSH keys) |
+| [hostinger](servers/hostinger/) | stdio | 119 | Web hosting management (domains, hosting, emails) |
+| [notion](servers/notion/) | stdio | — | Notion workspace (pages, databases, blocks) |
+| [filesystem](servers/filesystem/) | stdio | — | Local file access (read, write, manage files) |
+
 ### Using the installer
 
 **List available servers:**
