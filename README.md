@@ -5,7 +5,6 @@ Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) ser
 **Tested in production with:**
 - [Apify](https://mcp.apify.com) — 8 tools (web scraping, actor management) via Streamable HTTP
 - [Hetzner Cloud](https://github.com/dkruyt/mcp-hetzner) — 30 tools (server/volume/firewall management) via Stdio
-- [Notion](https://www.npmjs.com/package/@notionhq/notion-mcp-server) — 22 tools (pages, databases, blocks) via Stdio
 - [Hostinger](https://www.npmjs.com/package/hostinger-api-mcp) — 119 tools (hosting management) via Stdio
 
 ## Features
@@ -134,22 +133,7 @@ pip install git+https://github.com/dkruyt/mcp-hetzner.git
 [mcp-client] Server hetzner initialized, registered 30 tools
 ```
 
-### Example 3: Notion (Stdio)
 
-```json
-{
-  "servers": {
-    "notion": {
-      "transport": "stdio",
-      "command": "npx",
-      "args": ["-y", "@notionhq/notion-mcp-server"],
-      "env": {
-        "NOTION_API_KEY": "${NOTION_API_KEY}"
-      }
-    }
-  }
-}
-```
 
 ## Configuration Reference
 
@@ -160,7 +144,7 @@ All server configs go under `plugins.entries.mcp-client.config.servers` in `open
 | Transport | Use case | Example servers |
 |---|---|---|
 | **`streamable-http`** | Remote API with single POST endpoint | Apify, Smithery Connect |
-| **`stdio`** | Local subprocess, npm packages | Notion, Hetzner, Hostinger |
+| **`stdio`** | Local subprocess, npm packages | Hetzner, Hostinger |
 | **`sse`** | Remote Server-Sent Events (legacy) | Custom MCP servers |
 
 ### Server config options
@@ -281,7 +265,6 @@ This plugin includes a server installer system with pre-configured setups for po
 | [apify](servers/apify/) | streamable-http | 8 | Hosted — nothing to install | [Get token](https://console.apify.com/account/integrations) |
 | [hetzner](servers/hetzner/) | stdio | 30 | `pip install git+https://github.com/dkruyt/mcp-hetzner.git` | [Get token](https://console.hetzner.cloud) → Security → API Tokens |
 | [hostinger](servers/hostinger/) | stdio | 119 | `npm install -g hostinger-api-mcp` | Hostinger dashboard → API Token |
-| [notion](servers/notion/) | stdio | — | Uses npx (auto-download) | [Create integration](https://www.notion.so/my-integrations) |
 
 Or use the installer for any of these: `./install-server.sh apify`
 
@@ -324,7 +307,6 @@ The installer will:
 | **apify** | streamable-http | 8 | Web scraping and automation platform |
 | **hetzner** | stdio | 30 | Hetzner Cloud infrastructure management |
 | **hostinger** | stdio | 119 | Web hosting and domain management |
-| **notion** | stdio | 6+ | Official Notion workspace integration |
 
 ### Contributing new servers
 
