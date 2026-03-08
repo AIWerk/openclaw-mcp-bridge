@@ -30,9 +30,8 @@ export class SseTransport implements McpTransport {
     // Start event stream in background (it runs forever)
     const connectionTimeout = this.clientConfig.connectionTimeoutMs || 10000;
     const streamReady = new Promise<void>((resolve, reject) => {
-      this._onEndpointReceived = resolve;
-      // Timeout if endpoint not received within connectionTimeout
-      setTimeout(() => reject(new Error("SSE endpoint URL not received within timeout")), connectionTimeout);
+      const timer = setTimeout(() => reject(new Error("SSE endpoint URL not received within timeout")), connectionTimeout);
+      this._onEndpointReceived = () => { clearTimeout(timer); resolve(); };
     });
 
     // Fire and forget the stream reader
@@ -188,11 +187,14 @@ export class SseTransport implements McpTransport {
       ...this.config.headers,
       "Content-Type": "application/json"
     });
-    await fetch(this.endpointUrl!, {
+    const response = await fetch(this.endpointUrl!, {
       method: "POST",
       headers,
       body: JSON.stringify(notification)
     });
+    if (!response.ok) {
+      this.logger.warn(`[mcp-client] SSE notification got HTTP ${response.status}`);
+    }
   }
 
   async sendRequest(request: McpRequest): Promise<McpResponse> {

@@ -151,6 +151,8 @@ Paste this into your `openclaw.json` under `plugins.entries.mcp-client.config`, 
 
 > **Note:** If OpenClaw already has a native plugin for a service, prefer the native plugin — it's faster and better integrated. Use this plugin for servers without native OpenClaw support.
 
+> **Streamable HTTP:** This transport expects single JSON-RPC responses per request. Servers using chunked/streaming responses may not work correctly. SSE and stdio are the most thoroughly tested transports.
+
 ## File structure
 
 | File | Purpose |

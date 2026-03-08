@@ -48,28 +48,42 @@ export default function activate(api: any) {
       registeredToolNames: []
     };
 
-    // Reconnection callback that re-initializes everything
-    const onReconnected = async () => {
+    // Refresh lock to prevent concurrent re-initialization (reconnect + tools/list_changed race)
+    let refreshInProgress = false;
+    let refreshQueued = false;
+
+    const refreshConnection = async () => {
+      if (refreshInProgress) {
+        refreshQueued = true;
+        api.logger.info(`[mcp-client] Refresh already in progress for ${name}, queuing`);
+        return;
+      }
+      refreshInProgress = true;
       try {
-        api.logger.info(`[mcp-client] Re-initializing server after reconnection: ${name}`);
+        api.logger.info(`[mcp-client] Re-initializing server: ${name}`);
         connection.isInitialized = false;
         connection.tools = [];
         
-        // Re-initialize the MCP protocol
         await initializeProtocol(connection);
-        
-        // Re-discover available tools
         await discoverTools(connection);
-        
-        // Re-register tools with OpenClaw
         registerServerTools(connection);
 
         connection.isInitialized = true;
-        api.logger.info(`[mcp-client] Server ${name} re-initialized after reconnection, registered ${connection.tools.length} tools`);
+        api.logger.info(`[mcp-client] Server ${name} re-initialized, registered ${connection.tools.length} tools`);
       } catch (error) {
-        api.logger.error(`[mcp-client] Failed to re-initialize server ${name} after reconnection:`, error);
+        api.logger.error(`[mcp-client] Failed to re-initialize server ${name}:`, error);
+      } finally {
+        refreshInProgress = false;
+        if (refreshQueued) {
+          refreshQueued = false;
+          api.logger.info(`[mcp-client] Processing queued refresh for ${name}`);
+          await refreshConnection();
+        }
       }
     };
+
+    // Used by both reconnect and notifications/tools/list_changed
+    const onReconnected = refreshConnection;
 
     // Create appropriate transport with reconnection callback
     if (serverConfig.transport === "sse") {
@@ -118,7 +132,7 @@ export default function activate(api: any) {
         capabilities: {},
         clientInfo: {
           name: "openclaw-mcp-client",
-          version: "1.3.2"
+          version: "1.3.3"
         }
       }
     };

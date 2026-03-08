@@ -7,6 +7,8 @@ export interface McpServerConfig {
   command?: string;
   args?: string[];
   env?: Record<string, string>;
+  // Stdio framing override (default: auto-detect from first message)
+  framing?: "auto" | "lsp" | "newline";
 }
 
 export interface McpClientConfig {

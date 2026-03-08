@@ -51,7 +51,7 @@ export class StdioTransport implements McpTransport {
       throw new Error("Failed to create process pipes");
     }
 
-    this.framingMode = "auto";
+    this.framingMode = this.config.framing || "auto";
     this.stdoutBuffer = Buffer.alloc(0);
     this.process.stdout.on("data", (data: Buffer) => {
       this.stdoutBuffer = Buffer.concat([this.stdoutBuffer, data]);
