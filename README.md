@@ -4,7 +4,7 @@ Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) ser
 
 ## Features
 
-- **SSE + Stdio transports** — connect to remote (HTTP SSE) or local (subprocess) MCP servers
+- **Three transports** — SSE, Stdio, and Streamable HTTP (for Smithery Connect, Swiggy, Zomato, etc.)
 - **Auto-discovery** — `tools/list` → all tools registered as native OpenClaw tools
 - **Schema conversion** — JSON Schema → TypeBox, with multi-fallback import strategy
 - **Reconnection** — auto-reconnect with full protocol re-initialization + tool re-registration
@@ -57,6 +57,25 @@ Edit `~/.openclaw/openclaw.json` → `plugins.entries.mcp-client.config.servers`
   }
 }
 ```
+
+### Streamable HTTP server (remote)
+
+```json
+{
+  "my-api": {
+    "transport": "streamable-http",
+    "url": "https://mcp.example.com/mcp",
+    "headers": {
+      "Authorization": "Bearer ${MY_TOKEN}"
+    }
+  }
+}
+```
+
+> **When to use which transport?**
+> - **SSE** — most common, classic MCP servers (Apify, custom servers)
+> - **Streamable HTTP** — newer transport, single POST endpoint (Smithery Connect, Swiggy, Zomato)
+> - **Stdio** — local servers running as subprocess (Notion, filesystem, GitHub)
 
 ### Full config options
 
@@ -114,6 +133,7 @@ See [MCP Server Registry](https://github.com/modelcontextprotocol/servers) for m
 | `index.ts` | Main plugin — server init, tool registration, execution |
 | `transport-sse.ts` | SSE transport (HTTP Server-Sent Events) |
 | `transport-stdio.ts` | Stdio transport (subprocess) |
+| `transport-streamable-http.ts` | Streamable HTTP transport (single POST endpoint) |
 | `schema-convert.ts` | JSON Schema → TypeBox conversion |
 | `types.ts` | TypeScript interfaces |
 | `openclaw.plugin.json` | Plugin metadata + config schema |
