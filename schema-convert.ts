@@ -4,7 +4,12 @@ type TypeBoxMod = { Type: any } | null;
 let cachedTypeBoxPromise: Promise<TypeBoxMod> | null = null;
 
 // Overridable loader for dependency injection (used by tests)
-export let typeBoxLoader: (() => Promise<TypeBoxMod>) | null = null;
+let typeBoxLoader: (() => Promise<TypeBoxMod>) | null = null;
+
+export function setTypeBoxLoader(loader: (() => Promise<TypeBoxMod>) | null): void {
+  typeBoxLoader = loader;
+  cachedTypeBoxPromise = null; // auto-reset cache
+}
 
 async function getTypeBox(): Promise<TypeBoxMod> {
   // If a test loader is set, always use it (bypass cache)

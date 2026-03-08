@@ -3,10 +3,8 @@ import assert from "node:assert/strict";
 import {
   convertJsonSchemaToTypeBox,
   createToolParameters,
-  typeBoxLoader,
-  resetTypeBoxCache
+  setTypeBoxLoader
 } from "../schema-convert.ts";
-import * as schemaConvert from "../schema-convert.ts";
 
 test("converts string schema", async () => {
   const schema = await convertJsonSchemaToTypeBox({ type: "string", minLength: 1 });
@@ -55,8 +53,7 @@ test("converts anyOf schema", async () => {
 
 test("falls back when TypeBox is missing", async () => {
   // Inject a loader that simulates missing TypeBox
-  schemaConvert.typeBoxLoader = async () => null;
-  resetTypeBoxCache();
+  setTypeBoxLoader(async () => null);
 
   try {
     const schema = await convertJsonSchemaToTypeBox({ type: "string" });
@@ -66,7 +63,6 @@ test("falls back when TypeBox is missing", async () => {
     assert.equal(params.type, "any");
   } finally {
     // Restore default loader
-    schemaConvert.typeBoxLoader = null;
-    resetTypeBoxCache();
+    setTypeBoxLoader(null);
   }
 });
