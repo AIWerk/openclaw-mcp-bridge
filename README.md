@@ -10,6 +10,7 @@ Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) ser
 - [Todoist](https://github.com/Doist/todoist-ai) — 27 tools (task/project management) via Stdio (npx)
 - [Tavily](https://tavily.com) — 5 tools (AI web search, extract, crawl, research) via Stdio (npx)
 - [Linear](https://linear.app) — issue & project tracking via Stdio (npx)
+- [Miro](https://miro.com) — whiteboard & visual collaboration via Stdio (npx)
 
 ## Features
 
@@ -184,7 +185,7 @@ All server configs go under `plugins.entries.mcp-client.config.servers` in `open
 | Transport | Use case | Example servers |
 |---|---|---|
 | **`streamable-http`** | Remote API with single POST endpoint | Apify, Smithery Connect |
-| **`stdio`** | Local subprocess, npm/Docker | GitHub, Hetzner, Hostinger, Todoist, Tavily, Linear |
+| **`stdio`** | Local subprocess, npm/Docker | GitHub, Hetzner, Hostinger, Todoist, Tavily, Linear, Miro |
 | **`sse`** | Remote Server-Sent Events (legacy) | Custom MCP servers |
 
 ### Server config options
@@ -292,6 +293,7 @@ Pre-configured setups for popular MCP servers. Each server in `servers/` include
 | [todoist](servers/todoist/) | stdio | 27 | `npm install -g linear-mcp` | [Get token](https://app.todoist.com/app/settings/integrations/developer) |
 | [tavily](servers/tavily/) | stdio | 5 | `npm install -g linear-mcp` | [Get key](https://app.tavily.com/home) (free: 1000 req/mo) |
 | [linear](servers/linear/) | stdio | 19 | `npm install -g linear-mcp` | [Get key](https://linear.app/settings/account/security) (free: 250 issues) |
+| [miro](servers/miro/) | stdio | TBD | Nothing — runs via `npx` | [Get token](https://miro.com/app/settings/user-profile/apps) (free plan works) |
 
 Use the installer: `./install-server.sh <server-name>` (or `--dry-run` to preview)
 
