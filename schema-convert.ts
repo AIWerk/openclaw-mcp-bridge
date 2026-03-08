@@ -55,9 +55,15 @@ try {
 }
 type TSchema = any;
 
+// Logger can be injected via setSchemaLogger(); defaults to console
+let schemaLogger: { warn: (...args: any[]) => void } = console;
+export function setSchemaLogger(logger: { warn: (...args: any[]) => void }): void {
+  schemaLogger = logger;
+}
+
 export function convertJsonSchemaToTypeBox(schema: any, depth = 0): TSchema {
   if (depth > 10) {
-    console.warn("[mcp-client] JSON schema depth limit exceeded (>10), falling back to Type.Any()");
+    schemaLogger.warn("[mcp-client] JSON schema depth limit exceeded (>10), falling back to Type.Any()");
     return Type.Any();
   }
 
@@ -97,7 +103,7 @@ export function convertJsonSchemaToTypeBox(schema: any, depth = 0): TSchema {
       if (schema.properties) {
         const propertyEntries = Object.entries(schema.properties);
         if (propertyEntries.length > 100) {
-          console.warn("[mcp-client] JSON schema object has too many properties (>100), falling back to Type.Any()");
+          schemaLogger.warn("[mcp-client] JSON schema object has too many properties (>100), falling back to Type.Any()");
           return Type.Any();
         }
 

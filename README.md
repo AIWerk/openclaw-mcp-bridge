@@ -159,11 +159,21 @@ Paste this into your `openclaw.json` under `plugins.entries.mcp-client.config`, 
 | `transport-sse.ts` | SSE transport (HTTP Server-Sent Events) |
 | `transport-stdio.ts` | Stdio transport (subprocess) |
 | `transport-streamable-http.ts` | Streamable HTTP transport (single POST endpoint) |
-| `schema-convert.ts` | JSON Schema → TypeBox conversion |
+| `schema-convert.ts` | JSON Schema → TypeBox conversion (safe subset — see note below) |
 | `types.ts` | TypeScript interfaces |
 | `openclaw.plugin.json` | Plugin metadata + config schema |
 | `install.sh` | Linux/macOS installer |
 | `install.ps1` | Windows PowerShell installer |
+
+## JSON Schema support
+
+The plugin converts MCP tool input schemas (JSON Schema) to TypeBox for OpenClaw's type system. This is a **safe, limited subset** — not a full JSON Schema implementation:
+
+- ✅ Supported: `string`, `number`, `integer`, `boolean`, `array`, `object`, `null`, `enum`, `required`
+- ⚠️ Falls back to `Type.Any()`: `anyOf`, `oneOf`, `allOf`, `$ref`, tuple arrays, complex compositions
+- 🛡️ Safety limits: max depth 10, max 100 properties per object (prevents recursion bombs)
+
+This means complex schemas won't crash the plugin — they'll just have looser input validation.
 
 ## Troubleshooting
 

@@ -9,10 +9,11 @@ import {
 import { SseTransport } from "./transport-sse.js";
 import { StdioTransport } from "./transport-stdio.js";
 import { StreamableHttpTransport } from "./transport-streamable-http.js";
-import { createToolParameters } from "./schema-convert.js";
+import { createToolParameters, setSchemaLogger } from "./schema-convert.js";
 
 export default function activate(api: any) {
   const config = (api.pluginConfig ?? {}) as McpClientConfig;
+  setSchemaLogger(api.logger);
   const connections = new Map<string, McpServerConnection>();
   
   if (!config.servers || Object.keys(config.servers).length === 0) {
@@ -117,7 +118,7 @@ export default function activate(api: any) {
         capabilities: {},
         clientInfo: {
           name: "openclaw-mcp-client",
-          version: "1.3.0"
+          version: "1.3.2"
         }
       }
     };

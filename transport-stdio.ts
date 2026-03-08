@@ -165,11 +165,22 @@ export class StdioTransport implements McpTransport {
     }
   }
 
+  private writeMessage(message: any): void {
+    const json = JSON.stringify(message);
+    if (this.framingMode === "lsp") {
+      const body = Buffer.from(json, "utf8");
+      this.process!.stdin!.write(`Content-Length: ${body.length}\r\n\r\n`);
+      this.process!.stdin!.write(body);
+    } else {
+      this.process!.stdin!.write(json + '\n');
+    }
+  }
+
   async sendNotification(notification: any): Promise<void> {
     if (!this.connected || !this.process?.stdin) {
       throw new Error("Stdio transport not connected");
     }
-    this.process.stdin.write(JSON.stringify(notification) + '\n');
+    this.writeMessage(notification);
   }
 
   async sendRequest(request: McpRequest): Promise<McpResponse> {
@@ -190,8 +201,7 @@ export class StdioTransport implements McpTransport {
       this.pendingRequests.set(id, { resolve, reject, timeout });
 
       try {
-        const messageStr = JSON.stringify(requestWithId) + '\n';
-        this.process!.stdin!.write(messageStr);
+        this.writeMessage(requestWithId);
       } catch (error) {
         clearTimeout(timeout);
         this.pendingRequests.delete(id);
@@ -324,7 +334,8 @@ export class StdioTransport implements McpTransport {
     if (this.backoffDelay <= 0) {
       this.backoffDelay = baseDelay;
     }
-    const reconnectInterval = this.backoffDelay;
+    const jitter = 0.5 + Math.random(); // 0.5x-1.5x jitter
+    const reconnectInterval = Math.round(this.backoffDelay * jitter);
     this.reconnectTimer = setTimeout(async () => {
       this.reconnectTimer = null;
       try {

@@ -198,7 +198,8 @@ export class StreamableHttpTransport implements McpTransport {
     if (this.backoffDelay <= 0) {
       this.backoffDelay = baseDelay;
     }
-    const reconnectInterval = this.backoffDelay;
+    const jitter = 0.5 + Math.random(); // 0.5x-1.5x jitter
+    const reconnectInterval = Math.round(this.backoffDelay * jitter);
     this.reconnectTimer = setTimeout(async () => {
       this.reconnectTimer = null;
       try {
