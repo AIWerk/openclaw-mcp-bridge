@@ -12,6 +12,7 @@ Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) ser
 - [Linear](https://linear.app) — issue & project tracking via Stdio (npx)
 - [Miro](https://miro.com) — whiteboard & visual collaboration via Stdio (npx)
 - [Stripe](https://stripe.com) — payments & billing via Stdio (npx) — **official server**
+- [Google Maps](https://developers.google.com/maps) — geocoding, places, directions via Stdio (npx) — **Anthropic reference server**
 
 ## Features
 
@@ -296,6 +297,7 @@ Pre-configured setups for popular MCP servers. Each server in `servers/` include
 | [linear](servers/linear/) | stdio | 19 | `npm install -g linear-mcp` | [Get key](https://linear.app/settings/account/security) (free: 250 issues) |
 | [miro](servers/miro/) | stdio | 6 | Nothing — runs via `npx` | [Get token](https://miro.com/app/settings/user-profile/apps) (free plan works) |
 | [stripe](servers/stripe/) | stdio | 28 | Nothing — runs via `npx` | [Get key](https://dashboard.stripe.com/apikeys) (test mode free) |
+| [google-maps](servers/google-maps/) | stdio | TBD | Nothing — runs via `npx` | [Get key](https://console.cloud.google.com/apis/credentials) (pay-as-you-go) |
 
 Use the installer: `./install-server.sh <server-name>` (or `--dry-run` to preview)
 
