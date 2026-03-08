@@ -7,6 +7,7 @@ Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) ser
 - [GitHub](https://github.com/github/github-mcp-server) — 41 tools (repos, issues, PRs, CI/CD) via Stdio (Docker)
 - [Hetzner Cloud](https://github.com/dkruyt/mcp-hetzner) — 30 tools (server/volume/firewall management) via Stdio
 - [Hostinger](https://www.npmjs.com/package/hostinger-api-mcp) — 119 tools (hosting management) via Stdio
+- [Todoist](https://github.com/Doist/todoist-ai) — 27 tools (task/project management) via Stdio (npx)
 
 ## Features
 
@@ -181,7 +182,7 @@ All server configs go under `plugins.entries.mcp-client.config.servers` in `open
 | Transport | Use case | Example servers |
 |---|---|---|
 | **`streamable-http`** | Remote API with single POST endpoint | Apify, Smithery Connect |
-| **`stdio`** | Local subprocess, npm/Docker | GitHub, Hetzner, Hostinger |
+| **`stdio`** | Local subprocess, npm/Docker | GitHub, Hetzner, Hostinger, Todoist |
 | **`sse`** | Remote Server-Sent Events (legacy) | Custom MCP servers |
 
 ### Server config options
@@ -286,6 +287,7 @@ Pre-configured setups for popular MCP servers. Each server in `servers/` include
 | [github](servers/github/) | stdio | 41 | `docker pull ghcr.io/github/github-mcp-server` | [Create PAT](https://github.com/settings/personal-access-tokens/new) |
 | [hetzner](servers/hetzner/) | stdio | 30 | `pip install git+https://github.com/dkruyt/mcp-hetzner.git` | [Get token](https://console.hetzner.cloud) → Security → API Tokens |
 | [hostinger](servers/hostinger/) | stdio | 119 | `npm install -g hostinger-api-mcp` | Hostinger dashboard → API Token |
+| [todoist](servers/todoist/) | stdio | 27 | Nothing — runs via `npx` | [Get token](https://app.todoist.com/app/settings/integrations/developer) |
 
 Use the installer: `./install-server.sh <server-name>` (or `--dry-run` to preview)
 
