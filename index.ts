@@ -8,6 +8,7 @@ import {
 } from "./types.js";
 import { SseTransport } from "./transport-sse.js";
 import { StdioTransport } from "./transport-stdio.js";
+import { StreamableHttpTransport } from "./transport-streamable-http.js";
 import { createToolParameters } from "./schema-convert.js";
 
 export default function activate(api: any) {
@@ -73,6 +74,8 @@ export default function activate(api: any) {
       transport = new SseTransport(serverConfig, config, api.logger, onReconnected);
     } else if (serverConfig.transport === "stdio") {
       transport = new StdioTransport(serverConfig, config, api.logger, onReconnected);
+    } else if (serverConfig.transport === "streamable-http") {
+      transport = new StreamableHttpTransport(serverConfig, config, api.logger, onReconnected);
     } else {
       throw new Error(`Unsupported transport: ${serverConfig.transport}`);
     }

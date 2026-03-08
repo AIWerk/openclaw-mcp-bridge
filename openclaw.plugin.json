@@ -13,8 +13,8 @@
           "properties": {
             "transport": {
               "type": "string",
-              "enum": ["sse", "stdio"],
-              "description": "Transport type: SSE (HTTP Server-Sent Events) or stdio (subprocess)"
+              "enum": ["sse", "stdio", "streamable-http"],
+              "description": "Transport type: SSE (HTTP Server-Sent Events), stdio (subprocess), or streamable-http (MCP Streamable HTTP)"
             },
             "url": {
               "type": "string",
@@ -53,6 +53,10 @@
             {
               "properties": { "transport": { "const": "stdio" } },
               "required": ["command"]
+            },
+            {
+              "properties": { "transport": { "const": "streamable-http" } },
+              "required": ["url"]
             }
           ]
         }

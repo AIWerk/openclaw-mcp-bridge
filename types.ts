@@ -1,5 +1,5 @@
 export interface McpServerConfig {
-  transport: "sse" | "stdio";
+  transport: "sse" | "stdio" | "streamable-http";
   // SSE transport
   url?: string;
   headers?: Record<string, string>;
