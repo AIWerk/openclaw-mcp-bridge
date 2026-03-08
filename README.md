@@ -290,10 +290,10 @@ Pre-configured setups for popular MCP servers. Each server in `servers/` include
 | [github](servers/github/) | stdio | 41 | `docker pull ghcr.io/github/github-mcp-server` | [Create PAT](https://github.com/settings/personal-access-tokens/new) |
 | [hetzner](servers/hetzner/) | stdio | 30 | `pip install git+https://github.com/dkruyt/mcp-hetzner.git` | [Get token](https://console.hetzner.cloud) → Security → API Tokens |
 | [hostinger](servers/hostinger/) | stdio | 119 | `npm install -g hostinger-api-mcp` | Hostinger dashboard → API Token |
-| [todoist](servers/todoist/) | stdio | 27 | `npm install -g linear-mcp` | [Get token](https://app.todoist.com/app/settings/integrations/developer) |
-| [tavily](servers/tavily/) | stdio | 5 | `npm install -g linear-mcp` | [Get key](https://app.tavily.com/home) (free: 1000 req/mo) |
+| [todoist](servers/todoist/) | stdio | 27 | Nothing — runs via `npx` | [Get token](https://app.todoist.com/app/settings/integrations/developer) |
+| [tavily](servers/tavily/) | stdio | 5 | Nothing — runs via `npx` | [Get key](https://app.tavily.com/home) (free: 1000 req/mo) |
 | [linear](servers/linear/) | stdio | 19 | `npm install -g linear-mcp` | [Get key](https://linear.app/settings/account/security) (free: 250 issues) |
-| [miro](servers/miro/) | stdio | TBD | Nothing — runs via `npx` | [Get token](https://miro.com/app/settings/user-profile/apps) (free plan works) |
+| [miro](servers/miro/) | stdio | 6 | Nothing — runs via `npx` | [Get token](https://miro.com/app/settings/user-profile/apps) (free plan works) |
 
 Use the installer: `./install-server.sh <server-name>` (or `--dry-run` to preview)
 
