@@ -155,10 +155,8 @@ pip install git+https://github.com/dkruyt/mcp-hetzner.git
 ```json
 {
   "servers": {
-    "filesystem": {
       "transport": "stdio",
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/user/documents"]
     }
   }
 }
@@ -173,7 +171,6 @@ All server configs go under `plugins.entries.mcp-client.config.servers` in `open
 | Transport | Use case | Example servers |
 |---|---|---|
 | **`streamable-http`** | Remote API with single POST endpoint | Apify, Smithery Connect |
-| **`stdio`** | Local subprocess, npm packages | Notion, Hetzner, GitHub, filesystem |
 | **`sse`** | Remote Server-Sent Events (legacy) | Custom MCP servers |
 
 ### Server config options
@@ -295,7 +292,6 @@ This plugin includes a server installer system with pre-configured setups for po
 | [hetzner](servers/hetzner/) | stdio | 30 | `pip install git+https://github.com/dkruyt/mcp-hetzner.git` | [Get token](https://console.hetzner.cloud) → Security → API Tokens |
 | [hostinger](servers/hostinger/) | stdio | 119 | `npm install -g hostinger-api-mcp` | Hostinger dashboard → API Token |
 | [notion](servers/notion/) | stdio | — | Uses npx (auto-download) | [Create integration](https://www.notion.so/my-integrations) |
-| [filesystem](servers/filesystem/) | stdio | — | Uses npx (auto-download) | No token needed |
 
 Or use the installer for any of these: `./install-server.sh apify`
 
@@ -339,7 +335,6 @@ The installer will:
 | **hetzner** | stdio | 30 | Hetzner Cloud infrastructure management |
 | **hostinger** | stdio | 119 | Web hosting and domain management |
 | **notion** | stdio | 6+ | Official Notion workspace integration |
-| **filesystem** | stdio | 6+ | Local file system access |
 
 ### Contributing new servers
 

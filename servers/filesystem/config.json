@@ -1,5 +1,0 @@
-{
-  "transport": "stdio",
-  "command": "npx",
-  "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/user/documents"]
-}

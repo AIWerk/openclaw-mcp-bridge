@@ -4,12 +4,8 @@ Official Notion integration for reading and managing your Notion workspace — p
 
 **Transport:** Stdio (npx, no install needed)
 
-## Tools
-- Search pages and databases
-- Read page content
-- Create and update pages
-- Query databases
-- Manage blocks
+## Tools (22)
+Full Notion API coverage: search, pages, databases, blocks, users, comments, and more.
 
 ## Installation
 
