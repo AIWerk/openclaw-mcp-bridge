@@ -211,7 +211,7 @@ All server configs go under `plugins.entries.mcp-client.config.servers` in `open
 
 | Option | Default | Description |
 |---|---|---|
-| `toolPrefix` | `true` | Prefix tool names with server name (e.g. `hetzner_list_servers`) |
+| `toolPrefix` | `"auto"` | Tool naming: `true` = always prefix, `false` = never prefix, `"auto"` = prefix only on collision |
 | `reconnectIntervalMs` | `30000` | Base reconnect interval (with 0.5x–1.5x jitter) |
 | `connectionTimeoutMs` | `10000` | Initial connection timeout |
 | `requestTimeoutMs` | `60000` | Per-request timeout for tool calls |

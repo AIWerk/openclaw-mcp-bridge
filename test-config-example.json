@@ -6,8 +6,8 @@
         "config": {
           "servers": {
             "apify": {
-              "transport": "sse",
-              "url": "https://mcp.apify.com/sse",
+              "transport": "streamable-http",
+              "url": "https://mcp.apify.com/mcp",
               "headers": {
                 "Authorization": "Bearer ${APIFY_TOKEN}"
               }

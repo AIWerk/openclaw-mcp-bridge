@@ -37,9 +37,7 @@ async function getTypeBox(): Promise<TypeBoxMod> {
   return cachedTypeBoxPromise;
 }
 
-export function resetTypeBoxCache(): void {
-  cachedTypeBoxPromise = null;
-}
+
 
 async function anyFallback(): Promise<TSchema> {
   const typeBox = await getTypeBox();
@@ -166,5 +164,3 @@ export async function createToolParameters(inputSchema: any): Promise<TSchema> {
     input: await convertJsonSchemaToTypeBox(inputSchema, 0)
   });
 }
-
-
