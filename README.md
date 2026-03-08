@@ -31,7 +31,7 @@ Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) ser
 ### Method 1: Clone (recommended)
 
 ```bash
-git clone https://github.com/AIWerk/openclaw-mcp-client.git \
+git clone https://github.com/AIWerk/openclaw-mcp-bridge.git \
   ~/.openclaw/extensions/mcp-client
 ```
 
@@ -39,15 +39,15 @@ git clone https://github.com/AIWerk/openclaw-mcp-client.git \
 
 ```bash
 # Review first:
-curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.sh | less
+curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-bridge/master/install.sh | less
 # Then run:
-curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.sh | bash
+curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-bridge/master/install.sh | bash
 ```
 
 ### Method 3: Windows (PowerShell)
 
 ```powershell
-irm https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.ps1 | iex
+irm https://raw.githubusercontent.com/AIWerk/openclaw-mcp-bridge/master/install.ps1 | iex
 ```
 
 ### After installation

@@ -1,6 +1,6 @@
 #!/bin/bash
 # OpenClaw MCP Client Plugin - Installer
-# Usage: curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.sh | bash
+# Usage: curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-bridge/master/install.sh | bash
 set -e
 
 PLUGIN_DIR="${HOME}/.openclaw/extensions/mcp-client"
@@ -15,7 +15,7 @@ if [ -d "$PLUGIN_DIR/.git" ]; then
 else
   echo "📥 Cloning plugin..."
   mkdir -p "$(dirname "$PLUGIN_DIR")"
-  git clone https://github.com/AIWerk/openclaw-mcp-client.git "$PLUGIN_DIR"
+  git clone https://github.com/AIWerk/openclaw-mcp-bridge.git "$PLUGIN_DIR"
 fi
 
 # 2. Add to openclaw.json if not already present
