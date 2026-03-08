@@ -57,6 +57,6 @@ Write-Host ""
 Write-Host "✅ MCP Client Plugin installed!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:"
-Write-Host "  1. Add MCP servers to config: openclaw config edit"
+Write-Host "  1. Add MCP servers to config: edit $env:USERPROFILE\.openclaw\openclaw.json"
 Write-Host "  2. Restart gateway: openclaw gateway restart"
 Write-Host ""

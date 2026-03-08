@@ -68,7 +68,7 @@ echo "✅ MCP Client Plugin installed!"
 echo ""
 echo "Next steps:"
 echo "  1. Add MCP servers to your config:"
-echo "     openclaw config edit  (or edit ~/.openclaw/openclaw.json)"
+echo "     nano ~/.openclaw/openclaw.json"
 echo ""
 echo "  Example - Filesystem server (no auth needed):"
 echo '     "servers": {'
