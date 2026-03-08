@@ -42,6 +42,11 @@
               "patternProperties": {
                 "^.*$": { "type": "string" }
               }
+            },
+            "framing": {
+              "type": "string",
+              "enum": ["auto", "lsp", "newline"],
+              "description": "Optional stdio framing mode override (default: auto)"
             }
           },
           "required": ["transport"],

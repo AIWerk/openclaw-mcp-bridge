@@ -13,6 +13,7 @@ export class StdioTransport implements McpTransport {
   private backoffDelay = 0;
   private framingMode: "auto" | "lsp" | "newline" = "auto";
   private stdoutBuffer = Buffer.alloc(0);
+  private isShuttingDown = false;
 
   constructor(config: McpServerConfig, clientConfig: any, logger: any, onReconnected?: () => Promise<void>) {
     this.config = config;
@@ -27,6 +28,7 @@ export class StdioTransport implements McpTransport {
     }
 
     try {
+      this.isShuttingDown = false;
       await this.startProcess();
       this.connected = true;
       this.backoffDelay = this.clientConfig.reconnectIntervalMs || 30000;
@@ -83,7 +85,9 @@ export class StdioTransport implements McpTransport {
       }
       this.pendingRequests.clear();
 
-      this.scheduleReconnect();
+      if (!this.isShuttingDown) {
+        this.scheduleReconnect();
+      }
     });
 
     this.process.on("error", (error) => {
@@ -98,7 +102,9 @@ export class StdioTransport implements McpTransport {
       }
       this.pendingRequests.clear();
 
-      this.scheduleReconnect();
+      if (!this.isShuttingDown) {
+        this.scheduleReconnect();
+      }
     });
 
     const connectionTimeout = this.clientConfig.connectionTimeoutMs || 5000;
@@ -149,6 +155,11 @@ export class StdioTransport implements McpTransport {
           this.logger.error("[mcp-client] Failed to refresh tools after list_changed notification:", error);
         });
       }
+      return;
+    }
+
+    if (!message.id && message.method) {
+      this.logger.debug(`[mcp-client] Unhandled stdio notification: ${message.method}`);
       return;
     }
 
@@ -357,6 +368,7 @@ export class StdioTransport implements McpTransport {
   }
 
   async disconnect(): Promise<void> {
+    this.isShuttingDown = true;
     this.connected = false;
     
     if (this.reconnectTimer) {
@@ -364,9 +376,23 @@ export class StdioTransport implements McpTransport {
       this.reconnectTimer = null;
     }
 
-    if (this.process) {
-      this.process.kill();
-      this.process = null;
+    const activeProcess = this.process;
+    if (activeProcess) {
+      if (activeProcess.stdin && !activeProcess.stdin.destroyed) {
+        try {
+          this.writeMessage({
+            jsonrpc: "2.0",
+            method: "close"
+          });
+        } catch (error) {
+          this.logger.debug("[mcp-client] Failed to send close notification during stdio disconnect");
+        }
+      }
+
+      await this.terminateProcessGracefully(activeProcess);
+      if (this.process === activeProcess) {
+        this.process = null;
+      }
     }
 
     // Reject all pending requests
@@ -379,5 +405,47 @@ export class StdioTransport implements McpTransport {
 
   isConnected(): boolean {
     return this.connected && this.process !== null;
+  }
+
+  private async terminateProcessGracefully(proc: ChildProcess): Promise<void> {
+    if (proc.exitCode !== null || proc.killed) {
+      return;
+    }
+
+    await new Promise<void>((resolve) => {
+      let done = false;
+      let forceKillTimer: NodeJS.Timeout | null = null;
+
+      const finish = () => {
+        if (done) return;
+        done = true;
+        if (forceKillTimer) {
+          clearTimeout(forceKillTimer);
+        }
+        proc.off("exit", onExit);
+        resolve();
+      };
+
+      const onExit = () => finish();
+      proc.once("exit", onExit);
+
+      try {
+        proc.kill("SIGINT");
+      } catch (error) {
+        finish();
+        return;
+      }
+
+      forceKillTimer = setTimeout(() => {
+        if (proc.exitCode === null && !proc.killed) {
+          try {
+            proc.kill("SIGTERM");
+          } catch (error) {
+            // Ignore kill errors during shutdown.
+          }
+        }
+        setTimeout(finish, 200);
+      }, 2000);
+    });
   }
 }

@@ -25,6 +25,9 @@ export class SseTransport implements McpTransport {
       throw new Error("SSE transport requires URL");
     }
 
+    this.warnIfNonTlsRemoteUrl(this.config.url);
+    this.resolveHeaders(this.config.headers || {});
+
     this.sseAbortController = new AbortController();
     
     // Start event stream in background (it runs forever)
@@ -166,6 +169,11 @@ export class SseTransport implements McpTransport {
       return;
     }
 
+    if (!message.id && message.method) {
+      this.logger.debug(`[mcp-client] Unhandled SSE notification: ${message.method}`);
+      return;
+    }
+
     if (message.id && this.pendingRequests.has(message.id)) {
       const pending = this.pendingRequests.get(message.id)!;
       clearTimeout(pending.timeout);
@@ -259,13 +267,28 @@ export class SseTransport implements McpTransport {
       resolved[key] = value.replace(/\$\{(\w+)\}/g, (_, envVar) => {
         const envValue = process.env[envVar];
         if (envValue === undefined) {
-          this.logger.warn(`[mcp-client] Missing environment variable "${envVar}" while resolving header "${key}"`);
-          return "";
+          throw new Error(`[mcp-client] Missing required environment variable "${envVar}" while resolving header "${key}"`);
         }
         return envValue;
       });
     }
     return resolved;
+  }
+
+  private warnIfNonTlsRemoteUrl(rawUrl: string): void {
+    try {
+      const parsed = new URL(rawUrl);
+      if (parsed.protocol !== "http:") {
+        return;
+      }
+      const host = parsed.hostname;
+      if (host === "localhost" || host === "127.0.0.1" || host === "::1") {
+        return;
+      }
+      this.logger.warn(`[mcp-client] WARNING: Non-TLS connection to ${host} — credentials may be transmitted in plaintext`);
+    } catch (error) {
+      // Ignore malformed URL here; connect() validation will fail later.
+    }
   }
 
   private scheduleReconnect(): void {

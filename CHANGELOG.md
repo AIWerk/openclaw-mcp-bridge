@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.4.0] - 2026-03-08
+
+### Changed
+- `index.ts`: Switched server initialization from serial startup to parallel `Promise.allSettled()` with per-server success/failure summary logging.
+- `index.ts`: Added global cross-connection tool name collision tracking. When `toolPrefix: false` collides globally, tool names are auto-prefixed with server name and warnings are logged.
+- `transport-sse.ts`, `transport-streamable-http.ts`: Added warning for non-localhost `http://` endpoints: `WARNING: Non-TLS connection to <host> — credentials may be transmitted in plaintext`.
+- `transport-stdio.ts`: Implemented graceful shutdown in `disconnect()` by attempting JSON-RPC `close` notification, then `SIGINT`, then `SIGTERM` fallback after 2 seconds.
+- `transport-sse.ts`, `transport-stdio.ts`, `transport-streamable-http.ts`: Added debug logging for unhandled MCP notifications.
+- `transport-sse.ts`, `transport-streamable-http.ts`: Header environment variable resolution now treats missing `${VAR}` values as required errors (throws at startup), instead of silently substituting empty strings.
+- `transport-streamable-http.ts`: `connect()` now performs a lightweight server probe (`OPTIONS`, fallback `HEAD`) and logs warnings on probe failures without blocking connection setup.
+- `openclaw.plugin.json`: Added `framing` schema property (`auto | lsp | newline`) for stdio server configuration parity with `types.ts`.
+
 ## [1.3.0] - 2026-03-08
 
 ### Changed

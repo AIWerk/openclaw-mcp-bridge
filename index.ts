@@ -15,6 +15,7 @@ export default function activate(api: any) {
   const config = (api.pluginConfig ?? {}) as McpClientConfig;
   setSchemaLogger(api.logger);
   const connections = new Map<string, McpServerConnection>();
+  const globalRegisteredToolNames = new Set<string>();
   
   if (!config.servers || Object.keys(config.servers).length === 0) {
     api.logger.info("[mcp-client] No servers configured, plugin inactive");
@@ -25,15 +26,66 @@ export default function activate(api: any) {
   initializeServers();
 
   async function initializeServers() {
-    for (const [serverName, serverConfig] of Object.entries(config.servers)) {
-      try {
+    const serverEntries = Object.entries(config.servers);
+    const results = await Promise.allSettled(
+      serverEntries.map(async ([serverName, serverConfig]) => {
         api.logger.info(`[mcp-client] Connecting to server: ${serverName} (${serverConfig.transport}: ${serverConfig.url || serverConfig.command})`);
         await initializeServer(serverName, serverConfig);
-      } catch (error: any) {
-        api.logger.error(`[mcp-client] Failed to initialize server ${serverName}:`, error?.message || error);
-        // Continue with other servers, don't fail completely
+        return serverName;
+      })
+    );
+
+    let succeeded = 0;
+    let failed = 0;
+
+    results.forEach((result, idx) => {
+      const serverName = serverEntries[idx][0];
+      if (result.status === "fulfilled") {
+        succeeded += 1;
+        api.logger.info(`[mcp-client] Startup success: ${serverName}`);
+      } else {
+        failed += 1;
+        const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
+        api.logger.error(`[mcp-client] Startup failed: ${serverName}: ${reason}`);
       }
+    });
+
+    api.logger.info(`[mcp-client] Server startup complete: ${succeeded} succeeded, ${failed} failed`);
+  }
+
+  function isNameTaken(name: string, localNames: Set<string>): boolean {
+    return localNames.has(name) || globalRegisteredToolNames.has(name);
+  }
+
+  function pickRegisteredToolName(connection: McpServerConnection, mcpTool: McpTool, localNames: Set<string>): string {
+    const baseName = config.toolPrefix !== false
+      ? `${connection.name}_${mcpTool.name}`
+      : mcpTool.name;
+    const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
+
+    let candidate = sanitizedBaseName;
+    if (config.toolPrefix === false && isNameTaken(candidate, localNames)) {
+      const prefixedName = `${connection.name}_${mcpTool.name}`.replace(/[^a-zA-Z0-9_]/g, "_");
+      api.logger.warn(
+        `[mcp-client] Global tool name collision detected for "${sanitizedBaseName}". Auto-prefixing with server name: "${prefixedName}"`
+      );
+      candidate = prefixedName;
     }
+
+    const uniqueBase = candidate;
+    let suffix = 2;
+    while (isNameTaken(candidate, localNames)) {
+      candidate = `${uniqueBase}_${suffix}`;
+      suffix += 1;
+    }
+
+    if (candidate !== uniqueBase) {
+      api.logger.warn(
+        `[mcp-client] Tool name collision after sanitization on server ${connection.name}: "${uniqueBase}" -> "${candidate}"`
+      );
+    }
+
+    return candidate;
   }
 
   async function initializeServer(name: string, serverConfig: McpServerConfig): Promise<void> {
@@ -119,6 +171,7 @@ export default function activate(api: any) {
     } catch (error) {
       api.logger.error(`[mcp-client] Failed to initialize server ${name}:`, error);
       connections.delete(name);
+      throw error;
     }
   }
 
@@ -181,28 +234,15 @@ export default function activate(api: any) {
   }
 
   function registerServerTools(connection: McpServerConnection): void {
+    for (const oldName of connection.registeredToolNames) {
+      globalRegisteredToolNames.delete(oldName);
+    }
+
     const usedToolNames = new Set<string>();
     const nextToolRegistrations = connection.tools.map((mcpTool) => {
-      const toolName = config.toolPrefix !== false
-        ? `${connection.name}_${mcpTool.name}`
-        : mcpTool.name;
-      const sanitizedBaseName = toolName.replace(/[^a-zA-Z0-9_]/g, "_");
-      let uniqueName = sanitizedBaseName;
-      let suffix = 2;
-
-      while (usedToolNames.has(uniqueName)) {
-        uniqueName = `${sanitizedBaseName}_${suffix}`;
-        suffix += 1;
-      }
-
-      if (uniqueName !== sanitizedBaseName) {
-        api.logger.warn(
-          `[mcp-client] Tool name collision after sanitization on server ${connection.name}: "${sanitizedBaseName}" -> "${uniqueName}"`
-        );
-      }
-
-      usedToolNames.add(uniqueName);
-      return { mcpTool, registeredName: uniqueName };
+      const registeredName = pickRegisteredToolName(connection, mcpTool, usedToolNames);
+      usedToolNames.add(registeredName);
+      return { mcpTool, registeredName };
     });
     const nextToolNames = nextToolRegistrations.map((entry) => entry.registeredName);
 
@@ -232,6 +272,7 @@ export default function activate(api: any) {
       try {
         const actualName = registerMcpTool(connection, mcpTool, registeredName);
         connection.registeredToolNames.push(actualName);
+        globalRegisteredToolNames.add(actualName);
       } catch (error) {
         api.logger.error(`[mcp-client] Failed to register tool ${mcpTool.name}:`, error);
       }
@@ -346,6 +387,7 @@ export default function activate(api: any) {
         for (const toolName of connection.registeredToolNames) {
           try {
             api.unregisterTool(toolName);
+            globalRegisteredToolNames.delete(toolName);
           } catch (error) {
             api.logger.warn(`[mcp-client] Failed to unregister tool ${toolName} during deactivation:`, error);
           }
@@ -358,6 +400,7 @@ export default function activate(api: any) {
       }
     }
     connections.clear();
+    globalRegisteredToolNames.clear();
   });
 
   api.logger.info(`[mcp-client] Plugin activated with ${Object.keys(config.servers).length} servers configured`);

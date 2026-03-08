@@ -23,8 +23,10 @@ export class StreamableHttpTransport implements McpTransport {
       throw new Error("Streamable HTTP transport requires URL");
     }
 
-    // No connectivity test needed — initializeProtocol will send the
-    // MCP "initialize" request which validates the connection.
+    this.warnIfNonTlsRemoteUrl(this.config.url);
+    this.resolveHeaders(this.config.headers || {});
+    await this.probeServer();
+
     this.connected = true;
     this.backoffDelay = this.clientConfig.reconnectIntervalMs || 30000;
     this.logger.info(`[mcp-client] Streamable HTTP transport ready for ${this.config.url}`);
@@ -129,6 +131,11 @@ export class StreamableHttpTransport implements McpTransport {
       return;
     }
 
+    if (!message.id && message.method) {
+      this.logger.debug(`[mcp-client] Unhandled streamable-http notification: ${message.method}`);
+      return;
+    }
+
     if (message.id && this.pendingRequests.has(message.id)) {
       const pending = this.pendingRequests.get(message.id)!;
       clearTimeout(pending.timeout);
@@ -192,13 +199,48 @@ export class StreamableHttpTransport implements McpTransport {
       resolved[key] = value.replace(/\$\{(\w+)\}/g, (_, envVar) => {
         const envValue = process.env[envVar];
         if (envValue === undefined) {
-          this.logger.warn(`[mcp-client] Missing environment variable "${envVar}" while resolving header "${key}"`);
-          return "";
+          throw new Error(`[mcp-client] Missing required environment variable "${envVar}" while resolving header "${key}"`);
         }
         return envValue;
       });
     }
     return resolved;
+  }
+
+  private async probeServer(): Promise<void> {
+    if (!this.config.url) {
+      return;
+    }
+
+    const headers = this.resolveHeaders(this.config.headers || {});
+    try {
+      const optionsResponse = await fetch(this.config.url, { method: "OPTIONS", headers });
+      if (optionsResponse.ok) {
+        return;
+      }
+      const headResponse = await fetch(this.config.url, { method: "HEAD", headers });
+      if (!headResponse.ok) {
+        this.logger.warn(`[mcp-client] Streamable HTTP probe warning for ${this.config.url}: OPTIONS ${optionsResponse.status}, HEAD ${headResponse.status}`);
+      }
+    } catch (error: any) {
+      this.logger.warn(`[mcp-client] Streamable HTTP probe warning for ${this.config.url}: ${error?.message || error}`);
+    }
+  }
+
+  private warnIfNonTlsRemoteUrl(rawUrl: string): void {
+    try {
+      const parsed = new URL(rawUrl);
+      if (parsed.protocol !== "http:") {
+        return;
+      }
+      const host = parsed.hostname;
+      if (host === "localhost" || host === "127.0.0.1" || host === "::1") {
+        return;
+      }
+      this.logger.warn(`[mcp-client] WARNING: Non-TLS connection to ${host} — credentials may be transmitted in plaintext`);
+    } catch (error) {
+      // Ignore malformed URL here; connect() validation will fail later.
+    }
   }
 
   private scheduleReconnect(): void {
