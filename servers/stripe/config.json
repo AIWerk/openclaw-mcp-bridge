@@ -1,0 +1,8 @@
+{
+  "transport": "stdio",
+  "command": "npx",
+  "args": ["-y", "@stripe/mcp"],
+  "env": {
+    "STRIPE_SECRET_KEY": "${STRIPE_API_KEY}"
+  }
+}
