@@ -76,8 +76,9 @@ fi
 if [[ -f "$SERVER_DIR/env_vars" ]] && [[ -s "$SERVER_DIR/env_vars" ]]; then
     echo "Checking environment variables..."
     
-    # Ensure .env file exists
+    # Ensure .env file exists with secure permissions
     touch "$OPENCLAW_ENV"
+    chmod 600 "$OPENCLAW_ENV"
     
     while read -r var; do
         [[ -z "$var" ]] && continue
