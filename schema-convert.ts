@@ -7,15 +7,17 @@ let cachedTypeBoxPromise: Promise<TypeBoxMod> | null = null;
 export let typeBoxLoader: (() => Promise<TypeBoxMod>) | null = null;
 
 async function getTypeBox(): Promise<TypeBoxMod> {
+  // If a test loader is set, always use it (bypass cache)
+  if (typeBoxLoader) {
+    return typeBoxLoader();
+  }
+
   if (cachedTypeBoxPromise) {
     return cachedTypeBoxPromise;
   }
 
   cachedTypeBoxPromise = (async () => {
     try {
-      if (typeBoxLoader) {
-        return typeBoxLoader();
-      }
       const mod: any = await import("@sinclair/typebox");
       const Type = mod?.Type ?? mod?.default?.Type;
       if (!Type) {
