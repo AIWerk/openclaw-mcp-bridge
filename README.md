@@ -150,18 +150,6 @@ pip install git+https://github.com/dkruyt/mcp-hetzner.git
 }
 ```
 
-### Example 4: Filesystem (Stdio, no auth)
-
-```json
-{
-  "servers": {
-      "transport": "stdio",
-      "command": "npx",
-    }
-  }
-}
-```
-
 ## Configuration Reference
 
 All server configs go under `plugins.entries.mcp-client.config.servers` in `openclaw.json`.
@@ -171,6 +159,7 @@ All server configs go under `plugins.entries.mcp-client.config.servers` in `open
 | Transport | Use case | Example servers |
 |---|---|---|
 | **`streamable-http`** | Remote API with single POST endpoint | Apify, Smithery Connect |
+| **`stdio`** | Local subprocess, npm packages | Notion, Hetzner, Hostinger |
 | **`sse`** | Remote Server-Sent Events (legacy) | Custom MCP servers |
 
 ### Server config options
