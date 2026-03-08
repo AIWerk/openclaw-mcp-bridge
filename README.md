@@ -2,134 +2,155 @@
 
 Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server into OpenClaw — tools are automatically discovered and registered as native agent tools via `registerTool()`.
 
+**Tested in production with:**
+- [Apify](https://mcp.apify.com) — 8 tools (web scraping, actor management) via Streamable HTTP
+- [Hetzner Cloud](https://github.com/dkruyt/mcp-hetzner) — 30 tools (server/volume/firewall management) via Stdio
+- [Hostinger](https://www.npmjs.com/package/hostinger-api-mcp) — 119 tools (hosting management) via Stdio
+
 ## Features
 
-- **Three transports** — SSE, Stdio, and Streamable HTTP (for Smithery Connect, Swiggy, Zomato, etc.)
+- **Three transports** — SSE, Stdio, and Streamable HTTP
 - **Auto-discovery** — `tools/list` → all tools registered as native OpenClaw tools
-- **Schema conversion** — JSON Schema → TypeBox, with multi-fallback import strategy
-- **Reconnection** — auto-reconnect with full protocol re-initialization + tool re-registration
-- **Memory-safe** — pending requests are cleaned up on reconnect, no leaked timeouts
-- **Env var substitution** — `${APIFY_TOKEN}` in headers/env config
+- **Schema conversion** — JSON Schema → TypeBox (safe subset, complex schemas fall back to `Type.Any()`)
+- **Reconnection** — exponential backoff with jitter, full protocol re-init + tool re-registration
+- **Refresh lock** — concurrent reconnect / tools/list_changed events can't race
+- **Bidirectional stdio framing** — auto-detects LSP Content-Length or newline, configurable
+- **Env var substitution** — `${MY_TOKEN}` in headers/env resolved from OpenClaw .env
+- **Memory-safe** — pending requests cleaned up on reconnect, no leaked timeouts
 
-## Quick Install
+## Installation
 
-**Linux / macOS:**
+### Method 1: Clone (recommended)
+
 ```bash
-# Review the script first if you prefer:
-# curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.sh > install.sh && cat install.sh && bash install.sh
+git clone https://github.com/AIWerk/openclaw-mcp-client.git \
+  ~/.openclaw/extensions/mcp-client
+```
 
+### Method 2: Install script
+
+```bash
+# Review first:
+curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.sh | less
+# Then run:
 curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.sh | bash
 ```
 
-**Windows (PowerShell):**
+### Method 3: Windows (PowerShell)
+
 ```powershell
 irm https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.ps1 | iex
 ```
 
-This clones the plugin, adds it to your `openclaw.json`, and you're ready to configure servers.
+### After installation
 
-## Configuration
+1. Add the plugin entry to `~/.openclaw/openclaw.json` (see Configuration below)
+2. Restart the gateway: `openclaw gateway restart`
+3. Check logs: `journalctl --user -u openclaw-gateway.service | grep mcp-client`
 
-Edit `~/.openclaw/openclaw.json` → `plugins.entries.mcp-client.config.servers`:
+## Getting Started
 
-### SSE server (remote)
+### Example 1: Apify (Streamable HTTP)
 
-```json
-{
-  "my-server": {
-    "transport": "sse",
-    "url": "https://mcp.example.com/sse",
-    "headers": {
-      "Authorization": "Bearer ${MY_TOKEN}"
-    }
-  }
-}
-```
+Apify provides 8 tools for web scraping, actor management, and documentation search.
 
-### Stdio server (local)
+**1. Get an API token:** [Apify Console → Settings → Integrations](https://console.apify.com/account/integrations)
 
-```json
-{
-  "notion": {
-    "transport": "stdio",
-    "command": "npx",
-    "args": ["-y", "@notionhq/notion-mcp-server"],
-    "env": {
-      "NOTION_API_KEY": "${NOTION_API_KEY}"
-    }
-  }
-}
-```
-
-### Streamable HTTP server (remote)
-
-```json
-{
-  "my-api": {
-    "transport": "streamable-http",
-    "url": "https://mcp.example.com/mcp",
-    "headers": {
-      "Authorization": "Bearer ${MY_TOKEN}"
-    }
-  }
-}
-```
-
-> **When to use which transport?**
-> - **SSE** — most common, classic MCP servers (Apify, custom servers)
-> - **Streamable HTTP** — newer transport, single POST endpoint (Smithery Connect, Swiggy, Zomato)
-> - **Stdio** — local servers running as subprocess (Notion, filesystem, GitHub)
-
-### Full config options
-
-| Option | Default | Description |
-|---|---|---|
-| `toolPrefix` | `true` | Prefix tool names with server name (e.g. `myserver_search`) |
-| `reconnectIntervalMs` | `30000` | Auto-reconnect interval |
-| `connectionTimeoutMs` | `10000` | Initial connection timeout |
-| `requestTimeoutMs` | `60000` | Tool call / request timeout (per tool invocation) |
-
-After configuring, restart the gateway:
-
+**2. Add token to your environment:**
 ```bash
-openclaw gateway restart
+# If using pass (password-store):
+pass insert api/apify-token
+
+# Or add directly to ~/.openclaw/.env:
+echo "APIFY_TOKEN=apify_api_xxxxx" >> ~/.openclaw/.env
 ```
 
-## How it works
-
+**3. Add to `openclaw.json`:**
+```json
+{
+  "plugins": {
+    "entries": {
+      "mcp-client": {
+        "enabled": true,
+        "config": {
+          "servers": {
+            "apify": {
+              "transport": "streamable-http",
+              "url": "https://mcp.apify.com",
+              "headers": {
+                "Authorization": "Bearer ${APIFY_TOKEN}"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
 ```
-MCP Server              Plugin                  Agent
-┌─────────────┐        ┌─────────────────┐     ┌──────────┐
-│ tools/list   │◄──────│ mcp-client       │────►│ uses the │
-│ tools/call   │◄──────│ registerTool()   │     │ tools    │
-│ SSE/stdio    │       └─────────────────┘     └──────────┘
-└─────────────┘
+
+**4. Restart:** `openclaw gateway restart`
+
+**Expected output:**
+```
+[mcp-client] Connected to server: apify
+[mcp-client] Server apify initialized, registered 8 tools
 ```
 
-1. Plugin connects to each configured MCP server
-2. Sends `initialize` + `notifications/initialized` (MCP handshake)
-3. Calls `tools/list` to discover available tools
-4. Converts JSON Schema → TypeBox and registers each tool via `api.registerTool()`
-5. Tool calls are proxied as `tools/call` JSON-RPC requests
+Now your agent can use tools like `apify_search_actors`, `apify_call_actor`, etc.
 
-On connection loss: auto-reconnect → full re-handshake → re-register tools.
+### Example 2: Hetzner Cloud (Stdio)
 
-## Example MCP servers
+Manage Hetzner Cloud infrastructure (servers, volumes, firewalls, SSH keys) through natural language.
 
-Any MCP-compliant server should work. Here are some examples (not all tested by us):
+**1. Install the MCP server:**
+```bash
+pip install git+https://github.com/dkruyt/mcp-hetzner.git
+```
 
-| Server | Transport | Auth |
-|---|---|---|
-| [Apify](https://mcp.apify.com) | SSE | Bearer token |
-| [@notionhq/notion-mcp-server](https://npmjs.com/package/@notionhq/notion-mcp-server) | stdio | API key via env |
-| [@modelcontextprotocol/server-filesystem](https://github.com/modelcontextprotocol/servers) | stdio | none |
-| [@modelcontextprotocol/server-github](https://github.com/modelcontextprotocol/servers) | stdio | GitHub token |
-| [Swiggy](https://mcp.swiggy.com/food) | streamable-http | none |
-| [Zomato](https://mcp-server.zomato.com/mcp) | streamable-http | none |
+**2. Get API token:** [Hetzner Console → Security → API Tokens](https://console.hetzner.cloud)
 
-See [MCP Server Registry](https://registry.modelcontextprotocol.io) and [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) for more.
+**3. Add to `openclaw.json`:**
+```json
+{
+  "servers": {
+    "hetzner": {
+      "transport": "stdio",
+      "command": "mcp-hetzner",
+      "env": {
+        "HCLOUD_TOKEN": "${HETZNER_API_TOKEN}"
+      }
+    }
+  }
+}
+```
 
-### Quick-start config (copy-paste ready)
+**4. Restart:** `openclaw gateway restart`
+
+**Expected output:**
+```
+[mcp-client] Connected to server: hetzner
+[mcp-client] Server hetzner initialized, registered 30 tools
+```
+
+### Example 3: Notion (Stdio)
+
+```json
+{
+  "servers": {
+    "notion": {
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "@notionhq/notion-mcp-server"],
+      "env": {
+        "NOTION_API_KEY": "${NOTION_API_KEY}"
+      }
+    }
+  }
+}
+```
+
+### Example 4: Filesystem (Stdio, no auth)
 
 ```json
 {
@@ -138,44 +159,92 @@ See [MCP Server Registry](https://registry.modelcontextprotocol.io) and [awesome
       "transport": "stdio",
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/user/documents"]
-    },
-    "swiggy": {
-      "transport": "streamable-http",
-      "url": "https://mcp.swiggy.com/food"
     }
   }
 }
 ```
 
-Paste this into your `openclaw.json` under `plugins.entries.mcp-client.config`, adjust the filesystem path, restart the gateway, and you'll have two MCP servers connected.
+## Configuration Reference
 
-> **Note:** If OpenClaw already has a native plugin for a service, prefer the native plugin — it's faster and better integrated. Use this plugin for servers without native OpenClaw support.
+All server configs go under `plugins.entries.mcp-client.config.servers` in `openclaw.json`.
 
-> **Streamable HTTP:** This transport expects single JSON-RPC responses per request. Servers using chunked/streaming responses may not work correctly. SSE and stdio are the most thoroughly tested transports.
+### Transport types
 
-## File structure
+| Transport | Use case | Example servers |
+|---|---|---|
+| **`streamable-http`** | Remote API with single POST endpoint | Apify, Smithery Connect |
+| **`stdio`** | Local subprocess, npm packages | Notion, Hetzner, GitHub, filesystem |
+| **`sse`** | Remote Server-Sent Events (legacy) | Custom MCP servers |
 
-| File | Purpose |
-|---|---|
-| `index.ts` | Main plugin — server init, tool registration, execution |
-| `transport-sse.ts` | SSE transport (HTTP Server-Sent Events) |
-| `transport-stdio.ts` | Stdio transport (subprocess) |
-| `transport-streamable-http.ts` | Streamable HTTP transport (single POST endpoint) |
-| `schema-convert.ts` | JSON Schema → TypeBox conversion (safe subset — see note below) |
-| `types.ts` | TypeScript interfaces |
-| `openclaw.plugin.json` | Plugin metadata + config schema |
-| `install.sh` | Linux/macOS installer |
-| `install.ps1` | Windows PowerShell installer |
+### Server config options
+
+```json
+{
+  "my-server": {
+    "transport": "streamable-http",     // Required: "sse" | "stdio" | "streamable-http"
+    "url": "https://...",               // Required for sse/streamable-http
+    "command": "mcp-hetzner",           // Required for stdio
+    "args": [],                         // Optional: command arguments (stdio)
+    "headers": {},                      // Optional: HTTP headers (sse/streamable-http)
+    "env": {},                          // Optional: environment variables (stdio)
+    "framing": "auto"                   // Optional: "auto" | "lsp" | "newline" (stdio only)
+  }
+}
+```
+
+### Global config options
+
+| Option | Default | Description |
+|---|---|---|
+| `toolPrefix` | `true` | Prefix tool names with server name (e.g. `hetzner_list_servers`) |
+| `reconnectIntervalMs` | `30000` | Base reconnect interval (with 0.5x–1.5x jitter) |
+| `connectionTimeoutMs` | `10000` | Initial connection timeout |
+| `requestTimeoutMs` | `60000` | Per-request timeout for tool calls |
+
+### Environment variable substitution
+
+Use `${VAR_NAME}` in `headers` and `env` values. Variables are resolved from OpenClaw's `.env` file at startup.
+
+```json
+"headers": { "Authorization": "Bearer ${MY_TOKEN}" }
+```
+
+## How it works
+
+```
+MCP Server              Plugin                  OpenClaw Agent
+┌─────────────┐        ┌─────────────────┐     ┌──────────────┐
+│ tools/list   │◄──────│ mcp-client       │────►│ uses tools   │
+│ tools/call   │◄──────│ registerTool()   │     │ naturally    │
+│ SSE/stdio/   │       │ schema convert   │     │ "list my     │
+│ HTTP         │       └─────────────────┘     │  servers"    │
+└─────────────┘                                └──────────────┘
+```
+
+1. Plugin connects to each configured MCP server via the specified transport
+2. MCP handshake: `initialize` → `notifications/initialized`
+3. `tools/list` discovers available tools (with pagination support)
+4. JSON Schema → TypeBox conversion, then `api.registerTool()` for each tool
+5. Agent tool calls are proxied as `tools/call` JSON-RPC requests
+6. On connection loss: exponential backoff with jitter → full re-handshake → re-register
+7. On `notifications/tools/list_changed`: refresh with concurrency lock
+
+## Finding MCP servers
+
+- **[MCP Server Registry](https://registry.modelcontextprotocol.io)** — official Anthropic registry
+- **[awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers)** — curated community list
+- **[Glama](https://glama.ai/mcp/servers)** — searchable directory
+- **[PulseMCP](https://www.pulsemcp.com)** — another directory with reviews
 
 ## JSON Schema support
 
-The plugin converts MCP tool input schemas (JSON Schema) to TypeBox for OpenClaw's type system. This is a **safe, limited subset** — not a full JSON Schema implementation:
+The plugin converts MCP tool input schemas to TypeBox for OpenClaw's type system. This is a **safe, limited subset** — not a full JSON Schema implementation:
 
 - ✅ Supported: `string`, `number`, `integer`, `boolean`, `array`, `object`, `null`, `enum`, `required`
 - ⚠️ Falls back to `Type.Any()`: `anyOf`, `oneOf`, `allOf`, `$ref`, tuple arrays, complex compositions
 - 🛡️ Safety limits: max depth 10, max 100 properties per object (prevents recursion bombs)
 
-This means complex schemas won't crash the plugin — they'll just have looser input validation.
+Complex schemas won't crash the plugin — they'll have looser input validation via `Type.Any()`.
 
 ## Troubleshooting
 
@@ -188,24 +257,43 @@ journalctl --user -u openclaw-gateway.service | grep mcp-client
 # [mcp-client] Server myserver initialized, registered N tools
 ```
 
-Common issues:
-- **"No servers configured"** — add at least one server to config
-- **Tool name conflicts** — the MCP server exposes tools that overlap with native OpenClaw plugins. Remove the MCP server or disable the native plugin.
-- **SSE timeout** — check URL and auth token
-- **Stdio crash** — ensure `npx` / command is available and the package exists
+| Problem | Solution |
+|---|---|
+| "No servers configured" | Add at least one server to config |
+| Tool name conflicts | MCP tools overlap with native OpenClaw plugins — remove one |
+| SSE/HTTP timeout | Check URL, auth token, and network |
+| Stdio crash | Ensure command exists (`which mcp-hetzner`, `npx --version`) |
+| "Stdio startup stdout readiness timed out" | Normal for some servers — they don't emit stdout before init |
+| Streamable HTTP parse error | Server may use chunked streaming (not yet supported) |
+
+## File structure
+
+| File | Purpose |
+|---|---|
+| `index.ts` | Main plugin — server lifecycle, tool registration, execution |
+| `transport-sse.ts` | SSE transport (Server-Sent Events) |
+| `transport-stdio.ts` | Stdio transport (subprocess, LSP/newline framing) |
+| `transport-streamable-http.ts` | Streamable HTTP transport (POST, SSE response parsing) |
+| `schema-convert.ts` | JSON Schema → TypeBox conversion with injectable logger |
+| `types.ts` | TypeScript interfaces |
+| `openclaw.plugin.json` | Plugin metadata + config schema |
 
 ## Uninstall
 
-1. Remove the `mcp-client` entry from `plugins.entries` in your `openclaw.json`
-2. Delete the plugin folder: `rm -rf ~/.openclaw/extensions/mcp-client`
-3. Restart the gateway: `openclaw gateway restart`
+```bash
+# 1. Remove from openclaw.json (delete the mcp-client entry under plugins.entries)
+# 2. Delete the plugin
+rm -rf ~/.openclaw/extensions/mcp-client
+# 3. Restart
+openclaw gateway restart
+```
 
 ## Requirements
 
 - OpenClaw 2026.3.x+
 - Node.js 22+
-- **TypeBox** — used for schema conversion, provided by OpenClaw (no separate install needed). If you run the plugin outside of OpenClaw, install it manually: `npm install @sinclair/typebox`
+- **TypeBox** — provided by OpenClaw runtime (no separate install needed)
 
 ## License
 
-MIT
+MIT — [AIWerk](https://aiwerk.ch)
