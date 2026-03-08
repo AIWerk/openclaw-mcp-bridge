@@ -5,6 +5,7 @@ Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) ser
 **Tested in production with:**
 - [Apify](https://mcp.apify.com) — 8 tools (web scraping, actor management) via Streamable HTTP
 - [Hetzner Cloud](https://github.com/dkruyt/mcp-hetzner) — 30 tools (server/volume/firewall management) via Stdio
+- [Notion](https://www.npmjs.com/package/@notionhq/notion-mcp-server) — 22 tools (pages, databases, blocks) via Stdio
 - [Hostinger](https://www.npmjs.com/package/hostinger-api-mcp) — 119 tools (hosting management) via Stdio
 
 ## Features
