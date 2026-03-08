@@ -1,7 +1,7 @@
 {
   "id": "mcp-client",
   "name": "mcp-client",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "entryPoint": "index.ts",
   "configSchema": {
     "servers": {
@@ -68,9 +68,9 @@
       }
     },
     "toolPrefix": {
-      "type": "boolean",
-      "default": true,
-      "description": "Whether to prefix tool names with server name (e.g. 'apify_search_tool')"
+      "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["auto"]}],
+      "default": "auto",
+      "description": "Tool naming: true = always prefix with server name, false = never prefix, 'auto' = prefix only on collision (default)"
     },
     "reconnectIntervalMs": {
       "type": "number",

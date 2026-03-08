@@ -18,23 +18,33 @@ function isNameTaken(name: string, localNames: Set<string>, globalNames: Set<str
 export function pickRegisteredToolName(
   serverName: string,
   toolName: string,
-  toolPrefix: boolean | undefined,
+  toolPrefix: boolean | "auto" | undefined,
   localNames: Set<string>,
   globalNames: Set<string>,
   logger?: { warn: (...args: any[]) => void }
 ): string {
-  const baseName = toolPrefix !== false
-    ? `${serverName}_${toolName}`
-    : toolName;
-  const sanitizedBaseName = baseName.replace(/[^a-zA-Z0-9_]/g, "_");
+  // toolPrefix: true = always prefix, false = never prefix, "auto" = prefix only on collision (default)
+  const effectivePrefix = toolPrefix === undefined ? "auto" : toolPrefix;
 
-  let candidate = sanitizedBaseName;
-  if (toolPrefix === false && isNameTaken(candidate, localNames, globalNames)) {
-    const prefixedName = `${serverName}_${toolName}`.replace(/[^a-zA-Z0-9_]/g, "_");
-    logger?.warn(
-      `[mcp-client] Global tool name collision detected for "${sanitizedBaseName}". Auto-prefixing with server name: "${prefixedName}"`
-    );
-    candidate = prefixedName;
+  let candidate: string;
+  if (effectivePrefix === true) {
+    // Always prefix with server name
+    candidate = `${serverName}_${toolName}`.replace(/[^a-zA-Z0-9_]/g, "_");
+  } else if (effectivePrefix === false) {
+    // Never prefix — use raw tool name, no collision fallback
+    candidate = toolName.replace(/[^a-zA-Z0-9_]/g, "_");
+  } else {
+    // "auto" — try without prefix, auto-prefix on collision
+    const unprefixed = toolName.replace(/[^a-zA-Z0-9_]/g, "_");
+    if (isNameTaken(unprefixed, localNames, globalNames)) {
+      const prefixedName = `${serverName}_${toolName}`.replace(/[^a-zA-Z0-9_]/g, "_");
+      logger?.warn(
+        `[mcp-client] Global tool name collision detected for "${unprefixed}". Auto-prefixing with server name: "${prefixedName}"`
+      );
+      candidate = prefixedName;
+    } else {
+      candidate = unprefixed;
+    }
   }
 
   const uniqueBase = candidate;
@@ -204,7 +214,7 @@ export default function activate(api: any) {
         capabilities: {},
         clientInfo: {
           name: "openclaw-mcp-bridge",
-          version: "1.4.0"
+          version: "1.5.0"
         }
       }
     };

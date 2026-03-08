@@ -13,7 +13,7 @@ export interface McpServerConfig {
 
 export interface McpClientConfig {
   servers: Record<string, McpServerConfig>;
-  toolPrefix?: boolean;
+  toolPrefix?: boolean | "auto";
   reconnectIntervalMs?: number;
   connectionTimeoutMs?: number;
   requestTimeoutMs?: number;

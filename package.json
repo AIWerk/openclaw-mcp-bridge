@@ -1,6 +1,6 @@
 {
   "name": "openclaw-mcp-bridge",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "MCP client plugin for OpenClaw — bridge to any MCP server",
   "license": "MIT",
   "repository": {

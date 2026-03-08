@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.5.0] - 2026-03-08
+
+### Changed
+- `toolPrefix` config now accepts `true | false | "auto"` (default changed from `true` to `"auto"`)
+  - `true`: always prefix tool names with server name
+  - `false`: never prefix, use raw tool names
+  - `"auto"`: no prefix by default, auto-prefix only on collision (recommended)
+- Updated `openclaw.plugin.json` schema, `types.ts`, and `index.ts` to support new policy
+- Added first GitHub release tag (`v1.5.0`)
+
 ## [1.4.2] - 2026-03-08
 
 ### Changed
