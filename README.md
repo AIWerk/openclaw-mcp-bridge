@@ -295,7 +295,7 @@ Pre-configured setups for popular MCP servers. Each server in `servers/` include
 | [tavily](servers/tavily/) | stdio | 5 | Nothing — runs via `npx` | [Get key](https://app.tavily.com/home) (free: 1000 req/mo) |
 | [linear](servers/linear/) | stdio | 19 | `npm install -g linear-mcp` | [Get key](https://linear.app/settings/account/security) (free: 250 issues) |
 | [miro](servers/miro/) | stdio | 6 | Nothing — runs via `npx` | [Get token](https://miro.com/app/settings/user-profile/apps) (free plan works) |
-| [stripe](servers/stripe/) | stdio | TBD | Nothing — runs via `npx` | [Get key](https://dashboard.stripe.com/apikeys) (test mode free) |
+| [stripe](servers/stripe/) | stdio | 28 | Nothing — runs via `npx` | [Get key](https://dashboard.stripe.com/apikeys) (test mode free) |
 
 Use the installer: `./install-server.sh <server-name>` (or `--dry-run` to preview)
 
