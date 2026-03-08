@@ -54,4 +54,5 @@ export interface McpServerConnection {
   transport: McpTransport;
   tools: McpTool[];
   isInitialized: boolean;
+  registeredToolNames: string[];
 }

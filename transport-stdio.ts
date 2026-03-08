@@ -11,6 +11,7 @@ export class StdioTransport implements McpTransport {
   private logger: any;
   private reconnectTimer: NodeJS.Timeout | null = null;
   private onReconnected?: () => Promise<void>;
+  private backoffDelay = 0;
 
   constructor(config: McpServerConfig, clientConfig: any, logger: any, onReconnected?: () => Promise<void>) {
     this.config = config;
@@ -27,6 +28,7 @@ export class StdioTransport implements McpTransport {
     try {
       await this.startProcess();
       this.connected = true;
+      this.backoffDelay = this.clientConfig.reconnectIntervalMs || 30000;
     } catch (error) {
       this.logger.error("Stdio transport connection failed:", error);
       throw error;
@@ -91,13 +93,69 @@ export class StdioTransport implements McpTransport {
     this.process.on("error", (error) => {
       this.logger.error("MCP server process error:", error);
       this.connected = false;
+      this.process = null;
+
+      // Reject all pending requests
+      for (const [id, pending] of this.pendingRequests) {
+        clearTimeout(pending.timeout);
+        pending.reject(new Error("Process error"));
+      }
+      this.pendingRequests.clear();
+
+      this.scheduleReconnect();
     });
 
-    // Wait a bit for the process to start
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const connectionTimeout = this.clientConfig.connectionTimeoutMs || 5000;
+    await new Promise<void>((resolve, reject) => {
+      let settled = false;
+      let timeout: NodeJS.Timeout;
+
+      const cleanup = () => {
+        this.process?.stdout?.off("data", onFirstData);
+        this.process?.off("error", onProcessError);
+        this.process?.off("exit", onProcessExit);
+        clearTimeout(timeout);
+      };
+
+      const settleResolve = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve();
+      };
+
+      const settleReject = (error: Error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(error);
+      };
+
+      const onFirstData = () => settleResolve();
+      const onProcessError = (error: Error) => settleReject(error);
+      const onProcessExit = () => settleReject(new Error("MCP server exited before stdout became ready"));
+
+      this.process!.stdout!.once("data", onFirstData);
+      this.process!.once("error", onProcessError);
+      this.process!.once("exit", onProcessExit);
+
+      timeout = setTimeout(() => {
+        this.logger.warn(`[mcp-client] Stdio startup stdout readiness timed out after ${connectionTimeout}ms; continuing`);
+        settleResolve();
+      }, connectionTimeout);
+    });
   }
 
   private handleMessage(message: any): void {
+    if (!message.id && message.method === "notifications/tools/list_changed") {
+      if (this.onReconnected) {
+        this.onReconnected().catch((error) => {
+          this.logger.error("[mcp-client] Failed to refresh tools after list_changed notification:", error);
+        });
+      }
+      return;
+    }
+
     if (message.id && this.pendingRequests.has(message.id)) {
       const pending = this.pendingRequests.get(message.id)!;
       clearTimeout(pending.timeout);
@@ -171,12 +229,17 @@ export class StdioTransport implements McpTransport {
     }
     this.pendingRequests.clear();
 
-    const reconnectInterval = this.clientConfig.reconnectIntervalMs || 30000;
+    const baseDelay = this.clientConfig.reconnectIntervalMs || 30000;
+    if (this.backoffDelay <= 0) {
+      this.backoffDelay = baseDelay;
+    }
+    const reconnectInterval = this.backoffDelay;
     this.reconnectTimer = setTimeout(async () => {
       this.reconnectTimer = null;
       try {
         await this.connect();
         this.logger.info("Stdio transport reconnected successfully");
+        this.backoffDelay = baseDelay;
         
         // Call the reconnection callback to re-initialize protocol and tools
         if (this.onReconnected) {
@@ -184,6 +247,7 @@ export class StdioTransport implements McpTransport {
         }
       } catch (error) {
         this.logger.error("Reconnection failed:", error);
+        this.backoffDelay = Math.min(this.backoffDelay * 2, 300000);
         // Schedule another reconnect attempt
         this.scheduleReconnect();
       }

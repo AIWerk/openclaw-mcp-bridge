@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.2.0] - 2026-03-08
+
+### Changed
+- Stdio startup now waits for first `stdout` data event instead of a fixed 1000ms delay, with configurable timeout fallback via `connectionTimeoutMs` (default 5000ms).
+- SSE transport now buffers multi-line SSE `data:` fields and parses them only on event boundary (blank line), fixing multi-line JSON event parsing.
+- SSE `sendRequest` now rejects on HTTP non-2xx responses (`response.ok === false`) instead of only handling network errors.
+- Stdio process `error` handler now rejects all pending requests and schedules reconnect, matching process exit behavior.
+- All transports now handle `notifications/tools/list_changed` server notifications and trigger tool re-discovery callback flow.
+- Reconnect scheduling now uses exponential backoff in all transports:
+  - starts at `reconnectIntervalMs` (default 30000ms)
+  - doubles on each failed attempt
+  - caps at 300000ms (5 minutes)
+  - resets after successful reconnection
+- Tool registration flow now tracks per-connection registered tool names and handles reconnect refreshes safely.
+  - Attempts to unregister previous tools if `unregisterTool` API is available.
+  - Logs a warning when tool lists change and unregister is unavailable.
+
 ## [1.1.0] - 2026-03-08
 
 ### Added

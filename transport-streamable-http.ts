@@ -10,6 +10,7 @@ export class StreamableHttpTransport implements McpTransport {
   private reconnectTimer: NodeJS.Timeout | null = null;
   private onReconnected?: () => Promise<void>;
   private sessionId?: string;
+  private backoffDelay = 0;
 
   constructor(config: McpServerConfig, clientConfig: any, logger: any, onReconnected?: () => Promise<void>) {
     this.config = config;
@@ -26,6 +27,7 @@ export class StreamableHttpTransport implements McpTransport {
     // No connectivity test needed — initializeProtocol will send the
     // MCP "initialize" request which validates the connection.
     this.connected = true;
+    this.backoffDelay = this.clientConfig.reconnectIntervalMs || 30000;
     this.logger.info(`[mcp-client] Streamable HTTP transport ready for ${this.config.url}`);
   }
 
@@ -63,9 +65,6 @@ export class StreamableHttpTransport implements McpTransport {
         body: JSON.stringify(requestWithId)
       })
         .then(async response => {
-          clearTimeout(timeout);
-          this.pendingRequests.delete(id);
-
           // Extract session ID from response headers if present
           const responseSessionId = response.headers.get("mcp-session-id");
           if (responseSessionId) {
@@ -73,14 +72,18 @@ export class StreamableHttpTransport implements McpTransport {
           }
 
           if (!response.ok) {
+            clearTimeout(timeout);
+            this.pendingRequests.delete(id);
             reject(new Error(`HTTP ${response.status}: ${response.statusText}`));
             return;
           }
 
           try {
             const jsonResponse = await response.json();
-            resolve(jsonResponse);
+            this.handleMessage(jsonResponse);
           } catch (error) {
+            clearTimeout(timeout);
+            this.pendingRequests.delete(id);
             reject(new Error("Failed to parse JSON response"));
           }
         })
@@ -97,6 +100,29 @@ export class StreamableHttpTransport implements McpTransport {
           reject(error);
         });
     });
+  }
+
+  private handleMessage(message: any): void {
+    if (!message.id && message.method === "notifications/tools/list_changed") {
+      if (this.onReconnected) {
+        this.onReconnected().catch((error) => {
+          this.logger.error("[mcp-client] Failed to refresh tools after list_changed notification:", error);
+        });
+      }
+      return;
+    }
+
+    if (message.id && this.pendingRequests.has(message.id)) {
+      const pending = this.pendingRequests.get(message.id)!;
+      clearTimeout(pending.timeout);
+      this.pendingRequests.delete(message.id);
+
+      if (message.error) {
+        pending.reject(new Error(message.error.message || "MCP error"));
+      } else {
+        pending.resolve(message);
+      }
+    }
   }
 
   async sendNotification(notification: any): Promise<void> {
@@ -169,12 +195,17 @@ export class StreamableHttpTransport implements McpTransport {
     }
     this.pendingRequests.clear();
 
-    const reconnectInterval = this.clientConfig.reconnectIntervalMs || 30000;
+    const baseDelay = this.clientConfig.reconnectIntervalMs || 30000;
+    if (this.backoffDelay <= 0) {
+      this.backoffDelay = baseDelay;
+    }
+    const reconnectInterval = this.backoffDelay;
     this.reconnectTimer = setTimeout(async () => {
       this.reconnectTimer = null;
       try {
         await this.connect();
         this.logger.info("Streamable HTTP transport reconnected successfully");
+        this.backoffDelay = baseDelay;
         
         // Call the reconnection callback to re-initialize protocol and tools
         if (this.onReconnected) {
@@ -182,6 +213,7 @@ export class StreamableHttpTransport implements McpTransport {
         }
       } catch (error) {
         this.logger.error("Reconnection failed:", error);
+        this.backoffDelay = Math.min(this.backoffDelay * 2, 300000);
         // Schedule another reconnect attempt
         this.scheduleReconnect();
       }

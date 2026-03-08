@@ -43,7 +43,8 @@ export default function activate(api: any) {
       name,
       transport: null as any, // Will be set below
       tools: [],
-      isInitialized: false
+      isInitialized: false,
+      registeredToolNames: []
     };
 
     // Reconnection callback that re-initializes everything
@@ -117,7 +118,7 @@ export default function activate(api: any) {
         capabilities: {},
         clientInfo: {
           name: "openclaw-mcp-client",
-          version: "1.1.1"
+          version: "1.2.0"
         }
       }
     };
@@ -167,16 +168,46 @@ export default function activate(api: any) {
   }
 
   function registerServerTools(connection: McpServerConnection): void {
+    const nextToolNames = connection.tools.map((mcpTool) => {
+      const toolName = config.toolPrefix !== false 
+        ? `${connection.name}_${mcpTool.name}` 
+        : mcpTool.name;
+      return toolName.replace(/[^a-zA-Z0-9_]/g, '_');
+    });
+
+    const oldToolNames = connection.registeredToolNames;
+    if (oldToolNames.length > 0) {
+      if (typeof api.unregisterTool === "function") {
+        for (const oldName of oldToolNames) {
+          try {
+            api.unregisterTool(oldName);
+          } catch (error) {
+            api.logger.warn(`[mcp-client] Failed to unregister tool ${oldName}:`, error);
+          }
+        }
+      } else {
+        const oldSorted = [...oldToolNames].sort();
+        const nextSorted = [...nextToolNames].sort();
+        const changed = oldSorted.length !== nextSorted.length || oldSorted.some((name, idx) => name !== nextSorted[idx]);
+        if (changed) {
+          api.logger.warn(`[mcp-client] Tool list changed for ${connection.name}, but unregisterTool API is unavailable. Existing tool registrations may remain stale.`);
+        }
+      }
+    }
+
+    connection.registeredToolNames = [];
+
     for (const mcpTool of connection.tools) {
       try {
-        registerMcpTool(connection, mcpTool);
+        const registeredName = registerMcpTool(connection, mcpTool);
+        connection.registeredToolNames.push(registeredName);
       } catch (error) {
         api.logger.error(`[mcp-client] Failed to register tool ${mcpTool.name}:`, error);
       }
     }
   }
 
-  function registerMcpTool(connection: McpServerConnection, mcpTool: McpTool): void {
+  function registerMcpTool(connection: McpServerConnection, mcpTool: McpTool): string {
     // Generate tool name with optional prefix
     const toolName = config.toolPrefix !== false 
       ? `${connection.name}_${mcpTool.name}` 
@@ -214,6 +245,8 @@ export default function activate(api: any) {
         }
       }
     });
+
+    return validToolName;
   }
 
   async function executeMcpTool(

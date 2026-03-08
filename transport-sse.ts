@@ -11,6 +11,8 @@ export class SseTransport implements McpTransport {
   private reconnectTimer: NodeJS.Timeout | null = null;
   private sseAbortController: AbortController | null = null;
   private onReconnected?: () => Promise<void>;
+  private backoffDelay = 0;
+  private currentDataBuffer: string[] = [];
 
   constructor(config: McpServerConfig, clientConfig: any, logger: any, onReconnected?: () => Promise<void>) {
     this.config = config;
@@ -45,6 +47,7 @@ export class SseTransport implements McpTransport {
     // Wait only until we get the endpoint URL
     await streamReady;
     this.connected = true;
+    this.backoffDelay = this.clientConfig.reconnectIntervalMs || 30000;
   }
   
   private _onEndpointReceived: (() => void) | null = null;
@@ -108,11 +111,19 @@ export class SseTransport implements McpTransport {
 
   private processEventLine(line: string, currentEvent: string = ""): void {
     const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("event: ")) return;
+    if (trimmed.startsWith("event: ")) return;
 
     if (trimmed.startsWith("data: ")) {
-      const data = trimmed.substring(6);
-      
+      this.currentDataBuffer.push(trimmed.substring(6));
+      return;
+    }
+
+    if (trimmed === "") {
+      if (this.currentDataBuffer.length === 0) return;
+
+      const data = this.currentDataBuffer.join("\n");
+      this.currentDataBuffer = [];
+
       // Handle endpoint event (SSE event type "endpoint" with URL as data)
       if (currentEvent === "endpoint") {
         if (data.startsWith("/")) {
@@ -141,6 +152,15 @@ export class SseTransport implements McpTransport {
   }
 
   private handleMessage(message: any): void {
+    if (!message.id && message.method === "notifications/tools/list_changed") {
+      if (this.onReconnected) {
+        this.onReconnected().catch((error) => {
+          this.logger.error("[mcp-client] Failed to refresh tools after list_changed notification:", error);
+        });
+      }
+      return;
+    }
+
     if (message.id && this.pendingRequests.has(message.id)) {
       const pending = this.pendingRequests.get(message.id)!;
       clearTimeout(pending.timeout);
@@ -196,11 +216,19 @@ export class SseTransport implements McpTransport {
         method: "POST",
         headers,
         body: JSON.stringify(requestWithId)
-      }).catch(error => {
-        clearTimeout(timeout);
-        this.pendingRequests.delete(id);
-        reject(error);
-      });
+      })
+        .then((response) => {
+          if (!response.ok) {
+            clearTimeout(timeout);
+            this.pendingRequests.delete(id);
+            reject(new Error(`HTTP ${response.status}`));
+          }
+        })
+        .catch((error) => {
+          clearTimeout(timeout);
+          this.pendingRequests.delete(id);
+          reject(error);
+        });
     });
   }
 
@@ -231,12 +259,17 @@ export class SseTransport implements McpTransport {
     }
     this.pendingRequests.clear();
 
-    const reconnectInterval = this.clientConfig.reconnectIntervalMs || 30000;
+    const baseDelay = this.clientConfig.reconnectIntervalMs || 30000;
+    if (this.backoffDelay <= 0) {
+      this.backoffDelay = baseDelay;
+    }
+    const reconnectInterval = this.backoffDelay;
     this.reconnectTimer = setTimeout(async () => {
       this.reconnectTimer = null;
       try {
         await this.connect();
         this.logger.info("SSE transport reconnected successfully");
+        this.backoffDelay = baseDelay;
         
         // Call the reconnection callback to re-initialize protocol and tools
         if (this.onReconnected) {
@@ -244,6 +277,7 @@ export class SseTransport implements McpTransport {
         }
       } catch (error) {
         this.logger.error("Reconnection failed:", error);
+        this.backoffDelay = Math.min(this.backoffDelay * 2, 300000);
         // Schedule another reconnect attempt
         this.scheduleReconnect();
       }
