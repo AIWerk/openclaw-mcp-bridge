@@ -1,8 +1,9 @@
-const fs = require("fs");
-const path = require("path");
+import fs from "fs";
+import path from "path";
 
 // Multiple fallback strategies for TypeBox import
-// TODO: Refactor when OpenClaw supports native ESM / dependency injection for plugins
+// Note: Dynamic require() used intentionally — TypeBox path varies by host environment
+// and synchronous resolution is needed at module load time (ESM dynamic import is async)
 let Type: any;
 try {
   // Strategy 1: Try normal require first

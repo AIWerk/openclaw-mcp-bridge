@@ -88,14 +88,14 @@ export class SseTransport implements McpTransport {
         buffer = lines.pop() || ""; // Keep partial line in buffer
 
         for (const line of lines) {
-          this.processEventLine(line, currentEvent);
-          // Track current event type for proper SSE event+data pairing
           const trimmed = line.trim();
+          // Update event type BEFORE processing data lines
           if (trimmed.startsWith("event: ")) {
             currentEvent = trimmed.substring(7).trim();
           } else if (trimmed === "") {
             currentEvent = ""; // Reset on blank line (SSE event boundary)
           }
+          this.processEventLine(line, currentEvent);
         }
       }
     } catch (error) {
