@@ -132,7 +132,7 @@ export default function activate(api: any) {
         capabilities: {},
         clientInfo: {
           name: "openclaw-mcp-client",
-          version: "1.3.3"
+          version: "1.3.4"
         }
       }
     };

@@ -47,8 +47,9 @@ export class StreamableHttpTransport implements McpTransport {
 
       this.pendingRequests.set(id, { resolve, reject, timeout });
 
-      // Send request
+      // Send request (Accept both JSON and SSE per MCP spec)
       const headers = this.resolveHeaders({
+        "Accept": "application/json, text/event-stream",
         ...this.config.headers,
         "Content-Type": "application/json"
       });
@@ -78,12 +79,29 @@ export class StreamableHttpTransport implements McpTransport {
           }
 
           try {
-            const jsonResponse = await response.json();
+            const contentType = response.headers.get("content-type") || "";
+            let jsonResponse: any;
+            
+            if (contentType.includes("text/event-stream")) {
+              // Parse SSE response: extract data from "data: {...}" lines
+              const text = await response.text();
+              const dataLines = text.split('\n')
+                .filter((line: string) => line.startsWith('data:'))
+                .map((line: string) => line.substring(5).trim());
+              if (dataLines.length > 0) {
+                jsonResponse = JSON.parse(dataLines[dataLines.length - 1]);
+              } else {
+                throw new Error("No data lines in SSE response");
+              }
+            } else {
+              jsonResponse = await response.json();
+            }
+            
             this.handleMessage(jsonResponse);
           } catch (error) {
             clearTimeout(timeout);
             this.pendingRequests.delete(id);
-            reject(new Error("Failed to parse JSON response"));
+            reject(new Error("Failed to parse response: " + (error instanceof Error ? error.message : String(error))));
           }
         })
         .catch(error => {
@@ -130,6 +148,7 @@ export class StreamableHttpTransport implements McpTransport {
     }
 
     const headers = this.resolveHeaders({
+      "Accept": "application/json, text/event-stream",
       ...this.config.headers,
       "Content-Type": "application/json"
     });
