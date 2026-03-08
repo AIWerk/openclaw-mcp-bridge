@@ -324,8 +324,18 @@ export default function activate(api: any) {
 
   // Cleanup on deactivation
   api.on("deactivate", async () => {
-    api.logger.info("[mcp-client] Deactivating, closing connections");
+    api.logger.info("[mcp-client] Deactivating, closing connections and unregistering tools");
     for (const connection of connections.values()) {
+      // Unregister tools first
+      if (typeof api.unregisterTool === "function") {
+        for (const toolName of connection.registeredToolNames) {
+          try {
+            api.unregisterTool(toolName);
+          } catch (error) {
+            api.logger.warn(`[mcp-client] Failed to unregister tool ${toolName} during deactivation:`, error);
+          }
+        }
+      }
       try {
         await connection.transport.disconnect();
       } catch (error) {

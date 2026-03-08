@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 // Multiple fallback strategies for TypeBox import
+// TODO: Refactor when OpenClaw supports native ESM / dependency injection for plugins
 let Type: any;
 try {
   // Strategy 1: Try normal require first

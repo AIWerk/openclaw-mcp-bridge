@@ -55,6 +55,13 @@ export class StdioTransport implements McpTransport {
     this.stdoutBuffer = Buffer.alloc(0);
     this.process.stdout.on("data", (data: Buffer) => {
       this.stdoutBuffer = Buffer.concat([this.stdoutBuffer, data]);
+      // Safety limit: prevent unbounded buffer growth from misbehaving servers
+      const MAX_BUFFER = 50 * 1024 * 1024; // 50MB
+      if (this.stdoutBuffer.length > MAX_BUFFER) {
+        this.logger.error(`[mcp-client] Stdio buffer exceeded ${MAX_BUFFER} bytes, killing process`);
+        this.process?.kill();
+        return;
+      }
       this.processStdoutBuffer();
     });
 
