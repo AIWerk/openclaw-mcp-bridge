@@ -136,21 +136,34 @@ export default function activate(api: any) {
   }
 
   async function discoverTools(connection: McpServerConnection): Promise<void> {
-    const listRequest: McpRequest = {
-      jsonrpc: "2.0",
-      id: 0, // overridden by sendRequest
-      method: "tools/list"
-    };
+    const allTools: McpTool[] = [];
+    let cursor: string | undefined = undefined;
 
-    const response = await connection.transport.sendRequest(listRequest);
-    
-    if (response.error) {
-      throw new Error(`Tools list failed: ${response.error.message}`);
+    while (true) {
+      const listRequest: McpRequest = {
+        jsonrpc: "2.0",
+        id: 0, // overridden by sendRequest
+        method: "tools/list",
+        ...(cursor ? { params: { cursor } } : {})
+      };
+
+      const response = await connection.transport.sendRequest(listRequest);
+      
+      if (response.error) {
+        throw new Error(`Tools list failed: ${response.error.message}`);
+      }
+
+      const pageTools = Array.isArray(response.result?.tools) ? response.result.tools : [];
+      allTools.push(...pageTools);
+
+      const nextCursor = response.result?.nextCursor;
+      if (!nextCursor) {
+        break;
+      }
+      cursor = nextCursor;
     }
 
-    if (response.result && response.result.tools) {
-      connection.tools = response.result.tools;
-    }
+    connection.tools = allTools;
   }
 
   function registerServerTools(connection: McpServerConnection): void {

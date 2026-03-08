@@ -150,7 +150,12 @@ export class StdioTransport implements McpTransport {
     const resolved: Record<string, string> = {};
     for (const [key, value] of Object.entries(env)) {
       resolved[key] = value.replace(/\$\{(\w+)\}/g, (_, envVar) => {
-        return process.env[envVar] || "";
+        const envValue = process.env[envVar];
+        if (envValue === undefined) {
+          this.logger.warn(`[mcp-client] Missing environment variable "${envVar}" while resolving env key "${key}"`);
+          return "";
+        }
+        return envValue;
       });
     }
     return resolved;

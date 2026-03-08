@@ -15,6 +15,9 @@ Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) ser
 
 **Linux / macOS:**
 ```bash
+# Review the script first if you prefer:
+# curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.sh > install.sh && cat install.sh && bash install.sh
+
 curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-client/master/install.sh | bash
 ```
 
@@ -84,7 +87,7 @@ Edit `~/.openclaw/openclaw.json` → `plugins.entries.mcp-client.config.servers`
 | `toolPrefix` | `true` | Prefix tool names with server name (e.g. `myserver_search`) |
 | `reconnectIntervalMs` | `30000` | Auto-reconnect interval |
 | `connectionTimeoutMs` | `10000` | Initial connection timeout |
-| `requestTimeoutMs` | `60000` | Tool call / request timeout |
+| `requestTimeoutMs` | `60000` | Tool call / request timeout (per tool invocation) |
 
 After configuring, restart the gateway:
 
@@ -126,6 +129,26 @@ Any MCP-compliant server should work. Here are some examples (not all tested by 
 
 See [MCP Server Registry](https://registry.modelcontextprotocol.io) and [awesome-mcp-servers](https://github.com/punkpeye/awesome-mcp-servers) for more.
 
+### Quick-start config (copy-paste ready)
+
+```json
+{
+  "servers": {
+    "filesystem": {
+      "transport": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/user/documents"]
+    },
+    "swiggy": {
+      "transport": "streamable-http",
+      "url": "https://mcp.swiggy.com/food"
+    }
+  }
+}
+```
+
+Paste this into your `openclaw.json` under `plugins.entries.mcp-client.config`, adjust the filesystem path, restart the gateway, and you'll have two MCP servers connected.
+
 > **Note:** If OpenClaw already has a native plugin for a service, prefer the native plugin — it's faster and better integrated. Use this plugin for servers without native OpenClaw support.
 
 ## File structure
@@ -159,10 +182,17 @@ Common issues:
 - **SSE timeout** — check URL and auth token
 - **Stdio crash** — ensure `npx` / command is available and the package exists
 
+## Uninstall
+
+1. Remove the `mcp-client` entry from `plugins.entries` in your `openclaw.json`
+2. Delete the plugin folder: `rm -rf ~/.openclaw/extensions/mcp-client`
+3. Restart the gateway: `openclaw gateway restart`
+
 ## Requirements
 
 - OpenClaw 2026.3.x+
 - Node.js 22+
+- **TypeBox** — used for schema conversion, provided by OpenClaw (no separate install needed). If you run the plugin outside of OpenClaw, install it manually: `npm install @sinclair/typebox`
 
 ## License
 

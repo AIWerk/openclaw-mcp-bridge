@@ -52,7 +52,10 @@ export class SseTransport implements McpTransport {
   private async startEventStream(): Promise<void> {
     if (!this.config.url) return;
 
-    const headers = this.resolveHeaders(this.config.headers || {});
+    const headers = this.resolveHeaders({
+      ...this.config.headers,
+      "Accept": "text/event-stream"
+    });
     
     try {
       const response = await fetch(this.config.url, {
@@ -111,7 +114,7 @@ export class SseTransport implements McpTransport {
       const data = trimmed.substring(6);
       
       // Handle endpoint event (SSE event type "endpoint" with URL as data)
-      if (currentEvent === "endpoint" || data.startsWith("http") || data.startsWith("/")) {
+      if (currentEvent === "endpoint") {
         if (data.startsWith("/")) {
           // Relative URL — resolve against base
           const base = new URL(this.config.url!);
@@ -205,7 +208,12 @@ export class SseTransport implements McpTransport {
     const resolved: Record<string, string> = {};
     for (const [key, value] of Object.entries(headers)) {
       resolved[key] = value.replace(/\$\{(\w+)\}/g, (_, envVar) => {
-        return process.env[envVar] || "";
+        const envValue = process.env[envVar];
+        if (envValue === undefined) {
+          this.logger.warn(`[mcp-client] Missing environment variable "${envVar}" while resolving header "${key}"`);
+          return "";
+        }
+        return envValue;
       });
     }
     return resolved;

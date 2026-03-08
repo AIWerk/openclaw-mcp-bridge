@@ -1,3 +1,6 @@
+const fs = require("fs");
+const path = require("path");
+
 // Multiple fallback strategies for TypeBox import
 let Type: any;
 try {
@@ -10,17 +13,29 @@ try {
     Type = require(typeboxPath).Type;
   } catch (error2) {
     try {
-      // Strategy 3: Try known OpenClaw paths
-      const knownPaths = [
-        "/home/agbergsmann/.nvm/versions/node/v22.22.0/lib/node_modules/openclaw",
-        "/usr/local/lib/node_modules/openclaw",
-        "/opt/openclaw/node_modules"
-      ];
-      
+      // Strategy 3: Resolve from __dirname, then walk parent directories
+      const searchPaths: string[] = [__dirname];
+      let currentDir = __dirname;
+
+      while (true) {
+        const parentDir = path.dirname(currentDir);
+        if (parentDir === currentDir) {
+          break;
+        }
+        currentDir = parentDir;
+        searchPaths.push(currentDir);
+      }
+
       let found = false;
-      for (const path of knownPaths) {
+      for (const basePath of searchPaths) {
         try {
-          const typeboxPath = require.resolve("@sinclair/typebox", { paths: [path] });
+          const localNodeModulesPath = path.join(basePath, "node_modules");
+          const typeboxPkgPath = path.join(localNodeModulesPath, "@sinclair", "typebox", "package.json");
+          if (!fs.existsSync(typeboxPkgPath)) {
+            continue;
+          }
+
+          const typeboxPath = require.resolve("@sinclair/typebox", { paths: [basePath, localNodeModulesPath] });
           Type = require(typeboxPath).Type;
           found = true;
           break;
@@ -30,7 +45,7 @@ try {
       }
       
       if (!found) {
-        throw new Error("TypeBox not found in any known location");
+        throw new Error("TypeBox not found from __dirname parent search paths");
       }
     } catch (error3) {
       throw new Error(`Failed to import TypeBox: ${error3.message}. Original errors: ${error.message}, ${error2.message}`);
@@ -75,17 +90,16 @@ export function convertJsonSchemaToTypeBox(schema: any): TSchema {
     case "object":
       if (schema.properties) {
         const properties: Record<string, TSchema> = {};
+        const requiredSet = new Set<string>(
+          Array.isArray(schema.required) ? schema.required : []
+        );
+
         for (const [key, value] of Object.entries(schema.properties)) {
-          properties[key] = convertJsonSchemaToTypeBox(value as any);
+          const converted = convertJsonSchemaToTypeBox(value as any);
+          properties[key] = requiredSet.has(key) ? converted : Type.Optional(converted);
         }
-        
-        const objectOptions: any = {};
-        if (schema.required && Array.isArray(schema.required)) {
-          // Mark required properties
-          objectOptions.required = schema.required;
-        }
-        
-        return Type.Object(properties, objectOptions);
+
+        return Type.Object(properties);
       }
       return Type.Object({});
     

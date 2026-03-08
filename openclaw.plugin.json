@@ -78,6 +78,12 @@
       "default": 10000,
       "minimum": 1000,
       "description": "Initial connection timeout in milliseconds"
+    },
+    "requestTimeoutMs": {
+      "type": "number",
+      "default": 60000,
+      "minimum": 1000,
+      "description": "Tool call / request timeout in milliseconds"
     }
   },
   "required": ["servers"]
