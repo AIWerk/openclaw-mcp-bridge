@@ -1,47 +1,32 @@
 # Google Maps MCP Server
 
-Location, geocoding, places, and directions via MCP — **official Anthropic reference server** (`@modelcontextprotocol/server-google-maps`).
-
-## What it provides
-
-Tools for Google Maps operations:
-- Geocoding (address → coordinates and reverse)
-- Place search and details
-- Directions and route calculation
-- Distance matrix
+Google Maps MCP tools for places, geocoding, and routing.
 
 ## Requirements
+- Node.js + npx
+- Google Maps API key
 
-- Node.js 18+
-- Google Maps API key with relevant APIs enabled
+## Quick Install
 
-## Install
-
-No installation needed — runs via `npx`.
-
-## Get your API key
-
-1. Go to https://console.cloud.google.com/apis/credentials
-2. Create or select a project
-3. Enable these APIs: Maps JavaScript API, Geocoding API, Places API, Directions API
-4. Create an API key under Credentials
-
-## Configuration
-
-```json
-"google-maps": {
-  "transport": "stdio",
-  "command": "npx",
-  "args": ["-y", "@modelcontextprotocol/server-google-maps"],
-  "env": {
-    "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}"
-  }
-}
+### Linux / macOS
+```bash
+cd ~/.openclaw/extensions/mcp-client/servers/google-maps
+chmod +x install.sh && ./install.sh
 ```
 
-## Verify
+### Windows (PowerShell)
+```powershell
+cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\google-maps
+.\install.ps1
+```
 
-After gateway restart, check logs for:
-```
-Server google-maps initialized, registered N tools
-```
+### Manual Setup
+1. Get your token: https://console.cloud.google.com/apis/credentials
+2. Add to .env: `GOOGLE_MAPS_API_KEY=your_token`
+3. Add config to openclaw.json (see config.json)
+4. Restart gateway
+
+## What you get
+- Geocoding and reverse geocoding
+- Places search and details
+- Routing and distance tools

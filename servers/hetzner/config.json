@@ -1,6 +1,7 @@
 {
   "transport": "stdio",
-  "command": "mcp-hetzner",
+  "command": "node",
+  "args": ["path/to/dist/index.js"],
   "env": {
     "HCLOUD_TOKEN": "${HETZNER_API_TOKEN}"
   }

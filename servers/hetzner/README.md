@@ -1,57 +1,33 @@
-# Hetzner Cloud MCP Server
+# Hetzner MCP Server
 
-Cloud infrastructure management — **[dkruyt/mcp-hetzner](https://github.com/dkruyt/mcp-hetzner)** (`mcp-hetzner`).
-
-## What it provides
-
-30 tools across all major Hetzner Cloud resource types:
-
-- **Servers:** list, get, create, delete, power on/off, reboot
-- **Volumes:** list, get, create, delete, attach, detach, resize
-- **Firewalls:** list, get, create, delete, update, set rules, apply/remove from resources
-- **SSH Keys:** list, get, create, update, delete
-- **Info:** list images, server types, locations
+Hetzner Cloud MCP server built from source.
 
 ## Requirements
+- Git
+- Node.js + npm
+- Hetzner Cloud API token
 
-- Python 3.11+
-- Hetzner Cloud API token (Read & Write)
+## Quick Install
 
-## Install
-
+### Linux / macOS
 ```bash
-pip install --break-system-packages git+https://github.com/dkruyt/mcp-hetzner.git
+cd ~/.openclaw/extensions/mcp-client/servers/hetzner
+chmod +x install.sh && ./install.sh
 ```
 
-Verify: `which mcp-hetzner` should return a path.
-
-## Get your token
-
-1. Go to [Hetzner Cloud Console](https://console.hetzner.cloud)
-2. Select your project → Security → API Tokens → **Generate API Token**
-3. Grant Read & Write permissions for full functionality
-
-## Configuration
-
-Add to your `openclaw.json` under `plugins.entries.mcp-client.config.servers`:
-
-```json
-{
-  "hetzner": {
-    "transport": "stdio",
-    "command": "mcp-hetzner",
-    "env": {
-      "HCLOUD_TOKEN": "${HETZNER_API_TOKEN}"
-    }
-  }
-}
+### Windows (PowerShell)
+```powershell
+cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\hetzner
+.\install.ps1
 ```
 
-> **Env var note:** `.env` uses `HETZNER_API_TOKEN`; the server expects `HCLOUD_TOKEN` — the config maps them as shown above.
+### Manual Setup
+1. Get your token: https://console.hetzner.cloud/
+2. Add to .env: `HETZNER_API_TOKEN=your_token`
+3. Add config to openclaw.json (see config.json)
+4. Restart gateway
 
-## Verify
-
-After gateway restart, check logs for:
-```
-Server hetzner initialized, registered 30 tools
-```
+## What you get
+- Server lifecycle tools
+- Volume, network, and firewall tools
+- Project resource inspection tools

@@ -1,7 +1,8 @@
 {
   "transport": "stdio",
-  "command": "hostinger-api-mcp",
+  "command": "npx",
+  "args": ["-y", "@anthropic-pb/hostinger-mcp-server"],
   "env": {
-    "API_TOKEN": "${HOSTINGER_API_TOKEN}"
+    "HOSTINGER_API_TOKEN": "${HOSTINGER_API_TOKEN}"
   }
 }

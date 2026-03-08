@@ -1,7 +1,7 @@
 {
   "transport": "stdio",
   "command": "node",
-  "args": ["node_modules/linear-mcp/build/index.js"],
+  "args": ["path/to/linear-mcp/dist/index.js"],
   "env": {
     "LINEAR_API_KEY": "${LINEAR_API_KEY}"
   }

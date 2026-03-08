@@ -1,60 +1,33 @@
 # Wise MCP Server
 
-International money transfer and multi-currency account management — community server by **[Szotasz/wise-mcp](https://github.com/Szotasz/wise-mcp)**.
-
-## What it provides
-
-20 tools for Wise account management:
-
-- **Read-only (14):** profiles, balances, currencies, exchange rates, quotes, transfers, recipients, statements, activities, transactions
-- **Write (6):** create quote, create recipient, create transfer, fund transfer, cancel transfer, simulate (sandbox)
-
-> ⚠️ **Write tools move real money.** Review carefully before use.
+Wise MCP server for multi-currency account and transfer workflows.
 
 ## Requirements
+- Git
+- Node.js + npm
+- Wise API token
 
-- Node.js
-- Wise Personal API token
+## Quick Install
 
-## Install
-
+### Linux / macOS
 ```bash
-git clone https://github.com/Szotasz/wise-mcp
-cd wise-mcp
-npm install
-npm run build
+cd ~/.openclaw/extensions/mcp-client/servers/wise
+chmod +x install.sh && ./install.sh
 ```
 
-> Also available as a [Smithery hosted](https://smithery.ai/) option (search "wise-mcp") if you prefer no local install.
-
-## Get your token
-
-1. Go to [Wise Settings → API tokens](https://wise.com/settings/api-tokens)
-2. Create a **Personal API token**
-3. Start with read-only permissions; add write permissions only if needed
-
-## Configuration
-
-Add to your `openclaw.json` under `plugins.entries.mcp-client.config.servers`:
-
-```json
-{
-  "wise": {
-    "transport": "stdio",
-    "command": "node",
-    "args": ["/path/to/wise-mcp/dist/cli.js"],
-    "env": {
-      "WISE_API_TOKEN": "${WISE_API_TOKEN}"
-    }
-  }
-}
+### Windows (PowerShell)
+```powershell
+cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\wise
+.\install.ps1
 ```
 
-Update the path in `args` to match where you cloned the repo.
+### Manual Setup
+1. Get your token: https://wise.com/settings/api-tokens
+2. Add to .env: `WISE_API_TOKEN=your_token`
+3. Add config to openclaw.json (see config.json)
+4. Restart gateway
 
-## Verify
-
-After gateway restart, check logs for:
-```
-Server wise initialized, registered 20 tools
-```
+## What you get
+- Profile and balance lookup tools
+- Quote and transfer workflow tools
+- Recipient and transaction tools

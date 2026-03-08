@@ -1,61 +1,32 @@
 # GitHub MCP Server
 
-Official MCP server by GitHub (`github/github-mcp-server`).
-
-## What it provides
-
-41 tools for GitHub operations:
-- Repository management (browse code, search files, analyze commits)
-- Issue & PR automation (create, update, review, merge)
-- CI/CD monitoring (workflow runs, build failures)
-- Code analysis (security findings, Dependabot alerts)
+Official GitHub MCP server running in Docker.
 
 ## Requirements
-
 - Docker
-- GitHub Personal Access Token
+- GitHub fine-grained personal access token
 
-## Install
+## Quick Install
 
+### Linux / macOS
 ```bash
-./install.sh
+cd ~/.openclaw/extensions/mcp-client/servers/github
+chmod +x install.sh && ./install.sh
 ```
 
-Or manually:
-
-```bash
-docker pull ghcr.io/github/github-mcp-server
+### Windows (PowerShell)
+```powershell
+cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\github
+.\install.ps1
 ```
 
-## Get your token
+### Manual Setup
+1. Get your token: https://github.com/settings/tokens
+2. Add to .env: `GITHUB_MCP_TOKEN=your_token`
+3. Add config to openclaw.json (see config.json)
+4. Restart gateway
 
-1. Go to https://github.com/settings/personal-access-tokens/new
-2. Select the repositories you want to access
-3. Enable permissions: Contents (read), Issues (read/write), Pull requests (read/write)
-4. Copy the token
-
-## Configuration
-
-Add to your `openclaw.json` under `plugins.entries.mcp-client.config.servers`:
-
-```json
-"github": {
-  "transport": "stdio",
-  "command": "docker",
-  "args": ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "ghcr.io/github/github-mcp-server"],
-  "env": {
-    "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_MCP_TOKEN}"
-  }
-}
-```
-
-## Windows
-
-Docker Desktop required. Same configuration works on Windows.
-
-## Verify
-
-After gateway restart, check logs for:
-```
-Server github initialized, registered 41 tools
-```
+## What you get
+- Repository browsing and search tools
+- Issue and pull request management tools
+- Workflow and automation helpers

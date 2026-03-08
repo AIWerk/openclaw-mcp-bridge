@@ -1,7 +1,7 @@
 {
   "transport": "stdio",
   "command": "node",
-  "args": ["/path/to/wise-mcp/dist/cli.js"],
+  "args": ["path/to/wise-mcp/dist/cli.js"],
   "env": {
     "WISE_API_TOKEN": "${WISE_API_TOKEN}"
   }

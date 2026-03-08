@@ -1,7 +1,7 @@
 {
   "transport": "stdio",
   "command": "npx",
-  "args": ["-y", "@modelcontextprotocol/server-google-maps"],
+  "args": ["-y", "@anthropic-pb/google-maps-mcp-server"],
   "env": {
     "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}"
   }

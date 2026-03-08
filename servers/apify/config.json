@@ -1,6 +1,6 @@
 {
   "transport": "streamable-http",
-  "url": "https://mcp.apify.com",
+  "url": "https://mcp.apify.com/mcp",
   "headers": {
     "Authorization": "Bearer ${APIFY_TOKEN}"
   }

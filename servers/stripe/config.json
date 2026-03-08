@@ -1,8 +1,8 @@
 {
   "transport": "stdio",
   "command": "npx",
-  "args": ["-y", "@stripe/mcp"],
+  "args": ["-y", "@anthropic-pb/stripe-mcp-server", "--tools=all", "--api-key=${STRIPE_API_KEY}"],
   "env": {
-    "STRIPE_SECRET_KEY": "${STRIPE_API_KEY}"
+    "STRIPE_API_KEY": "${STRIPE_API_KEY}"
   }
 }

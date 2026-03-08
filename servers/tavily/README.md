@@ -1,61 +1,32 @@
 # Tavily MCP Server
 
-AI-optimized web search API via MCP (`tavily-mcp`).
-
-## What it provides
-
-5 tools for web search and content extraction:
-- `tavily_search` — web search optimized for LLMs (returns clean markdown)
-- `tavily_extract` — extract content from URLs
-- `tavily_crawl` — crawl websites with configurable depth
-- `tavily_map` — map a website's URL structure
-- `tavily_research` — comprehensive multi-source research
+Tavily MCP search and extraction tools.
 
 ## Requirements
+- Node.js + npx
+- Tavily API key
 
-- Node.js 18+
-- Tavily API key (free tier: 1000 requests/month)
+## Quick Install
 
-## Install
-
-No installation needed — runs via `npx`.
-
-## Get your API key
-
-1. Visit https://app.tavily.com/home
-2. Sign up with Google or GitHub (instant)
-3. Copy the API key from the dashboard
-
-## Pricing
-
-- **Free:** 1000 requests/month
-- **Hobby:** $20/month (10,000 requests)
-- **Pro:** $100/month (100,000 requests)
-
-## Configuration
-
-Add to your `openclaw.json` under `plugins.entries.mcp-client.config.servers`:
-
-```json
-"tavily": {
-  "transport": "stdio",
-  "command": "npx",
-  "args": ["-y", "tavily-mcp"],
-  "env": {
-    "TAVILY_API_KEY": "${TAVILY_API_KEY}"
-  }
-}
+### Linux / macOS
+```bash
+cd ~/.openclaw/extensions/mcp-client/servers/tavily
+chmod +x install.sh && ./install.sh
 ```
 
-## Verify
-
-After gateway restart, check logs for:
+### Windows (PowerShell)
+```powershell
+cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\tavily
+.\install.ps1
 ```
-Server tavily initialized, registered 5 tools
-```
 
-## Notes
+### Manual Setup
+1. Get your token: https://app.tavily.com/home
+2. Add to .env: `TAVILY_API_KEY=your_token`
+3. Add config to openclaw.json (see config.json)
+4. Restart gateway
 
-- Tavily is the most requested MCP server in the OpenClaw community
-- Results are pre-cleaned markdown — ideal for LLM consumption
-- The free tier is generous enough for personal use
+## What you get
+- Web search tools
+- URL extraction and crawling tools
+- Research and mapping helpers
