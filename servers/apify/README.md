@@ -1,10 +1,11 @@
 # Apify MCP Server
 
-Web scraping and automation platform — 8 tools for actor management, web scraping, and documentation search.
+Web scraping and automation platform — hosted by Apify (`apify/actors-mcp-server`).
 
-**Transport:** Streamable HTTP (hosted, no local install)
+## What it provides
 
-## Tools
+8 tools for actor management, web scraping, and documentation search: find and run actors, check run status, retrieve results, search/fetch Apify docs, and scrape any URL to markdown.
+
 - `search-actors` — Find scrapers/actors in the Apify Store
 - `fetch-actor-details` — Get actor documentation and input schema
 - `call-actor` — Run an actor with parameters
@@ -14,29 +15,25 @@ Web scraping and automation platform — 8 tools for actor management, web scrap
 - `fetch-apify-docs` — Fetch full documentation pages
 - `apify/rag-web-browser` — Scrape any URL to markdown
 
-## Installation
+## Requirements
 
-### 1. Get your API token
-Go to [Apify Console → Settings → Integrations](https://console.apify.com/account/integrations) and create an API token.
+- No local install — hosted service, Streamable HTTP transport
+- Apify API token (free tier available)
 
-### 2. Save the token
-```bash
-# Option A: Add to .env directly
-echo "APIFY_TOKEN=apify_api_xxxxx" >> ~/.openclaw/.env
+## Install
 
-# Option B: Using pass (password-store)
-pass insert api/apify-token
-# Then add to your generate-env.sh:
-# write_secret "APIFY_TOKEN" "api/apify-token"
-```
+No installation needed — runs via Streamable HTTP.
 
-### 3. Install with the installer
-```bash
-cd ~/.openclaw/extensions/mcp-client
-./install-server.sh apify
-```
+## Get your token
 
-### 4. Or manually add to openclaw.json
+1. Go to [Apify Console → Settings → Integrations](https://console.apify.com/account/integrations)
+2. Create an API token
+3. Free tier available; paid plans for higher usage
+
+## Configuration
+
+Add to your `openclaw.json` under `plugins.entries.mcp-client.config.servers`:
+
 ```json
 {
   "apify": {
@@ -49,25 +46,13 @@ cd ~/.openclaw/extensions/mcp-client
 }
 ```
 
-### 5. Restart gateway
-```bash
-openclaw gateway restart
+Set `APIFY_TOKEN` in your `~/.openclaw/.env`.
+
+## Verify
+
+After gateway restart, check logs for:
+```
+Server apify initialized, registered 8 tools
 ```
 
-### 6. Verify
-```bash
-journalctl --user -u openclaw-gateway.service | grep "apify"
-# Expected: Server apify initialized, registered 8 tools
-```
-
-## Windows
-
-OpenClaw runs on Windows (WSL2 recommended). Adapt paths:
-- Config: `%USERPROFILE%\.openclaw\openclaw.json`
-- Logs: `openclaw gateway logs` (no journalctl)
-- `pip`/`npm`/`npx` commands work the same on Windows
-
-## Notes
-- Apify is a hosted service — no local software needed
-- Free tier available (limited usage), paid plans for more
-- SSE transport is deprecated (sunset April 2026), use Streamable HTTP
+> **Note:** SSE transport is deprecated (sunset April 2026) — use Streamable HTTP as shown above.

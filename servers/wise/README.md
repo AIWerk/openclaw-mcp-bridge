@@ -1,27 +1,41 @@
 # Wise MCP Server
 
-[Wise](https://wise.com) (formerly TransferWise) international money transfer and multi-currency account management.
+International money transfer and multi-currency account management — community server by **[Szotasz/wise-mcp](https://github.com/Szotasz/wise-mcp)**.
 
-## Server
+## What it provides
 
-- **Source:** [Szotasz/wise-mcp](https://github.com/Szotasz/wise-mcp) (community)
-- **Transport:** stdio
-- **Install:** `git clone` + `npm install` + `npm run build` (no npm package)
-- **Also available:** [Smithery hosted](https://smithery.ai/) (search "wise-mcp")
+20 tools for Wise account management:
 
-## Tools (20)
+- **Read-only (14):** profiles, balances, currencies, exchange rates, quotes, transfers, recipients, statements, activities, transactions
+- **Write (6):** create quote, create recipient, create transfer, fund transfer, cancel transfer, simulate (sandbox)
 
-**Read-only (14):** profiles, balances, currencies, exchange rates, quotes, transfers, recipients, statements, activities, transactions
+> ⚠️ **Write tools move real money.** Review carefully before use.
 
-**Write (6):** create quote, create recipient, create transfer, fund transfer, cancel transfer, simulate (sandbox)
+## Requirements
 
-## Get Your Token
+- Node.js
+- Wise Personal API token
+
+## Install
+
+```bash
+git clone https://github.com/Szotasz/wise-mcp
+cd wise-mcp
+npm install
+npm run build
+```
+
+> Also available as a [Smithery hosted](https://smithery.ai/) option (search "wise-mcp") if you prefer no local install.
+
+## Get your token
 
 1. Go to [Wise Settings → API tokens](https://wise.com/settings/api-tokens)
 2. Create a **Personal API token**
-3. For production use, enable the permissions you need (read-only recommended to start)
+3. Start with read-only permissions; add write permissions only if needed
 
-## Config
+## Configuration
+
+Add to your `openclaw.json` under `plugins.entries.mcp-client.config.servers`:
 
 ```json
 {
@@ -36,9 +50,7 @@
 }
 ```
 
-## Windows Compatible
-
-Yes — pure Node.js, no native dependencies.
+Update the path in `args` to match where you cloned the repo.
 
 ## Verify
 

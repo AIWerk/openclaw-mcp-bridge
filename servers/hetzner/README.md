@@ -1,46 +1,40 @@
 # Hetzner Cloud MCP Server
 
-Cloud infrastructure management — 30 tools for servers, volumes, firewalls, SSH keys, and more.
+Cloud infrastructure management — **[dkruyt/mcp-hetzner](https://github.com/dkruyt/mcp-hetzner)** (`mcp-hetzner`).
 
-**Transport:** Stdio (local subprocess)
+## What it provides
 
-## Tools (30)
-Servers: list, get, create, delete, power on/off, reboot
-Volumes: list, get, create, delete, attach, detach, resize
-Firewalls: list, get, create, delete, update, set rules, apply/remove from resources
-SSH Keys: list, get, create, update, delete
-Info: list images, list server types, list locations
+30 tools across all major Hetzner Cloud resource types:
 
-## Installation
+- **Servers:** list, get, create, delete, power on/off, reboot
+- **Volumes:** list, get, create, delete, attach, detach, resize
+- **Firewalls:** list, get, create, delete, update, set rules, apply/remove from resources
+- **SSH Keys:** list, get, create, update, delete
+- **Info:** list images, server types, locations
 
-### 1. Install the MCP server
+## Requirements
+
+- Python 3.11+
+- Hetzner Cloud API token (Read & Write)
+
+## Install
+
 ```bash
 pip install --break-system-packages git+https://github.com/dkruyt/mcp-hetzner.git
 ```
 
 Verify: `which mcp-hetzner` should return a path.
 
-### 2. Get your API token
-Go to [Hetzner Cloud Console](https://console.hetzner.cloud) → select project → Security → API Tokens → **Generate API Token** (Read & Write).
+## Get your token
 
-### 3. Save the token
-```bash
-# Option A: Add to .env directly
-echo "HETZNER_API_TOKEN=your_token_here" >> ~/.openclaw/.env
+1. Go to [Hetzner Cloud Console](https://console.hetzner.cloud)
+2. Select your project → Security → API Tokens → **Generate API Token**
+3. Grant Read & Write permissions for full functionality
 
-# Option B: Using pass (password-store)
-pass insert aiwerk/hetzner-api-token
-# Then add to your generate-env.sh:
-# write_secret "HETZNER_API_TOKEN" "aiwerk/hetzner-api-token"
-```
+## Configuration
 
-### 4. Install with the installer
-```bash
-cd ~/.openclaw/extensions/mcp-client
-./install-server.sh hetzner
-```
+Add to your `openclaw.json` under `plugins.entries.mcp-client.config.servers`:
 
-### 5. Or manually add to openclaw.json
 ```json
 {
   "hetzner": {
@@ -53,21 +47,11 @@ cd ~/.openclaw/extensions/mcp-client
 }
 ```
 
-### 6. Restart and verify
-```bash
-openclaw gateway restart
-journalctl --user -u openclaw-gateway.service | grep "hetzner"
-# Expected: Server hetzner initialized, registered 30 tools
+> **Env var note:** `.env` uses `HETZNER_API_TOKEN`; the server expects `HCLOUD_TOKEN` — the config maps them as shown above.
+
+## Verify
+
+After gateway restart, check logs for:
 ```
-
-## Windows
-
-OpenClaw runs on Windows (WSL2 recommended). Adapt paths:
-- Config: `%USERPROFILE%\.openclaw\openclaw.json`
-- Logs: `openclaw gateway logs` (no journalctl)
-- `pip`/`npm`/`npx` commands work the same on Windows
-
-## Notes
-- Requires Python 3.11+
-- The token needs Read & Write permissions for full functionality
-- Source: [dkruyt/mcp-hetzner](https://github.com/dkruyt/mcp-hetzner)
+Server hetzner initialized, registered 30 tools
+```
