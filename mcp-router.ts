@@ -22,10 +22,19 @@ export interface RouterToolHint {
   requiredParams: string[];
 }
 
+export interface RouterServerStatus {
+  name: string;
+  transport: string;
+  status: "connected" | "idle" | "disconnected";
+  tools: number;
+  lastUsed?: string;
+}
+
 export type RouterDispatchResponse =
   | { server: string; action: "list"; tools: RouterToolHint[] }
   | { server: string; action: "refresh"; refreshed: true; tools: RouterToolHint[] }
   | { server: string; action: "call"; tool: string; result: any }
+  | { action: "status"; servers: RouterServerStatus[] }
   | {
       error: RouterErrorCode;
       message: string;
@@ -92,19 +101,24 @@ export class McpRouter {
       })
       .join(", ");
 
-    return `Call any MCP server tool. Servers: ${serverList}. Use action='list' to discover tools and required parameters, action='call' to execute a tool, and action='refresh' to clear cache and re-discover tools. If the user mentions a specific tool by name, the call action auto-connects and works without listing first.`;
+    return `Call any MCP server tool. Servers: ${serverList}. Use action='list' to discover tools and required parameters, action='call' to execute a tool, action='refresh' to clear cache and re-discover tools, and action='status' to check server connection states. If the user mentions a specific tool by name, the call action auto-connects and works without listing first.`;
   }
 
   async dispatch(server?: string, action: string = "call", tool?: string, params?: any): Promise<RouterDispatchResponse> {
     try {
+      const normalizedAction = action || "call";
+
+      // Status action: no server required, shows all server states
+      if (normalizedAction === "status") {
+        return this.getStatus();
+      }
+
       if (!server) {
         return this.error("invalid_params", "server is required");
       }
       if (!this.servers[server]) {
         return this.error("unknown_server", `Server '${server}' not found`, Object.keys(this.servers));
       }
-
-      const normalizedAction = action || "call";
       if (normalizedAction === "list") {
         try {
           const tools = await this.getToolList(server);
@@ -186,6 +200,25 @@ export class McpRouter {
 
     this.markUsed(server);
     return state.toolsCache;
+  }
+
+  private getStatus(): RouterDispatchResponse {
+    const serverStatuses: RouterServerStatus[] = Object.entries(this.servers).map(([name, config]) => {
+      const state = this.states.get(name);
+      let status: "connected" | "idle" | "disconnected" = "disconnected";
+      if (state?.transport.isConnected()) {
+        const idleMs = Date.now() - state.lastUsedAt;
+        status = idleMs > 60_000 ? "idle" : "connected";
+      }
+      return {
+        name,
+        transport: config.transport,
+        status,
+        tools: state?.toolNames.length ?? 0,
+        ...(state?.lastUsedAt ? { lastUsed: new Date(state.lastUsedAt).toISOString() } : {})
+      };
+    });
+    return { action: "status", servers: serverStatuses };
   }
 
   async disconnectAll(): Promise<void> {
