@@ -92,7 +92,7 @@ export class McpRouter {
       })
       .join(", ");
 
-    return `Call any MCP server tool. Servers: ${serverList}. Use action='list' to discover tools and required parameters, action='call' to execute a tool, and action='refresh' to clear cache and re-discover tools.`;
+    return `Call any MCP server tool. Servers: ${serverList}. Use action='list' to discover tools and required parameters, action='call' to execute a tool, and action='refresh' to clear cache and re-discover tools. If the user mentions a specific tool by name, the call action auto-connects and works without listing first.`;
   }
 
   async dispatch(server?: string, action: string = "call", tool?: string, params?: any): Promise<RouterDispatchResponse> {
