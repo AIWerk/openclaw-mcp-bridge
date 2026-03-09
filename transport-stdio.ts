@@ -42,7 +42,7 @@ export class StdioTransport implements McpTransport {
     if (!this.config.command) return;
 
     const env = { ...process.env, ...this.resolveEnv(this.config.env || {}) };
-    const args = this.config.args || [];
+    const args = this.resolveArgs(this.config.args || [], env);
 
     this.process = spawn(this.config.command, args, {
       stdio: ["pipe", "pipe", "pipe"],
@@ -314,6 +314,18 @@ export class StdioTransport implements McpTransport {
     }
 
     return true;
+  }
+
+  private resolveArgs(args: string[], env: Record<string, string>): string[] {
+    return args.map(arg =>
+      arg.replace(/\$\{(\w+)\}/g, (_, varName) => {
+        const value = env[varName] ?? process.env[varName];
+        if (value === undefined) {
+          throw new Error(`[mcp-client] Missing required environment variable "${varName}" while resolving arg "${arg}"`);
+        }
+        return value;
+      })
+    );
   }
 
   private resolveEnv(env: Record<string, string>): Record<string, string> {
