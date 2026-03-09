@@ -323,6 +323,8 @@ openclaw gateway restart
 - OpenClaw 2026.3.x+
 - Node.js 22+
 
+> **Note:** `@sinclair/typebox` is vendored in `node_modules/` intentionally (zero-install design). Users don't need to run `npm install` — the plugin works immediately after cloning. This is the only runtime dependency.
+
 ## License
 
 MIT — [AIWerk](https://aiwerk.ch)
