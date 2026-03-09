@@ -227,12 +227,20 @@ if [[ -z "$RESTART" || "$RESTART" =~ ^[Yy]$ ]]; then
     for i in 1 2 3 4 5 6; do
         sleep 5
         if ! systemctl --user is-active --quiet openclaw-gateway 2>/dev/null; then
-            echo "❌ Gateway failed! Check: journalctl --user -u openclaw-gateway --since '1 min ago' --no-pager"
+            echo "❌ Gateway failed to start!"
+            journalctl --user -u openclaw-gateway --since "1 min ago" --no-pager 2>/dev/null | grep -iE "error|fail|missing" | head -5
+            echo "Full logs: journalctl --user -u openclaw-gateway --since '1 min ago' --no-pager"
             exit 1
         fi
         if journalctl --user -u openclaw-gateway --since "1 min ago" --no-pager 2>/dev/null | grep -qi "Server ${SERVER_NAME} initialized"; then
             CONFIRMED=true
             break
+        fi
+        # Check if server explicitly failed
+        if journalctl --user -u openclaw-gateway --since "1 min ago" --no-pager 2>/dev/null | grep -qi "Startup failed: ${SERVER_NAME}"; then
+            echo "❌ ${SERVER_TITLE} MCP Server failed to start!"
+            journalctl --user -u openclaw-gateway --since "1 min ago" --no-pager 2>/dev/null | grep -i "$SERVER_NAME" | tail -5
+            exit 1
         fi
     done
     if $CONFIRMED; then
