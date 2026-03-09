@@ -220,12 +220,23 @@ echo "Updated ${OPENCLAW_JSON} for server ${SERVER_NAME}"
 echo ""
 read -r -p "Restart gateway now? [Y/n] " RESTART_ANSWER
 if [ -z "$RESTART_ANSWER" ] || [ "$RESTART_ANSWER" = "Y" ] || [ "$RESTART_ANSWER" = "y" ]; then
-  systemctl --user restart openclaw-gateway 2>/dev/null || echo "⚠️  Could not restart automatically. Run: systemctl --user restart openclaw-gateway"
-  sleep 5
-  if journalctl --user -u openclaw-gateway --since "10 sec ago" --no-pager 2>/dev/null | grep -qi "$SERVER_NAME"; then
+  systemctl --user restart openclaw-gateway 2>/dev/null || {
+    echo "⚠️  Could not restart automatically. Run: systemctl --user restart openclaw-gateway"
+    exit 0
+  }
+  echo "Waiting for gateway to start..."
+  sleep 8
+  # Check if gateway is actually running
+  if ! systemctl --user is-active --quiet openclaw-gateway 2>/dev/null; then
+    echo "❌ Gateway failed to start! Check logs: journalctl --user -u openclaw-gateway --since '30 sec ago' --no-pager"
+    journalctl --user -u openclaw-gateway --since "30 sec ago" --no-pager 2>/dev/null | grep -i "error\|fail\|missing" | head -5
+    exit 1
+  fi
+  # Check if this specific server registered
+  if journalctl --user -u openclaw-gateway --since "30 sec ago" --no-pager 2>/dev/null | grep -qi "$SERVER_NAME"; then
     echo "✅ ${SERVER_TITLE} MCP Server installed and running!"
   else
-    echo "✅ Installed. Check gateway logs to verify: journalctl --user -u openclaw-gateway -f"
+    echo "⚠️  Gateway is running but ${SERVER_TITLE} not found in logs. Check: journalctl --user -u openclaw-gateway -f"
   fi
 else
   echo "⏭️  Skipped restart. Run manually: systemctl --user restart openclaw-gateway"
