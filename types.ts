@@ -1,5 +1,7 @@
 export interface McpServerConfig {
   transport: "sse" | "stdio" | "streamable-http";
+  /** Human-readable description for router tool description generation */
+  description?: string;
   // SSE transport
   url?: string;
   headers?: Record<string, string>;
@@ -13,10 +15,13 @@ export interface McpServerConfig {
 
 export interface McpClientConfig {
   servers: Record<string, McpServerConfig>;
+  mode?: "direct" | "router";
   toolPrefix?: boolean | "auto";
   reconnectIntervalMs?: number;
   connectionTimeoutMs?: number;
   requestTimeoutMs?: number;
+  routerIdleTimeoutMs?: number;
+  routerMaxConcurrent?: number;
 }
 
 export interface McpTool {

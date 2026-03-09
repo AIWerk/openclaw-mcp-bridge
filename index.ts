@@ -12,6 +12,7 @@ import { SseTransport } from "./transport-sse.js";
 import { StdioTransport } from "./transport-stdio.js";
 import { StreamableHttpTransport } from "./transport-streamable-http.js";
 import { createToolParameters, setSchemaLogger } from "./schema-convert.js";
+import { McpRouter } from "./mcp-router.js";
 
 // Read version from package.json at load time (single source of truth)
 const PLUGIN_VERSION: string = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf-8")).version;
@@ -70,17 +71,44 @@ export function pickRegisteredToolName(
 
 export default function activate(api: any) {
   const config = (api.pluginConfig ?? {}) as McpClientConfig;
+  const mode = config.mode ?? "direct";
   setSchemaLogger(api.logger);
   const connections = new Map<string, McpServerConnection>();
   const globalRegisteredToolNames = new Set<string>();
+  const router = mode === "router" ? new McpRouter(config.servers || {}, config, api.logger) : null;
   
   if (!config.servers || Object.keys(config.servers).length === 0) {
     api.logger.info("[mcp-client] No servers configured, plugin inactive");
     return;
   }
 
-  // Initialize connections to all configured servers
-  initializeServers();
+  if (mode === "router") {
+    registerRouterTool();
+  } else {
+    // Initialize connections to all configured servers
+    initializeServers();
+  }
+
+  function registerRouterTool() {
+    api.registerTool({
+      name: "mcp",
+      label: "MCP Router",
+      description: router!.generateDescription(config.servers),
+      parameters: {
+        type: "object",
+        properties: {
+          server: { type: "string", description: "Server name" },
+          action: { type: "string", description: "list | call | refresh" },
+          tool: { type: "string", description: "Tool name for action=call" },
+          params: { type: "object", description: "Tool arguments" }
+        },
+        required: ["server"]
+      },
+      async execute(_toolId: string, params: any) {
+        return router!.dispatch(params?.server, params?.action, params?.tool, params?.params);
+      }
+    });
+  }
 
   async function initializeServers() {
     const serverEntries = Object.entries(config.servers);
@@ -423,6 +451,18 @@ export default function activate(api: any) {
   // Cleanup on deactivation
   api.on("deactivate", async () => {
     api.logger.info("[mcp-client] Deactivating, closing connections and unregistering tools");
+    if (mode === "router") {
+      if (typeof api.unregisterTool === "function") {
+        try {
+          api.unregisterTool("mcp");
+        } catch (error) {
+          api.logger.warn("[mcp-client] Failed to unregister mcp router tool during deactivation:", error);
+        }
+      }
+      await router!.disconnectAll();
+      return;
+    }
+
     for (const connection of connections.values()) {
       // Unregister tools first
       if (typeof api.unregisterTool === "function") {
