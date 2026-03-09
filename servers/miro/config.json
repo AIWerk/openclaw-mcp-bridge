@@ -2,5 +2,7 @@
   "transport": "stdio",
   "command": "npx",
   "args": ["-y", "@llmindset/mcp-miro", "--token", "${MIRO_API_TOKEN}"],
-  "env": {}
+  "env": {
+    "MIRO_API_TOKEN": "${MIRO_API_TOKEN}"
+  }
 }
