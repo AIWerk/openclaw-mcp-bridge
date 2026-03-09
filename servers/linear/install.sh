@@ -154,7 +154,15 @@ mkdir -p "$OPENCLAW_DIR"
 # Write token to .env (OpenClaw standard: ~/.openclaw/.env, chmod 600)
 touch "$ENV_FILE"
 if grep -q "^${ENV_VAR_NAME}=" "$ENV_FILE"; then
-  echo "${ENV_VAR_NAME} already exists in ${ENV_FILE}; leaving existing value unchanged"
+  echo "${ENV_VAR_NAME} already exists in ${ENV_FILE}."
+  read -r -p "Overwrite with new token? [y/N]: " OVERWRITE
+  if [[ "$OVERWRITE" =~ ^[Yy]$ ]]; then
+    sed -i "/^${ENV_VAR_NAME}=/d" "$ENV_FILE"
+    echo "${ENV_VAR_NAME}=${TOKEN}" >> "$ENV_FILE"
+    echo "✅ Updated ${ENV_VAR_NAME} in ${ENV_FILE}"
+  else
+    echo "Keeping existing value."
+  fi
 else
   echo "${ENV_VAR_NAME}=${TOKEN}" >> "$ENV_FILE"
   echo "✅ Added ${ENV_VAR_NAME} to ${ENV_FILE}"
