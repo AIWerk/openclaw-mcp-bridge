@@ -1,9 +1,5 @@
-import { readFileSync } from "fs";
-import { join } from "path";
 import {
   McpClientConfig,
-  McpRequest,
-  McpResponse,
   McpServerConfig,
   McpTool,
   McpTransport
@@ -11,8 +7,7 @@ import {
 import { SseTransport } from "./transport-sse.js";
 import { StdioTransport } from "./transport-stdio.js";
 import { StreamableHttpTransport } from "./transport-streamable-http.js";
-
-const PLUGIN_VERSION: string = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf-8")).version;
+import { fetchToolsList, initializeProtocol, PLUGIN_VERSION } from "./protocol.js";
 
 type RouterErrorCode =
   | "unknown_server"
@@ -97,11 +92,7 @@ export class McpRouter {
       })
       .join(", ");
 
-    return `Call any MCP server tool. Servers: ${serverList}. Use action='list' with a server name to see available tools and required parameters.`;
-  }
-
-  generateDescription(servers: Record<string, McpServerConfig> = this.servers): string {
-    return McpRouter.generateDescription(servers);
+    return `Call any MCP server tool. Servers: ${serverList}. Use action='list' to discover tools and required parameters, action='call' to execute a tool, and action='refresh' to clear cache and re-discover tools.`;
   }
 
   async dispatch(server?: string, action: string = "call", tool?: string, params?: any): Promise<RouterDispatchResponse> {
@@ -185,7 +176,7 @@ export class McpRouter {
       return state.toolsCache;
     }
 
-    const tools = await this.fetchToolsList(state.transport);
+    const tools = await fetchToolsList(state.transport);
     state.toolNames = tools.map((tool) => tool.name);
     state.toolsCache = tools.map((tool) => ({
       name: tool.name,
@@ -227,7 +218,7 @@ export class McpRouter {
         await state!.transport.connect();
       }
       if (!state!.initialized) {
-        await this.initializeProtocol(state!.transport);
+        await initializeProtocol(state!.transport, PLUGIN_VERSION);
         state!.initialized = true;
       }
       this.markUsed(server);
@@ -276,6 +267,8 @@ export class McpRouter {
     }
 
     state.initialized = false;
+    state.toolsCache = undefined;
+    state.toolNames = [];
   }
 
   private markUsed(server: string): void {
@@ -315,60 +308,6 @@ export class McpRouter {
     }
 
     throw new Error(`Unsupported transport: ${serverConfig.transport}`);
-  }
-
-  private async initializeProtocol(transport: McpTransport): Promise<void> {
-    const initRequest: McpRequest = {
-      jsonrpc: "2.0",
-      method: "initialize",
-      params: {
-        protocolVersion: "2024-11-05",
-        capabilities: {},
-        clientInfo: {
-          name: "openclaw-mcp-bridge",
-          version: PLUGIN_VERSION
-        }
-      }
-    };
-
-    const response = await transport.sendRequest(initRequest);
-    if (response.error) {
-      throw new Error(`Initialize failed: ${response.error.message}`);
-    }
-
-    await transport.sendNotification({
-      jsonrpc: "2.0",
-      method: "notifications/initialized"
-    });
-  }
-
-  private async fetchToolsList(transport: McpTransport): Promise<McpTool[]> {
-    const allTools: McpTool[] = [];
-    let cursor: string | undefined;
-
-    while (true) {
-      const request: McpRequest = {
-        jsonrpc: "2.0",
-        method: "tools/list",
-        ...(cursor ? { params: { cursor } } : {})
-      };
-
-      const response: McpResponse = await transport.sendRequest(request);
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
-
-      const pageTools = Array.isArray(response.result?.tools) ? response.result.tools : [];
-      allTools.push(...pageTools);
-
-      const nextCursor = response.result?.nextCursor;
-      if (!nextCursor) {
-        break;
-      }
-      cursor = nextCursor;
-    }
-
-    return allTools;
   }
 
   private extractRequiredParams(tool: McpTool): string[] {

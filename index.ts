@@ -1,21 +1,17 @@
-import { readFileSync } from "fs";
-import { join } from "path";
 import {
   McpClientConfig,
+  McpRequest,
   McpServerConfig,
   McpServerConnection,
   McpTransport,
-  McpTool,
-  McpRequest
+  McpTool
 } from "./types.js";
 import { SseTransport } from "./transport-sse.js";
 import { StdioTransport } from "./transport-stdio.js";
 import { StreamableHttpTransport } from "./transport-streamable-http.js";
 import { createToolParameters, setSchemaLogger } from "./schema-convert.js";
 import { McpRouter } from "./mcp-router.js";
-
-// Read version from package.json at load time (single source of truth)
-const PLUGIN_VERSION: string = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf-8")).version;
+import { fetchToolsList, initializeProtocol, PLUGIN_VERSION } from "./protocol.js";
 
 function isNameTaken(name: string, localNames: Set<string>, globalNames: Set<string>): boolean {
   return localNames.has(name) || globalNames.has(name);
@@ -93,7 +89,7 @@ export default function activate(api: any) {
     api.registerTool({
       name: "mcp",
       label: "MCP Router",
-      description: router!.generateDescription(config.servers),
+      description: McpRouter.generateDescription(config.servers),
       parameters: {
         type: "object",
         properties: {
@@ -178,7 +174,7 @@ export default function activate(api: any) {
         connection.isInitialized = false;
         connection.tools = [];
         
-        await initializeProtocol(connection);
+        await initializeProtocol(connection.transport, PLUGIN_VERSION);
         await discoverTools(connection);
         await registerServerTools(connection);
 
@@ -219,7 +215,7 @@ export default function activate(api: any) {
       api.logger.info(`[mcp-client] Connected to server: ${name}`);
 
       // Initialize the MCP protocol
-      await initializeProtocol(connection);
+      await initializeProtocol(connection.transport, PLUGIN_VERSION);
       
       // Get available tools
       await discoverTools(connection);
@@ -237,62 +233,8 @@ export default function activate(api: any) {
     }
   }
 
-  async function initializeProtocol(connection: McpServerConnection): Promise<void> {
-    // Send initialize request
-    const initRequest: McpRequest = {
-      jsonrpc: "2.0",
-      method: "initialize",
-      params: {
-        protocolVersion: "2024-11-05",
-        capabilities: {},
-        clientInfo: {
-          name: "openclaw-mcp-bridge",
-          version: PLUGIN_VERSION
-        }
-      }
-    };
-
-    const response = await connection.transport.sendRequest(initRequest);
-    
-    if (response.error) {
-      throw new Error(`Initialize failed: ${response.error.message}`);
-    }
-
-    // Send initialized notification (no id = JSON-RPC notification, no response expected)
-    await connection.transport.sendNotification({
-      jsonrpc: "2.0",
-      method: "notifications/initialized"
-    });
-  }
-
   async function discoverTools(connection: McpServerConnection): Promise<void> {
-    const allTools: McpTool[] = [];
-    let cursor: string | undefined = undefined;
-
-    while (true) {
-      const listRequest: McpRequest = {
-        jsonrpc: "2.0",
-        method: "tools/list",
-        ...(cursor ? { params: { cursor } } : {})
-      };
-
-      const response = await connection.transport.sendRequest(listRequest);
-      
-      if (response.error) {
-        throw new Error(`Tools list failed: ${response.error.message}`);
-      }
-
-      const pageTools = Array.isArray(response.result?.tools) ? response.result.tools : [];
-      allTools.push(...pageTools);
-
-      const nextCursor = response.result?.nextCursor;
-      if (!nextCursor) {
-        break;
-      }
-      cursor = nextCursor;
-    }
-
-    connection.tools = allTools;
+    connection.tools = await fetchToolsList(connection.transport);
   }
 
   async function registerServerTools(connection: McpServerConnection): Promise<void> {

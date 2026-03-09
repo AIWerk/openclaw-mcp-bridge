@@ -25,7 +25,7 @@ class MockTransport implements McpTransport {
   disconnectCount = 0;
   private readonly key: string;
 
-  constructor(config: McpServerConfig) {
+  constructor(config: McpServerConfig, _clientConfig?: any, _logger?: any, _onReconnected?: () => Promise<void>) {
     this.key = config.url || config.command || "default";
     MockTransport.instances.set(this.key, this);
   }
@@ -104,9 +104,9 @@ function makeRouter(
     },
     makeLogger(),
     {
-      sse: MockTransport as any,
-      stdio: MockTransport as any,
-      streamableHttp: MockTransport as any
+      sse: MockTransport,
+      stdio: MockTransport,
+      streamableHttp: MockTransport
     }
   );
 }
@@ -242,4 +242,6 @@ test("generateDescription includes configured servers", () => {
   assert.match(description, /hetzner/);
   assert.match(description, /github/);
   assert.match(description, /action='list'/);
+  assert.match(description, /action='call'/);
+  assert.match(description, /action='refresh'/);
 });

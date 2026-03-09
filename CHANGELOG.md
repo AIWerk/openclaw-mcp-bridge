@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.6.0] - 2026-03-09
+
+### Added
+- feat: Smart Router mode (`mode: "router"`) — single mcp tool replaces all individual tools (~98% token reduction)
+- feat: Lazy connect with LRU eviction and idle timeout
+- feat: Per-server description field for dynamic tool descriptions
+- feat: Installer mode selection (router/direct) in `install.sh` and `install.ps1`
+
+### Fixed
+- fix: Default params to `{}` when undefined (strict MCP servers)
+- fix: `install-server.sh` router mode detection (no 30s timeout for lazy connect)
+
+### Documentation
+- docs: README rewrite with router as recommended mode
+
 ## [1.5.0] - 2026-03-08
 
 ### Changed
