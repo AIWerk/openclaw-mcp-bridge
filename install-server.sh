@@ -1,148 +1,238 @@
 #!/bin/bash
-
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OPENCLAW_CONFIG="$HOME/.openclaw/openclaw.json"
-OPENCLAW_ENV="$HOME/.openclaw/.env"
+OPENCLAW_DIR="${HOME}/.openclaw"
+OPENCLAW_JSON="${OPENCLAW_DIR}/openclaw.json"
+ENV_FILE="${OPENCLAW_DIR}/.env"
 
 usage() {
     echo "Usage: $0 <server-name> [--dry-run]"
     echo ""
     echo "Available servers:"
     for server_dir in "$SCRIPT_DIR/servers"/*; do
-        if [[ -d "$server_dir" ]]; then
-            server_name=$(basename "$server_dir")
-            echo "  - $server_name"
-        fi
+        [[ -d "$server_dir" ]] && echo "  - $(basename "$server_dir")"
     done
     exit 1
 }
 
-if [[ $# -eq 0 ]]; then
-    usage
-fi
+[[ $# -eq 0 ]] && usage
 
 SERVER_NAME="$1"
 DRY_RUN=false
-
-if [[ "$2" == "--dry-run" ]]; then
-    DRY_RUN=true
-fi
+[[ "$2" == "--dry-run" ]] && DRY_RUN=true
 
 SERVER_DIR="$SCRIPT_DIR/servers/$SERVER_NAME"
-
 if [[ ! -d "$SERVER_DIR" ]]; then
     echo "Error: Server '$SERVER_NAME' not found."
-    echo "Available servers:"
-    for server_dir in "$SCRIPT_DIR/servers"/*; do
-        if [[ -d "$server_dir" ]]; then
-            server_name=$(basename "$server_dir")
-            echo "  - $server_name"
-        fi
-    done
-    exit 1
+    usage
 fi
 
-echo "Installing MCP server: $SERVER_NAME"
+SERVER_TITLE="$(tr '-' ' ' <<<"$SERVER_NAME" | awk '{for(i=1;i<=NF;i++){$i=toupper(substr($i,1,1))substr($i,2)};print}')"
+SERVER_CONFIG_FILE="$SERVER_DIR/config.json"
+ENV_VARS_FILE="$SERVER_DIR/env_vars"
+
+require_cmd() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "❌ Missing required command: $1"
+        exit 1
+    fi
+}
+
+get_token_url() {
+    case "$SERVER_NAME" in
+        apify)       echo "https://console.apify.com/settings/integrations" ;;
+        github)      echo "https://github.com/settings/tokens" ;;
+        google-maps) echo "https://console.cloud.google.com/apis/credentials" ;;
+        hetzner)     echo "https://console.hetzner.cloud/" ;;
+        hostinger)   echo "https://hpanel.hostinger.com/api" ;;
+        linear)      echo "https://linear.app/settings/api" ;;
+        miro)        echo "https://miro.com/app/settings/user-profile/apps" ;;
+        stripe)      echo "https://dashboard.stripe.com/apikeys" ;;
+        tavily)      echo "https://app.tavily.com/home" ;;
+        todoist)     echo "https://app.todoist.com/app/settings/integrations/developer" ;;
+        wise)        echo "https://wise.com/settings/api-tokens" ;;
+        *)           echo "" ;;
+    esac
+}
+
+check_prerequisites() {
+    case "$SERVER_NAME" in
+        github)
+            require_cmd docker ;;
+        linear|wise|hetzner)
+            require_cmd node; require_cmd npm ;;
+        *)
+            require_cmd node; require_cmd npx ;;
+    esac
+}
+
+install_dependencies() {
+    case "$SERVER_NAME" in
+        github)
+            echo "Pulling GitHub MCP server Docker image..."
+            docker pull ghcr.io/github/github-mcp-server ;;
+        linear)
+            echo "Installing @anthropic-pb/linear-mcp-server globally..."
+            npm install -g @anthropic-pb/linear-mcp-server ;;
+        wise)
+            local clone_dir="$SERVER_DIR/mcp-server"
+            if [ -d "$clone_dir/.git" ]; then
+                echo "Updating wise mcp-server..."; git -C "$clone_dir" pull --ff-only
+            else
+                echo "Cloning wise mcp-server..."; git clone https://github.com/Szotasz/wise-mcp.git "$clone_dir"
+            fi
+            echo "Building wise mcp-server..."
+            (cd "$clone_dir" && npm install && npm run build) ;;
+        hetzner)
+            local clone_dir="$SERVER_DIR/mcp-server"
+            if [ -d "$clone_dir/.git" ]; then
+                echo "Updating hetzner mcp-server..."; git -C "$clone_dir" pull --ff-only
+            else
+                echo "Cloning hetzner mcp-server..."; git clone https://github.com/dkruyt/mcp-hetzner.git "$clone_dir"
+            fi
+            echo "Building hetzner mcp-server..."
+            (cd "$clone_dir" && npm install && npm run build) ;;
+    esac
+}
+
+resolve_path_override() {
+    case "$SERVER_NAME" in
+        linear)
+            local npm_root; npm_root="$(npm root -g)"
+            if [ -f "$npm_root/@anthropic-pb/linear-mcp-server/dist/index.js" ]; then
+                echo "$npm_root/@anthropic-pb/linear-mcp-server/dist/index.js"
+            else
+                echo "$npm_root/@anthropic-pb/linear-mcp-server/build/index.js"
+            fi ;;
+        wise)   echo "$SERVER_DIR/mcp-server/dist/cli.js" ;;
+        hetzner) echo "$SERVER_DIR/mcp-server/dist/index.js" ;;
+        *)      echo "" ;;
+    esac
+}
+
+# ========================================
+echo "========================================"
+echo "Installing ${SERVER_TITLE} MCP Server"
+echo "========================================"
 
 if [[ "$DRY_RUN" == "true" ]]; then
-    echo "[DRY RUN] Would execute:"
-    echo "[DRY RUN] Running install script: $SERVER_DIR/install.sh"
-    
-    if [[ -f "$SERVER_DIR/env_vars" ]] && [[ -s "$SERVER_DIR/env_vars" ]]; then
-        echo "[DRY RUN] Would check environment variables:"
-        while read -r var; do
-            [[ -z "$var" ]] && continue
-            echo "[DRY RUN]   - $var"
-        done < "$SERVER_DIR/env_vars"
-    fi
-    
-    echo "[DRY RUN] Would merge config into: $OPENCLAW_CONFIG"
-    echo "[DRY RUN] Config to merge:"
-    cat "$SERVER_DIR/config.json"
+    echo "[DRY RUN] Server: $SERVER_NAME"
+    [[ -f "$ENV_VARS_FILE" ]] && echo "[DRY RUN] Env var: $(cat "$ENV_VARS_FILE")"
+    echo "[DRY RUN] Config:"; cat "$SERVER_CONFIG_FILE"
     exit 0
 fi
 
-# Run installation script
-echo "Running installation script..."
-if [[ -x "$SERVER_DIR/install.sh" ]]; then
-    "$SERVER_DIR/install.sh"
-else
-    echo "Warning: Install script not executable or missing"
-fi
+# 1. Check prerequisites
+check_prerequisites
 
-# Check environment variables
-if [[ -f "$SERVER_DIR/env_vars" ]] && [[ -s "$SERVER_DIR/env_vars" ]]; then
-    echo "Checking environment variables..."
-    
-    # Ensure .env file exists with secure permissions
-    touch "$OPENCLAW_ENV"
-    chmod 600 "$OPENCLAW_ENV"
-    
-    while read -r var; do
-        [[ -z "$var" ]] && continue
-        
-        if grep -q "^$var=" "$OPENCLAW_ENV" 2>/dev/null; then
-            echo "Environment variable $var already exists."
-            read -p "Overwrite? [y/N]: " overwrite </dev/tty
-            if [[ "$overwrite" =~ ^[Yy]$ ]]; then
-                sed -i "/^$var=/d" "$OPENCLAW_ENV"
-            else
-                echo "Keeping existing value for $var"
-                continue
-            fi
+# 2. Install server-specific dependencies
+install_dependencies
+
+# 3. Get API token
+if [[ -f "$ENV_VARS_FILE" ]] && [[ -s "$ENV_VARS_FILE" ]]; then
+    ENV_VAR_NAME="$(head -n 1 "$ENV_VARS_FILE" | tr -d '[:space:]')"
+
+    TOKEN_URL="$(get_token_url)"
+    [[ -n "$TOKEN_URL" ]] && echo "Get your API token here: ${TOKEN_URL}"
+
+    TOKEN=""
+    while [ -z "$TOKEN" ]; do
+        read -r -p "Enter your ${SERVER_TITLE} API token: " TOKEN </dev/tty
+        [[ -z "$TOKEN" ]] && echo "Token cannot be empty."
+    done
+
+    # Write to .env
+    mkdir -p "$OPENCLAW_DIR"
+    touch "$ENV_FILE"
+    chmod 600 "$ENV_FILE"
+
+    if grep -q "^${ENV_VAR_NAME}=" "$ENV_FILE" 2>/dev/null; then
+        echo "${ENV_VAR_NAME} already exists in ${ENV_FILE}."
+        read -r -p "Overwrite with new token? [y/N]: " OVERWRITE </dev/tty
+        if [[ "$OVERWRITE" =~ ^[Yy]$ ]]; then
+            sed -i "/^${ENV_VAR_NAME}=/d" "$ENV_FILE"
+            echo "${ENV_VAR_NAME}=${TOKEN}" >> "$ENV_FILE"
+            echo "✅ Updated ${ENV_VAR_NAME} in ${ENV_FILE}"
+        else
+            echo "Keeping existing value."
         fi
-        
-        echo "Environment variable $var is required."
-        read -p "Enter value for $var: " -s value </dev/tty
-        echo
-        echo "$var=$value" >> "$OPENCLAW_ENV"
-        echo "Saved $var to $OPENCLAW_ENV"
-    done < "$SERVER_DIR/env_vars"
+    else
+        echo "${ENV_VAR_NAME}=${TOKEN}" >> "$ENV_FILE"
+        echo "✅ Saved ${ENV_VAR_NAME} to ${ENV_FILE}"
+    fi
 fi
 
-# Merge configuration
-echo "Merging configuration..."
-python3 - << EOF
-import json
-import os
+# 4. Backup and merge openclaw.json
+mkdir -p "$(dirname "$OPENCLAW_JSON")"
+[[ ! -f "$OPENCLAW_JSON" ]] && echo "{}" > "$OPENCLAW_JSON"
 
-config_file = "$OPENCLAW_CONFIG"
-server_config_file = "$SERVER_DIR/config.json"
-server_name = "$SERVER_NAME"
+BACKUP_FILE="${OPENCLAW_JSON}.bak-$(date +%Y%m%d%H%M%S)"
+cp "$OPENCLAW_JSON" "$BACKUP_FILE"
+echo "Backup: ${BACKUP_FILE}"
 
-# Load existing config
-if os.path.exists(config_file):
-    with open(config_file, 'r') as f:
-        config = json.load(f)
-else:
-    config = {}
+PATH_OVERRIDE="$(resolve_path_override)"
 
-# Ensure proper structure exists
-if 'plugins' not in config:
-    config['plugins'] = {}
-if 'entries' not in config['plugins']:
-    config['plugins']['entries'] = {}
-if 'mcp-client' not in config['plugins']['entries']:
-    config['plugins']['entries']['mcp-client'] = {}
-if 'config' not in config['plugins']['entries']['mcp-client']:
-    config['plugins']['entries']['mcp-client']['config'] = {}
-if 'servers' not in config['plugins']['entries']['mcp-client']['config']:
-    config['plugins']['entries']['mcp-client']['config']['servers'] = {}
+python3 - "$OPENCLAW_JSON" "$SERVER_CONFIG_FILE" "$SERVER_NAME" "$PATH_OVERRIDE" <<'PY'
+import json, sys
 
-# Load server config
-with open(server_config_file, 'r') as f:
-    server_config = json.load(f)
+openclaw_path, server_cfg_path, server_name, path_override = sys.argv[1:5]
 
-# Merge server config
-config['plugins']['entries']['mcp-client']['config']['servers'][server_name] = server_config
+with open(openclaw_path, "r", encoding="utf-8") as f:
+    raw = f.read().strip()
+    cfg = json.loads(raw) if raw else {}
 
-# Save config
-with open(config_file, 'w') as f:
-    json.dump(config, f, indent=2)
+with open(server_cfg_path, "r", encoding="utf-8") as f:
+    server_cfg = json.load(f)
 
-print(f"Configuration merged successfully for server: {server_name}")
-EOF
+if path_override:
+    args = server_cfg.get("args")
+    if isinstance(args, list):
+        for idx, value in enumerate(args):
+            if isinstance(value, str) and value.startswith("path/to/"):
+                args[idx] = path_override
 
-echo "Done! Run: openclaw gateway restart"
+plugins = cfg.setdefault("plugins", {})
+allow = plugins.setdefault("allow", [])
+if "mcp-client" not in allow:
+    allow.append("mcp-client")
+entries = plugins.setdefault("entries", {})
+mcp_client = entries.setdefault("mcp-client", {})
+mcp_client.setdefault("enabled", True)
+mcp_cfg = mcp_client.setdefault("config", {})
+mcp_cfg.setdefault("toolPrefix", True)
+mcp_cfg.setdefault("reconnectIntervalMs", 30000)
+mcp_cfg.setdefault("connectionTimeoutMs", 10000)
+mcp_cfg.setdefault("requestTimeoutMs", 60000)
+servers = mcp_cfg.setdefault("servers", {})
+servers[server_name] = server_cfg
+
+with open(openclaw_path, "w", encoding="utf-8") as f:
+    json.dump(cfg, f, indent=2)
+    f.write("\n")
+
+print(f"✅ Configuration merged for: {server_name}")
+PY
+
+# 5. Gateway restart
+echo ""
+read -r -p "Restart gateway now? [Y/n]: " RESTART </dev/tty
+if [[ -z "$RESTART" || "$RESTART" =~ ^[Yy]$ ]]; then
+    systemctl --user restart openclaw-gateway 2>/dev/null || {
+        echo "⚠️  Auto-restart failed. Run: systemctl --user restart openclaw-gateway"
+        exit 0
+    }
+    echo "Waiting for gateway..."
+    sleep 8
+    if ! systemctl --user is-active --quiet openclaw-gateway 2>/dev/null; then
+        echo "❌ Gateway failed! Check: journalctl --user -u openclaw-gateway --since '30 sec ago' --no-pager"
+        exit 1
+    fi
+    if journalctl --user -u openclaw-gateway --since "30 sec ago" --no-pager 2>/dev/null | grep -qi "$SERVER_NAME.*registered"; then
+        echo "✅ ${SERVER_TITLE} MCP Server installed and running!"
+    else
+        echo "⚠️  Gateway running but ${SERVER_TITLE} not confirmed in logs. Check: journalctl --user -u openclaw-gateway -f"
+    fi
+else
+    echo "⏭️  Run manually: systemctl --user restart openclaw-gateway"
+fi
