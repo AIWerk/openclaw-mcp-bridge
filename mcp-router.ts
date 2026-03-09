@@ -160,7 +160,7 @@ export class McpRouter {
         method: "tools/call",
         params: {
           name: tool,
-          arguments: params
+          arguments: params ?? {}
         }
       });
 
