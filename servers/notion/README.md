@@ -15,15 +15,17 @@ Go to [My Integrations](https://www.notion.so/my-integrations) → New integrati
 Then share the pages/databases you want accessible with the integration (page → ··· → Connections → Add your integration).
 
 ### 2. Run the installer
+
+#### Linux / macOS
 ```bash
-cd ~/.openclaw/extensions/mcp-client
-./install-server.sh notion
+cd ~/.openclaw/extensions/mcp-client/servers/notion
+chmod +x install.sh && ./install.sh
 ```
 
-**Windows:**
+#### Windows (PowerShell)
 ```powershell
-cd $env:USERPROFILE\.openclaw\extensions\mcp-client
-.\install-server.ps1 notion
+cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\notion
+.\install.ps1
 ```
 
 The installer will:
