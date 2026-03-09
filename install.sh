@@ -18,7 +18,12 @@ else
   git clone https://github.com/AIWerk/openclaw-mcp-bridge.git "$PLUGIN_DIR"
 fi
 
-# 2. Add to openclaw.json if not already present
+# 2. Install dependencies (TypeBox is required for JSON Schema conversion)
+echo "📦 Installing dependencies..."
+cd "$PLUGIN_DIR" && npm install --production 2>&1 | tail -1
+echo ""
+
+# 3. Add to openclaw.json if not already present
 if [ -f "$CONFIG_FILE" ]; then
   if python3 -c "
 import json, sys

@@ -44,7 +44,10 @@ async function anyFallback(): Promise<TSchema> {
   if (typeBox?.Type) {
     return typeBox.Type.Any();
   }
-  return { type: "any" };
+  // Empty schema {} is valid JSON Schema (matches anything), unlike { type: "any" } which is invalid.
+  // This only triggers if @sinclair/typebox is missing — run `npm install` in the plugin directory.
+  schemaLogger.warn("[mcp-client] TypeBox unavailable — using permissive empty schema fallback. Run `npm install` in the plugin directory to fix.");
+  return {};
 }
 
 // Logger can be injected via setSchemaLogger(); defaults to console
@@ -147,7 +150,10 @@ export async function createToolParameters(inputSchema: any): Promise<TSchema> {
   const typeBox = await getTypeBox();
   const Type = typeBox?.Type;
   if (!Type) {
-    return anyFallback();
+    // TypeBox missing — return the raw JSON Schema as-is (OpenClaw may accept it directly)
+    // Better than { type: "any" } which is invalid JSON Schema
+    schemaLogger.warn("[mcp-client] TypeBox unavailable — passing raw JSON Schema to OpenClaw. Run `npm install` in the plugin directory.");
+    return inputSchema ?? {};
   }
 
   if (!inputSchema) {
