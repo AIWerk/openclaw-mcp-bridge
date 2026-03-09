@@ -1,3 +1,5 @@
+import { readFileSync } from "fs";
+import { join } from "path";
 import {
   McpClientConfig,
   McpServerConfig,
@@ -10,6 +12,9 @@ import { SseTransport } from "./transport-sse.js";
 import { StdioTransport } from "./transport-stdio.js";
 import { StreamableHttpTransport } from "./transport-streamable-http.js";
 import { createToolParameters, setSchemaLogger } from "./schema-convert.js";
+
+// Read version from package.json at load time (single source of truth)
+const PLUGIN_VERSION: string = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf-8")).version;
 
 function isNameTaken(name: string, localNames: Set<string>, globalNames: Set<string>): boolean {
   return localNames.has(name) || globalNames.has(name);
@@ -214,7 +219,7 @@ export default function activate(api: any) {
         capabilities: {},
         clientInfo: {
           name: "openclaw-mcp-bridge",
-          version: "1.5.0"
+          version: PLUGIN_VERSION
         }
       }
     };
@@ -377,7 +382,8 @@ export default function activate(api: any) {
       const response = await connection.transport.sendRequest(callRequest);
       
       if (response.error) {
-        throw new Error(`MCP error from ${connection.name}: ${response.error.message}`);
+        const code = response.error.code ? ` [code ${response.error.code}]` : "";
+        throw new Error(`MCP error from ${connection.name}${code}: ${response.error.message}`);
       }
 
       // Extract content from response
