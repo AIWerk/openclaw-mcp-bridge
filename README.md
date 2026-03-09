@@ -52,9 +52,9 @@ Agent                    MCP Bridge Plugin (in-process)              MCP Servers
 mcp(server="todoist", action="list")
 → { tools: [{ name: "find-tasks", description: "...", requiredParams: ["query"] }, ...] }
 
-// Step 2: Call a specific tool
-mcp(server="todoist", tool="find-tasks", params={ query: "MCP" })
-→ { result: { tasks: [...] } }
+// Step 2: Call a specific tool (param names depend on the MCP server)
+mcp(server="todoist", tool="get-overview", params={})
+→ { result: { projects: [...], sections: [...] } }
 
 // Refresh cached tool list (e.g. after server update)
 mcp(server="todoist", action="refresh")
@@ -148,6 +148,16 @@ irm https://raw.githubusercontent.com/AIWerk/openclaw-mcp-bridge/master/install.
 2. Restart the gateway: `openclaw gateway restart`
 3. Check logs: `journalctl --user -u openclaw-gateway.service | grep mcp-client`
 
+### Migrating from direct to router mode
+
+Already using direct mode? Switch in 3 steps:
+
+1. Add `"mode": "router"` to your mcp-client config
+2. Optionally add `"description"` to each server (improves agent tool discovery)
+3. Restart: `openclaw gateway restart`
+
+Your server configs stay exactly the same — only the dispatch method changes.
+
 ## Getting Started
 
 ### Example 1: Apify (Streamable HTTP, Router mode)
@@ -177,13 +187,23 @@ irm https://raw.githubusercontent.com/AIWerk/openclaw-mcp-bridge/master/install.
 }
 ```
 
-Get token: [Apify Console → Settings → Integrations](https://console.apify.com/account/integrations)
+**1.** Get token: [Apify Console → Settings → Integrations](https://console.apify.com/account/integrations)
+
+**2.** Add token to `.env`:
+```bash
+echo "APIFY_TOKEN=apify_api_xxxxx" >> ~/.openclaw/.env
+chmod 600 ~/.openclaw/.env
+```
+
+**3.** Add the config above to `openclaw.json`, then `openclaw gateway restart`.
 
 ### Example 2: Hetzner Cloud (Stdio)
 
 ```bash
 pip install git+https://github.com/dkruyt/mcp-hetzner.git
 ```
+
+Add to the `servers` object in your mcp-client config:
 
 ```json
 "hetzner": {
@@ -194,13 +214,15 @@ pip install git+https://github.com/dkruyt/mcp-hetzner.git
 }
 ```
 
-Get token: [Hetzner Console → Security → API Tokens](https://console.hetzner.cloud)
+Get token: [Hetzner Console → Security → API Tokens](https://console.hetzner.cloud), then `echo "HETZNER_API_TOKEN=..." >> ~/.openclaw/.env`
 
 ### Example 3: GitHub (Stdio via Docker)
 
 ```bash
 docker pull ghcr.io/github/github-mcp-server
 ```
+
+Add to the `servers` object:
 
 ```json
 "github": {
@@ -212,7 +234,7 @@ docker pull ghcr.io/github/github-mcp-server
 }
 ```
 
-Get token: [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new)
+Get token: [github.com/settings/personal-access-tokens/new](https://github.com/settings/personal-access-tokens/new), then `echo "GITHUB_MCP_TOKEN=ghp_..." >> ~/.openclaw/.env`
 
 ## Configuration Reference
 
@@ -246,7 +268,7 @@ All server configs go under `plugins.entries.mcp-client.config.servers` in `open
 | Option | Description |
 |---|---|
 | `transport` | `"stdio"`, `"sse"`, or `"streamable-http"` |
-| `description` | Human-readable description (used in router mode tool description) |
+| `description` | Human-readable description — optional, but recommended for router mode (shown in tool description; without it, only the server name appears) |
 | `url` | URL for SSE/HTTP transports |
 | `command` | Command for stdio transport |
 | `args` | Command arguments for stdio |
@@ -259,7 +281,7 @@ All server configs go under `plugins.entries.mcp-client.config.servers` in `open
 | Option | Default | Description |
 |---|---|---|
 | `mode` | `"direct"` | `"router"` (recommended) or `"direct"` |
-| `toolPrefix` | `"auto"` | Direct mode: `true` = always prefix, `false` = never (numeric suffix on collision), `"auto"` = prefix on collision |
+| `toolPrefix` | `"auto"` | Direct mode only (ignored in router): `true` = always prefix, `false` = never (numeric suffix on collision), `"auto"` = prefix on collision |
 | `routerIdleTimeoutMs` | `600000` | Router: disconnect idle servers after this time (10 min) |
 | `routerMaxConcurrent` | `5` | Router: max concurrent server connections (LRU eviction) |
 | `reconnectIntervalMs` | `30000` | Base reconnect interval (with jitter) |
