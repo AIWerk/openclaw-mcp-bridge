@@ -247,19 +247,11 @@ test("generateDescription includes configured servers", () => {
 });
 
 test("status action returns all servers with connection state", async () => {
-  const router = new McpRouter(
-    {
-      alpha: { transport: "stdio", command: "node", args: ["fake.js"] },
-      beta: { transport: "sse", url: "http://localhost:9999/sse" }
-    },
-    { servers: {} },
-    console,
-    {
-      sse: FakeTransport as any,
-      stdio: FakeTransport as any,
-      streamableHttp: FakeTransport as any
-    }
-  );
+  const servers = {
+    alpha: { transport: "stdio" as const, command: "node", args: ["fake.js"] },
+    beta: { transport: "sse" as const, url: "http://localhost:9999/sse" }
+  };
+  const router = makeRouter(servers);
 
   const result = await router.dispatch(undefined, "status");
   assert.equal("action" in result && result.action, "status");
@@ -277,19 +269,19 @@ test("status action returns all servers with connection state", async () => {
   }
 });
 
-test("status action shows connected server after call", async () => {
-  const router = new McpRouter(
-    { alpha: { transport: "stdio", command: "node", args: ["fake.js"] } },
-    { servers: {} },
-    console,
-    {
-      sse: FakeTransport as any,
-      stdio: FakeTransport as any,
-      streamableHttp: FakeTransport as any
-    }
-  );
+test("status action shows connected server after list", async () => {
+  const servers = {
+    alpha: { transport: "stdio" as const, command: "node", args: ["fake.js"] }
+  };
+  MockTransport.behaviors.set("node", {
+    tools: [
+      { name: "tool_a", description: "A", inputSchema: { type: "object" } },
+      { name: "tool_b", description: "B", inputSchema: { type: "object" } }
+    ]
+  });
+  const router = makeRouter(servers);
 
-  // Call a tool to trigger connection
+  // List triggers connection + tool fetch
   await router.dispatch("alpha", "list");
 
   const result = await router.dispatch(undefined, "status");
