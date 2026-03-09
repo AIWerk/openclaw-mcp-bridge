@@ -84,6 +84,28 @@ if (Test-Path $ConfigFile) {
     Write-Host "⚠️  Config not found at $ConfigFile" -ForegroundColor Yellow
 }
 
+# Register add-mcp-server skill via symlink/junction
+$SkillSource = "$PluginDir\skills\add-mcp-server"
+if (Test-Path $SkillSource) {
+    foreach ($SkillsDir in @("$env:USERPROFILE\clawd\skills", "$env:USERPROFILE\.openclaw\skills", "$env:USERPROFILE\openclaw\skills")) {
+        if (Test-Path $SkillsDir) {
+            $SkillLink = "$SkillsDir\add-mcp-server"
+            if (-not (Test-Path $SkillLink)) {
+                try {
+                    New-Item -ItemType Junction -Path $SkillLink -Target $SkillSource -ErrorAction Stop | Out-Null
+                    Write-Host "🧠 Skill 'add-mcp-server' registered in $SkillsDir\" -ForegroundColor Green
+                } catch {
+                    Write-Host "⚠️  Could not register skill automatically. Create a junction manually:" -ForegroundColor Yellow
+                    Write-Host "     cmd /c mklink /J `"$SkillLink`" `"$SkillSource`"" -ForegroundColor Yellow
+                }
+            } else {
+                Write-Host "🧠 Skill 'add-mcp-server' already registered in $SkillsDir\" -ForegroundColor Green
+            }
+            break
+        }
+    }
+}
+
 Write-Host ""
 Write-Host "✅ MCP Client Plugin installed!" -ForegroundColor Green
 Write-Host ""
@@ -92,7 +114,8 @@ Write-Host "  1. Install an MCP server:"
 Write-Host "     cd $env:USERPROFILE\.openclaw\extensions\mcp-client"
 Write-Host "     .\install-server.ps1 <SERVER_NAME>"
 Write-Host ""
-Write-Host "  2. Or add one manually to $env:USERPROFILE\.openclaw\openclaw.json"
+Write-Host "  2. Or ask your agent: 'Add the X MCP server'"
+Write-Host "     (uses the add-mcp-server skill)"
 Write-Host ""
 Write-Host "  Available servers: dir $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\"
 Write-Host ""
