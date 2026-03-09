@@ -223,8 +223,9 @@ if [[ -z "$RESTART" || "$RESTART" =~ ^[Yy]$ ]]; then
         echo "⚠️  Auto-restart failed. Run: systemctl --user restart openclaw-gateway"
         exit 0
     }
-    echo "Waiting for gateway and MCP server startup..."
+    echo "Waiting for gateway startup..."
     CONFIRMED=false
+    ROUTER_MODE=false
     for i in 1 2 3 4 5 6; do
         sleep 5
         if ! systemctl --user is-active --quiet openclaw-gateway 2>/dev/null; then
@@ -233,6 +234,13 @@ if [[ -z "$RESTART" || "$RESTART" =~ ^[Yy]$ ]]; then
             echo "Full logs: journalctl --user -u openclaw-gateway --since '1 min ago' --no-pager"
             exit 1
         fi
+        # Router mode: servers connect lazily, just check plugin loaded
+        if journalctl --user -u openclaw-gateway --since "1 min ago" --no-pager 2>/dev/null | grep -qi "Plugin activated with.*servers configured"; then
+            CONFIRMED=true
+            ROUTER_MODE=true
+            break
+        fi
+        # Direct mode: server connects at boot
         if journalctl --user -u openclaw-gateway --since "1 min ago" --no-pager 2>/dev/null | grep -qi "Server ${SERVER_NAME} initialized"; then
             CONFIRMED=true
             break
@@ -245,9 +253,13 @@ if [[ -z "$RESTART" || "$RESTART" =~ ^[Yy]$ ]]; then
         fi
     done
     if $CONFIRMED; then
-        echo "✅ ${SERVER_TITLE} MCP Server installed and running!"
+        if $ROUTER_MODE; then
+            echo "✅ ${SERVER_TITLE} configured! (Router mode — server connects on first use)"
+        else
+            echo "✅ ${SERVER_TITLE} MCP Server installed and running!"
+        fi
     else
-        echo "⚠️  Gateway running but ${SERVER_TITLE} not confirmed after 30s. Check: journalctl --user -u openclaw-gateway -f"
+        echo "⚠️  Gateway running but plugin not confirmed after 30s. Check: journalctl --user -u openclaw-gateway -f"
     fi
 else
     echo "⏭️  Run manually: systemctl --user restart openclaw-gateway"
