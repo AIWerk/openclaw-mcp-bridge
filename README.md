@@ -212,7 +212,7 @@ All server configs go under `plugins.entries.mcp-client.config.servers` in `open
 
 | Option | Default | Description |
 |---|---|---|
-| `toolPrefix` | `"auto"` | Tool naming: `true` = always prefix, `false` = never prefix, `"auto"` = prefix only on collision |
+| `toolPrefix` | `"auto"` | Tool naming: `true` = always prefix, `false` = never prefix (numeric suffix on collision: `search_2`), `"auto"` = prefix with server name on collision |
 | `reconnectIntervalMs` | `30000` | Base reconnect interval (with 0.5x–1.5x jitter) |
 | `connectionTimeoutMs` | `10000` | Initial connection timeout |
 | `requestTimeoutMs` | `60000` | Per-request timeout for tool calls |

@@ -5,7 +5,7 @@
 ### Changed
 - `toolPrefix` config now accepts `true | false | "auto"` (default changed from `true` to `"auto"`)
   - `true`: always prefix tool names with server name
-  - `false`: never prefix, use raw tool names
+  - `false`: never prefix, use raw tool names (on collision, numeric suffix is added: `search_2`)
   - `"auto"`: no prefix by default, auto-prefix only on collision (recommended)
 - Updated `openclaw.plugin.json` schema, `types.ts`, and `index.ts` to support new policy
 - Added first GitHub release tag (`v1.5.0`)
@@ -23,7 +23,7 @@
 
 ### Changed
 - `index.ts`: Switched server initialization from serial startup to parallel `Promise.allSettled()` with per-server success/failure summary logging.
-- `index.ts`: Added global cross-connection tool name collision tracking. When `toolPrefix: false` collides globally, tool names are auto-prefixed with server name and warnings are logged.
+- `index.ts`: Added global cross-connection tool name collision tracking. When `toolPrefix: false` collides globally, a numeric suffix is added (`search_2`, `search_3`, etc.) and warnings are logged. When `toolPrefix: "auto"` collides, server name prefix is used instead.
 - `transport-sse.ts`, `transport-streamable-http.ts`: Added warning for non-localhost `http://` endpoints: `WARNING: Non-TLS connection to <host> — credentials may be transmitted in plaintext`.
 - `transport-stdio.ts`: Implemented graceful shutdown in `disconnect()` by attempting JSON-RPC `close` notification, then `SIGINT`, then `SIGTERM` fallback after 2 seconds.
 - `transport-sse.ts`, `transport-stdio.ts`, `transport-streamable-http.ts`: Added debug logging for unhandled MCP notifications.
