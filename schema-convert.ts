@@ -1,4 +1,8 @@
+// TSchema is intentionally loose — TypeBox returns dynamic types
+// that don't have a single static interface
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TSchema = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TypeBoxMod = { Type: any } | null;
 
 let cachedTypeBoxPromise: Promise<TypeBoxMod> | null = null;
@@ -23,6 +27,7 @@ async function getTypeBox(): Promise<TypeBoxMod> {
 
   cachedTypeBoxPromise = (async () => {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mod: any = await import("@sinclair/typebox");
       const Type = mod?.Type ?? mod?.default?.Type;
       if (!Type) {
@@ -51,11 +56,12 @@ async function anyFallback(): Promise<TSchema> {
 }
 
 // Logger can be injected via setSchemaLogger(); defaults to console
-let schemaLogger: { warn: (...args: any[]) => void } = console;
-export function setSchemaLogger(logger: { warn: (...args: any[]) => void }): void {
+let schemaLogger: { warn: (...args: unknown[]) => void } = console;
+export function setSchemaLogger(logger: { warn: (...args: unknown[]) => void }): void {
   schemaLogger = logger;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function convertJsonSchemaToTypeBox(schema: any, depth = 0): Promise<TSchema> {
   const typeBox = await getTypeBox();
   const Type = typeBox?.Type;
@@ -77,7 +83,7 @@ export async function convertJsonSchemaToTypeBox(schema: any, depth = 0): Promis
     const unionSource = schema.anyOf || schema.oneOf;
     if (Array.isArray(unionSource) && unionSource.length > 0) {
       const variants = await Promise.all(
-        unionSource.map((item: any) => convertJsonSchemaToTypeBox(item, depth + 1))
+        unionSource.map((item: Record<string, unknown>) => convertJsonSchemaToTypeBox(item, depth + 1))
       );
       return Type.Union(variants);
     }
@@ -85,7 +91,7 @@ export async function convertJsonSchemaToTypeBox(schema: any, depth = 0): Promis
     // allOf maps to Type.Intersect
     if (Array.isArray(schema.allOf) && schema.allOf.length > 0) {
       const parts = await Promise.all(
-        schema.allOf.map((item: any) => convertJsonSchemaToTypeBox(item, depth + 1))
+        schema.allOf.map((item: Record<string, unknown>) => convertJsonSchemaToTypeBox(item, depth + 1))
       );
       return Type.Intersect(parts);
     }
@@ -95,7 +101,7 @@ export async function convertJsonSchemaToTypeBox(schema: any, depth = 0): Promis
         if (schema.enum) {
           return Type.Union(schema.enum.map((value: string) => Type.Literal(value)));
         }
-        const stringOptions: any = {};
+        const stringOptions: Record<string, unknown> = {};
         if (schema.minLength !== undefined) stringOptions.minLength = schema.minLength;
         if (schema.maxLength !== undefined) stringOptions.maxLength = schema.maxLength;
         if (schema.pattern !== undefined) stringOptions.pattern = schema.pattern;
@@ -103,7 +109,7 @@ export async function convertJsonSchemaToTypeBox(schema: any, depth = 0): Promis
       }
       case "number":
       case "integer": {
-        const numberOptions: any = {};
+        const numberOptions: Record<string, unknown> = {};
         if (schema.minimum !== undefined) numberOptions.minimum = schema.minimum;
         if (schema.maximum !== undefined) numberOptions.maximum = schema.maximum;
         return Type.Number(numberOptions);
@@ -129,7 +135,7 @@ export async function convertJsonSchemaToTypeBox(schema: any, depth = 0): Promis
           );
 
           for (const [key, value] of propertyEntries) {
-            const converted = await convertJsonSchemaToTypeBox(value as any, depth + 1);
+            const converted = await convertJsonSchemaToTypeBox(value as Record<string, unknown>, depth + 1);
             properties[key] = requiredSet.has(key) ? converted : Type.Optional(converted);
           }
           return Type.Object(properties);
@@ -146,6 +152,7 @@ export async function convertJsonSchemaToTypeBox(schema: any, depth = 0): Promis
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createToolParameters(inputSchema: any): Promise<TSchema> {
   const typeBox = await getTypeBox();
   const Type = typeBox?.Type;

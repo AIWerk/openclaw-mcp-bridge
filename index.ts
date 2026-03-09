@@ -4,7 +4,8 @@ import {
   McpServerConfig,
   McpServerConnection,
   McpTransport,
-  McpTool
+  McpTool,
+  OpenClawPluginApi
 } from "./types.js";
 import { SseTransport } from "./transport-sse.js";
 import { StdioTransport } from "./transport-stdio.js";
@@ -23,7 +24,7 @@ export function pickRegisteredToolName(
   toolPrefix: boolean | "auto" | undefined,
   localNames: Set<string>,
   globalNames: Set<string>,
-  logger?: { warn: (...args: any[]) => void }
+  logger?: { warn: (...args: unknown[]) => void }
 ): string {
   // toolPrefix: true = always prefix, false = never prefix, "auto" = prefix only on collision (default)
   const effectivePrefix = toolPrefix === undefined ? "auto" : toolPrefix;
@@ -65,6 +66,8 @@ export function pickRegisteredToolName(
   return candidate;
 }
 
+// OpenClaw plugin API is dynamically shaped — we type what we use
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function activate(api: any) {
   const config = (api.pluginConfig ?? {}) as McpClientConfig;
   const mode = config.mode ?? "direct";
@@ -100,8 +103,13 @@ export default function activate(api: any) {
         },
         required: ["server"]
       },
-      async execute(_toolId: string, params: any) {
-        return router!.dispatch(params?.server, params?.action, params?.tool, params?.params);
+      async execute(_toolId: string, params: Record<string, unknown>) {
+        return router!.dispatch(
+          params?.server as string,
+          params?.action as string,
+          params?.tool as string,
+          params?.params as Record<string, unknown> | undefined
+        );
       }
     });
   }
@@ -305,7 +313,7 @@ export default function activate(api: any) {
       label: label,
       description: mcpTool.description,
       parameters: parameters,
-      async execute(toolId: string, params: any) {
+      async execute(toolId: string, params: Record<string, unknown>) {
         try {
           return await executeMcpTool(connection, mcpTool.name, params);
         } catch (error) {
@@ -327,7 +335,7 @@ export default function activate(api: any) {
   async function executeMcpTool(
     connection: McpServerConnection, 
     toolName: string, 
-    params: any
+    params: Record<string, unknown>
   ): Promise<{ content: Array<{ type: string; text: string }> }> {
     try {
       // Check connection state first
@@ -371,9 +379,10 @@ export default function activate(api: any) {
       }
 
       // Convert content to expected format
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const formattedContent = content.map((item: any) => ({
-        type: item.type || "text",
-        text: item.text || item.content || JSON.stringify(item)
+        type: String(item.type || "text"),
+        text: String(item.text || item.content || JSON.stringify(item))
       }));
 
       return { content: formattedContent };

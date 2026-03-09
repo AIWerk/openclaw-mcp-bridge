@@ -1,3 +1,22 @@
+// OpenClaw Plugin API surface (partial — covers what this plugin uses)
+export interface OpenClawToolDefinition {
+  name: string;
+  description: string;
+  parameters?: Record<string, unknown>;
+  execute: (toolId: string, params: Record<string, unknown>) => Promise<unknown>;
+}
+
+export interface OpenClawPluginApi {
+  registerTool: (tool: OpenClawToolDefinition) => void;
+  log: {
+    info: (...args: unknown[]) => void;
+    warn: (...args: unknown[]) => void;
+    error: (...args: unknown[]) => void;
+    debug: (...args: unknown[]) => void;
+  };
+  config: McpClientConfig;
+}
+
 export interface McpServerConfig {
   transport: "sse" | "stdio" | "streamable-http";
   /** Human-readable description for router tool description generation */
