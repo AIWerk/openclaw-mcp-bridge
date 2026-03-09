@@ -83,15 +83,22 @@ if [[ -f "$SERVER_DIR/env_vars" ]] && [[ -s "$SERVER_DIR/env_vars" ]]; then
     while read -r var; do
         [[ -z "$var" ]] && continue
         
-        if ! grep -q "^$var=" "$OPENCLAW_ENV" 2>/dev/null; then
-            echo "Environment variable $var is missing."
-            read -p "Enter value for $var: " -s value
-            echo
-            echo "$var=$value" >> "$OPENCLAW_ENV"
-            echo "Added $var to $OPENCLAW_ENV"
-        else
-            echo "Environment variable $var already exists"
+        if grep -q "^$var=" "$OPENCLAW_ENV" 2>/dev/null; then
+            echo "Environment variable $var already exists."
+            read -p "Overwrite? [y/N]: " overwrite
+            if [[ "$overwrite" =~ ^[Yy]$ ]]; then
+                sed -i "/^$var=/d" "$OPENCLAW_ENV"
+            else
+                echo "Keeping existing value for $var"
+                continue
+            fi
         fi
+        
+        echo "Environment variable $var is required."
+        read -p "Enter value for $var: " -s value
+        echo
+        echo "$var=$value" >> "$OPENCLAW_ENV"
+        echo "Saved $var to $OPENCLAW_ENV"
     done < "$SERVER_DIR/env_vars"
 fi
 
