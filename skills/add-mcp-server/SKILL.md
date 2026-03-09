@@ -88,11 +88,25 @@ Before writing or executing config commands, enforce:
 - Blocked patterns: `curl|bash`, `curl|sh`, `wget|bash`, `wget|sh`, any piped remote execution, `sudo`
 - If command is outside allowlist, ask user for explicit approval before continuing.
 
+### 4.5.1 Verify package before config
+Before writing config, verify the package exists and is a real MCP server:
+1. **npm packages:** run `npm view <package> description` — confirm it exists and mentions MCP/Model Context Protocol.
+2. **pip/uvx packages:** run `pip index versions <package>` or `uvx <package> --help` — confirm it exists.
+3. **Dry-run the command:** run `<command> <args> --help` or `<command> <args> --version` to verify it starts.
+4. If the package name is ambiguous (multiple similar packages exist), show the user the options and ask which one.
+5. **Do NOT proceed if you cannot verify the package.** Ask the user for the exact package name or URL.
+
 ### 4.6 Install, test, submit, rollback
-1. Backup `openclaw.json` before modifying config.
-2. Install dependencies using pinned versions (avoid `latest` / unpinned installs).
-3. Add server entry and restart gateway.
-4. Test with `mcp(server="<name>", action="list")`.
+
+**⚠️ IMPORTANT: NEVER edit `openclaw.json` directly!** Use `install-server.sh` which handles backup, config update, and restart safely.
+
+1. Create server files in `servers/<name>/` (config.json, install.sh, install.ps1).
+2. Run `~/.openclaw/extensions/mcp-client/install-server.sh <name>` — this handles:
+   - Backup of openclaw.json
+   - Adding the server entry to config
+   - Prompting for env vars / API tokens
+   - Gateway restart
+3. Test with `mcp(server="<name>", action="list")`.
 5. If `authRequired: true` and creds are missing:
 - skip tools/list success requirement
 - verify process starts or endpoint is reachable
