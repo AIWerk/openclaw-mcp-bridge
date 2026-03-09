@@ -20,7 +20,14 @@ if (Test-Path "$PluginDir\.git") {
     git clone https://github.com/AIWerk/openclaw-mcp-bridge.git $PluginDir
 }
 
-# 2. Add to openclaw.json if not already present
+# 2. Install dependencies (TypeBox is required for JSON Schema conversion)
+Write-Host "📦 Installing dependencies..."
+Push-Location $PluginDir
+npm install --production 2>&1 | Select-Object -Last 1
+Pop-Location
+Write-Host ""
+
+# 3. Add to openclaw.json if not already present
 if (Test-Path $ConfigFile) {
     $cfg = Get-Content $ConfigFile -Raw | ConvertFrom-Json
 
@@ -57,6 +64,11 @@ Write-Host ""
 Write-Host "✅ MCP Client Plugin installed!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:"
-Write-Host "  1. Add MCP servers to config: edit $env:USERPROFILE\.openclaw\openclaw.json"
-Write-Host "  2. Restart gateway: openclaw gateway restart"
+Write-Host "  1. Install an MCP server:"
+Write-Host "     cd $env:USERPROFILE\.openclaw\extensions\mcp-client"
+Write-Host "     .\install-server.ps1 <SERVER_NAME>"
+Write-Host ""
+Write-Host "  2. Or add one manually to $env:USERPROFILE\.openclaw\openclaw.json"
+Write-Host ""
+Write-Host "  Available servers: dir $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\"
 Write-Host ""
