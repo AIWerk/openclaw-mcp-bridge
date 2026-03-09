@@ -93,7 +93,10 @@ if (Test-Path $SkillSource) {
     if (Test-Path $ConfigFile) {
         try {
             $cfgRead = Get-Content $ConfigFile -Raw | ConvertFrom-Json
-            $ws = if ($cfgRead.workspace) { $cfgRead.workspace } elseif ($cfgRead.agent -and $cfgRead.agent.workspace) { $cfgRead.agent.workspace } else { $null }
+            $ws = if ($cfgRead.workspace) { $cfgRead.workspace }
+                 elseif ($cfgRead.agent -and $cfgRead.agent.workspace) { $cfgRead.agent.workspace }
+                 elseif ($cfgRead.agents -and $cfgRead.agents.defaults -and $cfgRead.agents.defaults.workspace) { $cfgRead.agents.defaults.workspace }
+                 else { $null }
             if ($ws -and (Test-Path $ws)) { $SkillsDir = "$ws\skills" }
         } catch {}
     }

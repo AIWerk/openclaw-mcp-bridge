@@ -108,7 +108,10 @@ import json, sys
 try:
     with open('$CONFIG_FILE') as f:
         cfg = json.load(f)
-    ws = cfg.get('workspace') or cfg.get('agent', {}).get('workspace')
+    # Try all known locations for workspace
+    ws = (cfg.get('workspace')
+       or cfg.get('agent', {}).get('workspace')
+       or cfg.get('agents', {}).get('defaults', {}).get('workspace'))
     if ws: print(ws)
 except: pass
 " 2>/dev/null)
