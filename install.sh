@@ -99,19 +99,49 @@ fi
 # Register add-mcp-server skill via symlink
 SKILL_SOURCE="$PLUGIN_DIR/skills/add-mcp-server"
 if [ -d "$SKILL_SOURCE" ]; then
-  # Try common workspace skill directories
-  for SKILLS_DIR in "$HOME/clawd/skills" "$HOME/.openclaw/skills" "$HOME/openclaw/skills"; do
-    if [ -d "$SKILLS_DIR" ]; then
-      SKILL_LINK="$SKILLS_DIR/add-mcp-server"
-      if [ ! -e "$SKILL_LINK" ]; then
-        ln -s "$SKILL_SOURCE" "$SKILL_LINK" 2>/dev/null && \
-          echo "🧠 Skill 'add-mcp-server' registered in $SKILLS_DIR/" || true
-      else
-        echo "🧠 Skill 'add-mcp-server' already registered in $SKILLS_DIR/"
-      fi
-      break
+  SKILLS_DIR=""
+
+  # 1. Try reading workspace from openclaw.json
+  if [ -f "$CONFIG_FILE" ]; then
+    WORKSPACE=$(python3 -c "
+import json, sys
+try:
+    with open('$CONFIG_FILE') as f:
+        cfg = json.load(f)
+    ws = cfg.get('workspace') or cfg.get('agent', {}).get('workspace')
+    if ws: print(ws)
+except: pass
+" 2>/dev/null)
+    if [ -n "$WORKSPACE" ] && [ -d "$WORKSPACE" ]; then
+      SKILLS_DIR="$WORKSPACE/skills"
     fi
-  done
+  fi
+
+  # 2. Fallback: try common locations
+  if [ -z "$SKILLS_DIR" ]; then
+    for CANDIDATE in "$HOME/clawd/skills" "$HOME/.openclaw/skills" "$HOME/openclaw/skills"; do
+      if [ -d "$CANDIDATE" ]; then
+        SKILLS_DIR="$CANDIDATE"
+        break
+      fi
+    done
+  fi
+
+  # 3. Last resort: use ~/.openclaw/skills
+  if [ -z "$SKILLS_DIR" ]; then
+    SKILLS_DIR="$HOME/.openclaw/skills"
+  fi
+
+  # Create skills dir if needed and symlink
+  mkdir -p "$SKILLS_DIR" 2>/dev/null
+  SKILL_LINK="$SKILLS_DIR/add-mcp-server"
+  if [ ! -e "$SKILL_LINK" ]; then
+    ln -s "$SKILL_SOURCE" "$SKILL_LINK" 2>/dev/null && \
+      echo "🧠 Skill 'add-mcp-server' registered in $SKILLS_DIR/" || \
+      echo "⚠️  Could not register skill. Create manually: ln -s $SKILL_SOURCE $SKILL_LINK"
+  else
+    echo "🧠 Skill 'add-mcp-server' already registered in $SKILLS_DIR/"
+  fi
 fi
 
 echo ""

@@ -84,25 +84,43 @@ if (Test-Path $ConfigFile) {
     Write-Host "⚠️  Config not found at $ConfigFile" -ForegroundColor Yellow
 }
 
-# Register add-mcp-server skill via symlink/junction
+# Register add-mcp-server skill via junction
 $SkillSource = "$PluginDir\skills\add-mcp-server"
 if (Test-Path $SkillSource) {
-    foreach ($SkillsDir in @("$env:USERPROFILE\clawd\skills", "$env:USERPROFILE\.openclaw\skills", "$env:USERPROFILE\openclaw\skills")) {
-        if (Test-Path $SkillsDir) {
-            $SkillLink = "$SkillsDir\add-mcp-server"
-            if (-not (Test-Path $SkillLink)) {
-                try {
-                    New-Item -ItemType Junction -Path $SkillLink -Target $SkillSource -ErrorAction Stop | Out-Null
-                    Write-Host "🧠 Skill 'add-mcp-server' registered in $SkillsDir\" -ForegroundColor Green
-                } catch {
-                    Write-Host "⚠️  Could not register skill automatically. Create a junction manually:" -ForegroundColor Yellow
-                    Write-Host "     cmd /c mklink /J `"$SkillLink`" `"$SkillSource`"" -ForegroundColor Yellow
-                }
-            } else {
-                Write-Host "🧠 Skill 'add-mcp-server' already registered in $SkillsDir\" -ForegroundColor Green
-            }
-            break
+    $SkillsDir = $null
+
+    # 1. Try reading workspace from openclaw.json
+    if (Test-Path $ConfigFile) {
+        try {
+            $cfgRead = Get-Content $ConfigFile -Raw | ConvertFrom-Json
+            $ws = if ($cfgRead.workspace) { $cfgRead.workspace } elseif ($cfgRead.agent -and $cfgRead.agent.workspace) { $cfgRead.agent.workspace } else { $null }
+            if ($ws -and (Test-Path $ws)) { $SkillsDir = "$ws\skills" }
+        } catch {}
+    }
+
+    # 2. Fallback: try common locations
+    if (-not $SkillsDir) {
+        foreach ($candidate in @("$env:USERPROFILE\clawd\skills", "$env:USERPROFILE\.openclaw\skills", "$env:USERPROFILE\openclaw\skills")) {
+            if (Test-Path $candidate) { $SkillsDir = $candidate; break }
         }
+    }
+
+    # 3. Last resort: use ~/.openclaw/skills
+    if (-not $SkillsDir) { $SkillsDir = "$env:USERPROFILE\.openclaw\skills" }
+
+    # Create skills dir if needed and junction
+    if (-not (Test-Path $SkillsDir)) { New-Item -ItemType Directory -Path $SkillsDir -Force | Out-Null }
+    $SkillLink = "$SkillsDir\add-mcp-server"
+    if (-not (Test-Path $SkillLink)) {
+        try {
+            New-Item -ItemType Junction -Path $SkillLink -Target $SkillSource -ErrorAction Stop | Out-Null
+            Write-Host "🧠 Skill 'add-mcp-server' registered in $SkillsDir\" -ForegroundColor Green
+        } catch {
+            Write-Host "⚠️  Could not register skill automatically. Create a junction manually:" -ForegroundColor Yellow
+            Write-Host "     cmd /c mklink /J `"$SkillLink`" `"$SkillSource`"" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "🧠 Skill 'add-mcp-server' already registered in $SkillsDir\" -ForegroundColor Green
     }
 }
 

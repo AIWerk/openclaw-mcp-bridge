@@ -17,10 +17,13 @@ Activate when requests mention:
 ## Flow (Spec 4.2-4.6)
 
 ### 4.2 Trigger and scope
-1. Confirm target server and source (GitHub URL, npm package, PyPI package, Docker image, or remote endpoint URL).
-2. If the user gives only a vague name, search and propose candidate source URLs before writing files.
+1. **Check the catalog first:** look in `~/.openclaw/extensions/mcp-client/servers/` for a matching directory.
+   - If found (has `config.json`), skip to 4.6 — just run `install-server.sh <name>` and test.
+   - List available catalog servers: `ls ~/.openclaw/extensions/mcp-client/servers/`
+2. If not in catalog: confirm target server and source (GitHub URL, npm package, PyPI package, Docker image, or remote endpoint URL).
+3. If the user gives only a vague name, search and propose candidate source URLs before writing files.
 
-### 4.3 Build config from docs
+### 4.3 Build config from docs (only for non-catalog servers)
 1. Read README first; then package metadata/examples if needed.
 2. Extract: `name`, `description`, `transport`, `command`/`url`, `args`, `env`, `headers`, install method(s), auth requirements, credentials URL, homepage, license.
 3. Transport heuristics:
