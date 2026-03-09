@@ -96,6 +96,24 @@ else
   echo "⚠️  Config not found at $CONFIG_FILE"
 fi
 
+# Register add-mcp-server skill via symlink
+SKILL_SOURCE="$PLUGIN_DIR/skills/add-mcp-server"
+if [ -d "$SKILL_SOURCE" ]; then
+  # Try common workspace skill directories
+  for SKILLS_DIR in "$HOME/clawd/skills" "$HOME/.openclaw/skills" "$HOME/openclaw/skills"; do
+    if [ -d "$SKILLS_DIR" ]; then
+      SKILL_LINK="$SKILLS_DIR/add-mcp-server"
+      if [ ! -e "$SKILL_LINK" ]; then
+        ln -s "$SKILL_SOURCE" "$SKILL_LINK" 2>/dev/null && \
+          echo "🧠 Skill 'add-mcp-server' registered in $SKILLS_DIR/" || true
+      else
+        echo "🧠 Skill 'add-mcp-server' already registered in $SKILLS_DIR/"
+      fi
+      break
+    fi
+  done
+fi
+
 echo ""
 echo "✅ MCP Client Plugin installed!"
 echo ""
@@ -104,7 +122,8 @@ echo "  1. Install an MCP server:"
 echo "     cd ~/.openclaw/extensions/mcp-client"
 echo "     ./install-server.sh <SERVER_NAME>"
 echo ""
-echo "  2. Or add one manually to ~/.openclaw/openclaw.json"
+echo "  2. Or ask your agent: 'Add the X MCP server'"
+echo "     (uses the add-mcp-server skill)"
 echo ""
 echo "  Available servers: ls ~/.openclaw/extensions/mcp-client/servers/"
 echo ""
