@@ -30,3 +30,11 @@ cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\miro
 - Board content read tools
 - Board object creation/update tools
 - Collaboration workspace helpers
+
+## Remove
+
+```bash
+./install-server.sh miro --remove
+```
+
+Removes the server from config and cleans up the API token. The server recipe stays in `servers/miro/` for easy reinstall.

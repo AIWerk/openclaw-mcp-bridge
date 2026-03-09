@@ -30,3 +30,11 @@ cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\google-maps
 - Geocoding and reverse geocoding
 - Places search and details
 - Routing and distance tools
+
+## Remove
+
+```bash
+./install-server.sh google-maps --remove
+```
+
+Removes the server from config and cleans up the API token. The server recipe stays in `servers/google-maps/` for easy reinstall.

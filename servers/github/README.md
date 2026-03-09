@@ -30,3 +30,11 @@ cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\github
 - Repository browsing and search tools
 - Issue and pull request management tools
 - Workflow and automation helpers
+
+## Remove
+
+```bash
+./install-server.sh github --remove
+```
+
+Removes the server from config and cleans up the API token. The server recipe stays in `servers/github/` for easy reinstall.

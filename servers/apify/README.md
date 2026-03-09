@@ -30,3 +30,11 @@ cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\apify
 - Actor discovery and execution
 - Run/result retrieval tools
 - Apify documentation and web extraction tools
+
+## Remove
+
+```bash
+./install-server.sh apify --remove
+```
+
+Removes the server from config and cleans up the API token. The server recipe stays in `servers/apify/` for easy reinstall.

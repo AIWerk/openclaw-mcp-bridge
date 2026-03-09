@@ -30,3 +30,11 @@ cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\stripe
 - Customer and subscription tools
 - Invoices and payment intent tools
 - Refund, dispute, and balance tools
+
+## Remove
+
+```bash
+./install-server.sh stripe --remove
+```
+
+Removes the server from config and cleans up the API token. The server recipe stays in `servers/stripe/` for easy reinstall.

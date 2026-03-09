@@ -31,3 +31,11 @@ cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\wise
 - Profile and balance lookup tools
 - Quote and transfer workflow tools
 - Recipient and transaction tools
+
+## Remove
+
+```bash
+./install-server.sh wise --remove
+```
+
+Removes the server from config and cleans up the API token. The server recipe stays in `servers/wise/` for easy reinstall.

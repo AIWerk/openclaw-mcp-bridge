@@ -30,3 +30,11 @@ cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\hostinger
 - Hosting and site management tools
 - Domain and DNS management tools
 - Account and infrastructure utilities
+
+## Remove
+
+```bash
+./install-server.sh hostinger --remove
+```
+
+Removes the server from config and cleans up the API token. The server recipe stays in `servers/hostinger/` for easy reinstall.

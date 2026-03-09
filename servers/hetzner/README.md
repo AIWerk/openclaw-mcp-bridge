@@ -31,3 +31,11 @@ cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\hetzner
 - Server lifecycle tools
 - Volume, network, and firewall tools
 - Project resource inspection tools
+
+## Remove
+
+```bash
+./install-server.sh hetzner --remove
+```
+
+Removes the server from config and cleans up the API token. The server recipe stays in `servers/hetzner/` for easy reinstall.

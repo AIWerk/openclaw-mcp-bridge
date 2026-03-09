@@ -30,3 +30,11 @@ cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\linear
 - Issue create/update/search tools
 - Project and cycle management tools
 - Team workflow helpers
+
+## Remove
+
+```bash
+./install-server.sh linear --remove
+```
+
+Removes the server from config and cleans up the API token. The server recipe stays in `servers/linear/` for easy reinstall.

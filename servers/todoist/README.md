@@ -30,3 +30,11 @@ cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\todoist
 - Task and project CRUD tools
 - Sections, labels, and comments tools
 - Scheduling and tracking helpers
+
+## Remove
+
+```bash
+./install-server.sh todoist --remove
+```
+
+Removes the server from config and cleans up the API token. The server recipe stays in `servers/todoist/` for easy reinstall.

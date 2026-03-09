@@ -366,6 +366,18 @@ Pre-configured setups for popular MCP servers. Each server in `servers/` include
 
 Use the installer: `./install-server.sh <server-name>` (or `--dry-run` to preview)
 
+### Removing a server
+
+```bash
+./install-server.sh <server-name> --remove
+```
+
+This will:
+- Back up `openclaw.json`
+- Remove the server entry from config
+- Remove the API token from `.env`
+- Keep the server recipe in `servers/<name>/` (reinstall anytime with `./install-server.sh <name>`)
+
 ### Contributing new servers
 
 1. Create `servers/my-server/` with `config.json`, `install.sh`, `env_vars`, `README.md`

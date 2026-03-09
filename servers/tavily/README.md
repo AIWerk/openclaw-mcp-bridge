@@ -30,3 +30,11 @@ cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\tavily
 - Web search tools
 - URL extraction and crawling tools
 - Research and mapping helpers
+
+## Remove
+
+```bash
+./install-server.sh tavily --remove
+```
+
+Removes the server from config and cleans up the API token. The server recipe stays in `servers/tavily/` for easy reinstall.

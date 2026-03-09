@@ -32,3 +32,11 @@ cd $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\notion
 - 22 tools: search, pages, databases, blocks, users, comments
 - Full Notion API coverage
 - Official package: [@notionhq/notion-mcp-server](https://www.npmjs.com/package/@notionhq/notion-mcp-server)
+
+## Remove
+
+```bash
+./install-server.sh notion --remove
+```
+
+Removes the server from config and cleans up the API token. The server recipe stays in `servers/notion/` for easy reinstall.
