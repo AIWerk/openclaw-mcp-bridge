@@ -428,10 +428,17 @@ journalctl --user -u openclaw-gateway.service | grep mcp-client
 ## Uninstall
 
 ```bash
-rm -rf ~/.openclaw/extensions/mcp-client
-# Remove mcp-client from openclaw.json plugins.entries
-openclaw gateway restart
+~/.openclaw/extensions/mcp-client/uninstall.sh
 ```
+
+This will:
+- Remove all server API tokens from `.env`
+- Remove the `add-mcp-server` skill symlink
+- Back up and clean `openclaw.json`
+- Remove the plugin directory
+- Restart the gateway
+
+PowerShell: `~\.openclaw\extensions\mcp-client\uninstall.ps1`
 
 ## Requirements
 
