@@ -1,8 +1,17 @@
 {
+  "schemaVersion": 1,
+  "name": "google-maps",
+  "description": "places, geocoding, directions",
   "transport": "stdio",
   "command": "npx",
-  "args": ["-y", "@anthropic-pb/google-maps-mcp-server"],
+  "args": [
+    "-y",
+    "@anthropic-pb/google-maps-mcp-server"
+  ],
   "env": {
     "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}"
-  }
+  },
+  "authRequired": true,
+  "credentialsUrl": "https://console.cloud.google.com/apis/credentials",
+  "homepage": "https://developers.google.com/maps"
 }

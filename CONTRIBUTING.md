@@ -1,37 +1,38 @@
 # Contributing
 
-Thanks for your interest in contributing to the OpenClaw MCP Client Plugin!
+## 1. Easiest path: let your OpenClaw agent do it
+Use the `add-mcp-server` skill to add a server end-to-end (config, install wrappers, validation, local test, optional submission issue).
 
-## Adding a new server
+## 2. Manual path: submit a server via GitHub issue
+Open an issue in `AIWerk/openclaw-mcp-bridge` using the server submission template.
+Include full `config.json`, install method, and local test results.
 
-1. Create `servers/my-server/` with these files:
-   - `config.json` — server config with `${ENV_VAR}` placeholders
-   - `install.sh` — installation script (follow existing format)
-   - `env_vars` — one env var name per line (no values!)
-   - `README.md` — follow the standard format (see any existing server)
+## 3. Quality requirements
+- Server is publicly available (open source or public API/service)
+- Config secrets use `${VAR}` placeholders only (no hardcoded secrets)
+- `description` is one line and lowercase
+- Versions are pinned (npm `@x.y.z`, pip `==x.y.z`, docker `:x.y.z`)
 
-2. Test locally:
-   ```bash
-   ./install-server.sh my-server --dry-run
-   ./install-server.sh my-server
-   ```
+## 4. Server submission issue format
+Use title format:
+`[Server Submission] <name> — <description>`
 
-3. Submit a Pull Request with a brief description of the server and how many tools it provides.
+Provide:
+- `name`
+- `description`
+- `transport`
+- `command` or `url`
+- `args` (if applicable)
+- required env vars
+- `credentialsUrl`
+- install method(s)
+- source URL and homepage
+- local test result for `mcp(server="<name>", action="list")`
 
-## Code changes
+## 5. Review process overview
+Maintainers verify legitimacy, transport correctness, env var names, install reproducibility, credentials URL, and security constraints.
 
-1. Fork the repo and create a feature branch
-2. Make your changes to the TypeScript files
-3. Test with at least one MCP server connected
-4. Submit a PR — describe what you changed and why
-
-## Guidelines
-
-- Keep server READMEs concise (~40 lines) and consistent with existing ones
-- Config files must use `${VAR}` for secrets — never hardcode tokens
-- Install scripts should include "Next steps" guidance
-- Be respectful in discussions and reviews
-
-## Questions?
-
-Open an issue — we're happy to help.
+Review outcomes:
+- Approved: added to `servers/<name>/` and merged
+- Needs info: feedback posted, waiting for updates
+- Rejected: closed with rationale (duplicate, unmaintained, security risk, or invalid config)
