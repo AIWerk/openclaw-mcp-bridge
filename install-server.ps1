@@ -43,6 +43,7 @@ function Get-TokenUrl {
         "hostinger"   { "https://hpanel.hostinger.com/api" }
         "linear"      { "https://linear.app/settings/api" }
         "miro"        { "https://miro.com/app/settings/user-profile/apps" }
+        "notion"      { "https://www.notion.so/my-integrations" }
         "stripe"      { "https://dashboard.stripe.com/apikeys" }
         "tavily"      { "https://app.tavily.com/home" }
         "todoist"     { "https://app.todoist.com/app/settings/integrations/developer" }

@@ -11,6 +11,7 @@ Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) ser
 - [Tavily](https://tavily.com) — 5 tools (AI web search, extract, crawl, research) via Stdio (npx)
 - [Linear](https://linear.app) — issue & project tracking via Stdio (npx)
 - [Miro](https://miro.com) — whiteboard & visual collaboration via Stdio (npx)
+- [Notion](https://www.notion.so) — 22 tools (pages, databases, blocks, search) via Stdio (npx) — **official server**
 - [Stripe](https://stripe.com) — payments & billing via Stdio (npx) — **official server**
 - [Google Maps](https://developers.google.com/maps) — geocoding, places, directions via Stdio (npx) — **Anthropic reference server**
 - [Wise](https://wise.com) — 20 tools (multi-currency accounts, transfers, exchange rates) via Stdio (git clone) — **community ([Szotasz](https://github.com/Szotasz/wise-mcp))**

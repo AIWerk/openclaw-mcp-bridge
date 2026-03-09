@@ -48,6 +48,7 @@ get_token_url() {
         hostinger)   echo "https://hpanel.hostinger.com/api" ;;
         linear)      echo "https://linear.app/settings/api" ;;
         miro)        echo "https://miro.com/app/settings/user-profile/apps" ;;
+        notion)      echo "https://www.notion.so/my-integrations" ;;
         stripe)      echo "https://dashboard.stripe.com/apikeys" ;;
         tavily)      echo "https://app.tavily.com/home" ;;
         todoist)     echo "https://app.todoist.com/app/settings/integrations/developer" ;;
