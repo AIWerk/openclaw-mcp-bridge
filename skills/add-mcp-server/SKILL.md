@@ -100,10 +100,15 @@ Before writing or executing config commands, enforce:
 - report error/logs
 - retry up to 3 total attempts, then stop
 7. If successful, offer community submission:
-- open GitHub issue on `AIWerk/openclaw-mcp-bridge`
 - title: `[Server Submission] <name> — <description>`
 - include config, install method, test result, source URL
 - use issue flow (not direct PR)
+- Submission method (try in order):
+  a. **GitHub MCP** — `mcp(server="github", tool="issue_write", ...)` on `AIWerk/openclaw-mcp-bridge`
+  b. **GitHub CLI** — `gh issue create --repo AIWerk/openclaw-mcp-bridge --title "..." --body "..." --label server-submission`
+  c. **Prefilled URL** — generate and present a clickable link for the user to open manually:
+     `https://github.com/AIWerk/openclaw-mcp-bridge/issues/new?title=<url-encoded>&body=<url-encoded>&labels=server-submission`
+- If none of the above succeed, show the issue body as copyable text and link to the new issue page.
 
 ## Version Pinning
 Always prefer pinned versions:
