@@ -364,7 +364,20 @@ Pre-configured setups for popular MCP servers. Each server in `servers/` include
 | [google-maps](servers/google-maps/) | stdio | ~7 | Nothing — runs via `npx` | [Get key](https://console.cloud.google.com/apis/credentials) (pay-as-you-go) |
 | [wise](servers/wise/) | stdio | ~20 | `git clone` + `npm run build` | [Get token](https://wise.com/settings/api-tokens) (personal API token) |
 
-Use the installer: `./install-server.sh <server-name>` (or `--dry-run` to preview)
+**Browse the catalog:**
+```bash
+ls servers/                              # list all available servers
+cat servers/<name>/README.md             # read server docs, auth setup, examples
+./install-server.sh                      # list available servers + usage
+./install-server.sh <name> --dry-run     # preview config without installing
+```
+
+**Install a server:**
+```bash
+./install-server.sh <name>               # interactive install (prompts for token)
+```
+
+**Or ask your agent:** *"Install the Notion MCP server"* — the agent checks the catalog, runs `install-server.sh`, and handles everything. For servers not yet in the catalog, the agent searches, verifies the package, creates the config, and installs it.
 
 ### Removing a server
 
