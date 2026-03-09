@@ -1,24 +1,26 @@
-# OpenClaw MCP Client Plugin
+# OpenClaw MCP Bridge
 
 Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server into OpenClaw — tools are automatically discovered and made available to the agent.
+
+> **Naming:** The project is called **OpenClaw MCP Bridge**. It registers as `mcp-client` in OpenClaw's plugin config (the plugin ID). The repo is `openclaw-mcp-bridge`.
 
 **Two modes:**
 - **Router mode** (recommended) — single `mcp` tool, ~300 tokens. Agent discovers tools on-demand via `action=list`.
 - **Direct mode** — all tools registered individually as native tools. Simple, but heavy (~80 tokens per tool × N tools).
 
 **Tested in production with:**
-- [Apify](https://mcp.apify.com) — 8 tools (web scraping, actor management) via Streamable HTTP
-- [GitHub](https://github.com/github/github-mcp-server) — 41 tools (repos, issues, PRs, CI/CD) via Stdio (Docker)
-- [Hetzner Cloud](https://github.com/dkruyt/mcp-hetzner) — 30 tools (server/volume/firewall management) via Stdio
-- [Hostinger](https://www.npmjs.com/package/hostinger-api-mcp) — 119 tools (hosting management) via Stdio
-- [Todoist](https://github.com/Doist/todoist-ai) — 27 tools (task/project management) via Stdio (npx)
-- [Tavily](https://tavily.com) — 5 tools (AI web search, extract, crawl, research) via Stdio (npx)
+- [Apify](https://mcp.apify.com) — ~8 tools (web scraping, actor management) via Streamable HTTP
+- [GitHub](https://github.com/github/github-mcp-server) — ~40 tools (repos, issues, PRs, CI/CD) via Stdio (Docker)
+- [Hetzner Cloud](https://github.com/dkruyt/mcp-hetzner) — ~30 tools (server/volume/firewall management) via Stdio
+- [Hostinger](https://www.npmjs.com/package/hostinger-api-mcp) — ~120 tools (hosting management) via Stdio
+- [Todoist](https://github.com/Doist/todoist-ai) — ~27 tools (task/project management) via Stdio (npx)
+- [Tavily](https://tavily.com) — ~5 tools (AI web search, extract, crawl, research) via Stdio (npx)
 - [Linear](https://linear.app) — issue & project tracking via Stdio (npx)
 - [Miro](https://miro.com) — whiteboard & visual collaboration via Stdio (npx)
-- [Notion](https://www.notion.so) — 22 tools (pages, databases, blocks, search) via Stdio (npx) — **official server**
+- [Notion](https://www.notion.so) — ~22 tools (pages, databases, blocks, search) via Stdio (npx) — **official server**
 - [Stripe](https://stripe.com) — payments & billing via Stdio (npx) — **official server**
 - [Google Maps](https://developers.google.com/maps) — geocoding, places, directions via Stdio (npx) — **Anthropic reference server**
-- [Wise](https://wise.com) — 20 tools (multi-currency accounts, transfers, exchange rates) via Stdio (git clone) — **community ([Szotasz](https://github.com/Szotasz/wise-mcp))**
+- [Wise](https://wise.com) — ~20 tools (multi-currency accounts, transfers, exchange rates) via Stdio (git clone) — **community ([Szotasz](https://github.com/Szotasz/wise-mcp))**
 
 ## Smart Router Mode (recommended)
 
@@ -327,18 +329,18 @@ Pre-configured setups for popular MCP servers. Each server in `servers/` include
 
 | Server | Transport | Tools | Install | Token |
 |---|---|---|---|---|
-| [apify](servers/apify/) | streamable-http | 8 | Hosted — nothing to install | [Get token](https://console.apify.com/account/integrations) |
-| [github](servers/github/) | stdio | 41 | `docker pull ghcr.io/github/github-mcp-server` | [Create PAT](https://github.com/settings/personal-access-tokens/new) |
-| [hetzner](servers/hetzner/) | stdio | 30 | `pip install git+https://github.com/dkruyt/mcp-hetzner.git` | [Get token](https://console.hetzner.cloud) → Security → API Tokens |
-| [hostinger](servers/hostinger/) | stdio | 119 | `npm install -g hostinger-api-mcp` | Hostinger dashboard → API Token |
-| [todoist](servers/todoist/) | stdio | 27 | Nothing — runs via `npx` | [Get token](https://app.todoist.com/app/settings/integrations/developer) |
-| [tavily](servers/tavily/) | stdio | 5 | Nothing — runs via `npx` | [Get key](https://app.tavily.com/home) (free: 1000 req/mo) |
-| [linear](servers/linear/) | stdio | 19 | `npm install -g linear-mcp` | [Get key](https://linear.app/settings/account/security) (free: 250 issues) |
-| [miro](servers/miro/) | stdio | 6 | Nothing — runs via `npx` | [Get token](https://miro.com/app/settings/user-profile/apps) (free plan works) |
-| [notion](servers/notion/) | stdio | 22 | Nothing — runs via `npx` | [Get token](https://www.notion.so/profile/integrations) (create internal integration) |
-| [stripe](servers/stripe/) | stdio | 28 | Nothing — runs via `npx` | [Get key](https://dashboard.stripe.com/apikeys) (test mode free) |
-| [google-maps](servers/google-maps/) | stdio | 7 | Nothing — runs via `npx` | [Get key](https://console.cloud.google.com/apis/credentials) (pay-as-you-go) |
-| [wise](servers/wise/) | stdio | 20 | `git clone` + `npm run build` | [Get token](https://wise.com/settings/api-tokens) (personal API token) |
+| [apify](servers/apify/) | streamable-http | ~8 | Hosted — nothing to install | [Get token](https://console.apify.com/account/integrations) |
+| [github](servers/github/) | stdio | ~40 | `docker pull ghcr.io/github/github-mcp-server` | [Create PAT](https://github.com/settings/personal-access-tokens/new) |
+| [hetzner](servers/hetzner/) | stdio | ~30 | `pip install git+https://github.com/dkruyt/mcp-hetzner.git` | [Get token](https://console.hetzner.cloud) → Security → API Tokens |
+| [hostinger](servers/hostinger/) | stdio | ~120 | `npm install -g hostinger-api-mcp` | Hostinger dashboard → API Token |
+| [todoist](servers/todoist/) | stdio | ~27 | Nothing — runs via `npx` | [Get token](https://app.todoist.com/app/settings/integrations/developer) |
+| [tavily](servers/tavily/) | stdio | ~5 | Nothing — runs via `npx` | [Get key](https://app.tavily.com/home) (free: 1000 req/mo) |
+| [linear](servers/linear/) | stdio | ~19 | `npm install -g linear-mcp` | [Get key](https://linear.app/settings/account/security) (free: 250 issues) |
+| [miro](servers/miro/) | stdio | ~6 | Nothing — runs via `npx` | [Get token](https://miro.com/app/settings/user-profile/apps) (free plan works) |
+| [notion](servers/notion/) | stdio | ~22 | Nothing — runs via `npx` | [Get token](https://www.notion.so/profile/integrations) (create internal integration) |
+| [stripe](servers/stripe/) | stdio | ~28 | Nothing — runs via `npx` | [Get key](https://dashboard.stripe.com/apikeys) (test mode free) |
+| [google-maps](servers/google-maps/) | stdio | ~7 | Nothing — runs via `npx` | [Get key](https://console.cloud.google.com/apis/credentials) (pay-as-you-go) |
+| [wise](servers/wise/) | stdio | ~20 | `git clone` + `npm run build` | [Get token](https://wise.com/settings/api-tokens) (personal API token) |
 
 Use the installer: `./install-server.sh <server-name>` (or `--dry-run` to preview)
 
@@ -347,6 +349,23 @@ Use the installer: `./install-server.sh <server-name>` (or `--dry-run` to previe
 1. Create `servers/my-server/` with `config.json`, `install.sh`, `env_vars`, `README.md`
 2. Test: `./install-server.sh my-server --dry-run`
 3. Submit a Pull Request
+
+## Known Limitations & Trade-offs
+
+### Router mode
+- **Extra roundtrip** — agent must `list` before `call` (two tool invocations vs one in direct mode). Smarter models handle this naturally; weaker models may struggle with the two-step flow.
+- **No native tool selection** — the LLM doesn't see individual tool schemas in its context, so it can't use built-in tool-selection heuristics. It relies on the `list` response to choose.
+- **Cache staleness** — tool lists are cached per-server until explicit `refresh`. If a server updates its tools mid-session, the agent won't see new tools automatically (use `action=refresh`).
+
+### Direct mode
+- **Token cost scales linearly** — each tool adds ~80 tokens to every message. 10 servers × 20 tools = ~16,000 tokens of overhead.
+- **registerTool channel bug** — in some OpenClaw versions, `registerTool()` succeeds at the gateway level but tools don't appear in the agent's tool list. Router mode bypasses this entirely.
+
+### General
+- **Stdio: one process per server** — each stdio server spawns a subprocess. 10 servers = 10 processes. On resource-constrained systems, this matters.
+- **Auth refresh** — tokens in `${VAR}` are resolved at startup. If an API token expires mid-session, you need a gateway restart. There's no automatic token refresh.
+- **Error attribution** — when a tool call fails, it can be the bridge, the transport, or the downstream MCP server. Error messages try to include context, but debugging sometimes requires checking both bridge logs and server logs.
+- **Node.js 22+ required** — the bridge itself is zero-install (TypeBox vendored), but individual MCP servers may need Docker, pip, npm, or git.
 
 ## Troubleshooting
 
