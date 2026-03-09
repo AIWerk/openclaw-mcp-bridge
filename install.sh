@@ -72,17 +72,10 @@ echo ""
 echo "✅ MCP Client Plugin installed!"
 echo ""
 echo "Next steps:"
-echo "  1. Add MCP servers to your config:"
-echo "     nano ~/.openclaw/openclaw.json"
+echo "  1. Install an MCP server:"
+echo "     ./install-server.sh <SERVER_NAME>"
 echo ""
-echo "  Example - Filesystem server (no auth needed):"
-echo '     "servers": {'
-echo '       "fs": {'
-echo '         "transport": "stdio",'
-echo '         "command": "npx",'
-echo '         "args": ["-y", "@modelcontextprotocol/server-filesystem", "/tmp"]'
-echo '       }'
-echo '     }'
+echo "  2. Or add one manually to ~/.openclaw/openclaw.json"
 echo ""
-echo "  2. Restart gateway: openclaw gateway restart"
+echo "  Available servers: ls servers/"
 echo ""
