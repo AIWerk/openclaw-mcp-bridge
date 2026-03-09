@@ -151,41 +151,13 @@ done
 
 mkdir -p "$OPENCLAW_DIR"
 
-# Detect secret management strategy
-GENERATE_ENV="${OPENCLAW_DIR}/generate-env.sh"
-if [ -f "$GENERATE_ENV" ] && command -v pass >/dev/null 2>&1; then
-  # pass-based setup: store token in pass, add to generate-env.sh
-  PASS_PATH="mcp/${SERVER_NAME}-token"
-  echo "Detected pass-based secret store + generate-env.sh"
-  
-  if pass show "$PASS_PATH" >/dev/null 2>&1; then
-    echo "Token already exists in pass ($PASS_PATH); leaving unchanged"
-  else
-    echo "$TOKEN" | pass insert -e "$PASS_PATH"
-    echo "Saved token to pass: $PASS_PATH"
-  fi
-  
-  # Add to generate-env.sh if not already there
-  if ! grep -q "${ENV_VAR_NAME}" "$GENERATE_ENV"; then
-    # Insert before the mv line
-    sed -i "/^mv /i echo \"${ENV_VAR_NAME}=\$(pass show ${PASS_PATH})\" >> \$TMP_FILE" "$GENERATE_ENV"
-    echo "Added ${ENV_VAR_NAME} to ${GENERATE_ENV}"
-  else
-    echo "${ENV_VAR_NAME} already in ${GENERATE_ENV}"
-  fi
-  
-  # Regenerate .env now
-  bash "$GENERATE_ENV"
-  echo "Regenerated ${ENV_FILE}"
+# Write token to .env (OpenClaw standard: ~/.openclaw/.env, chmod 600)
+touch "$ENV_FILE"
+if grep -q "^${ENV_VAR_NAME}=" "$ENV_FILE"; then
+  echo "${ENV_VAR_NAME} already exists in ${ENV_FILE}; leaving existing value unchanged"
 else
-  # Simple .env append (no pass, no generate-env.sh)
-  touch "$ENV_FILE"
-  if ! grep -q "^${ENV_VAR_NAME}=" "$ENV_FILE"; then
-    echo "${ENV_VAR_NAME}=${TOKEN}" >> "$ENV_FILE"
-    echo "Added ${ENV_VAR_NAME} to ${ENV_FILE}"
-  else
-    echo "${ENV_VAR_NAME} already exists in ${ENV_FILE}; leaving existing value unchanged"
-  fi
+  echo "${ENV_VAR_NAME}=${TOKEN}" >> "$ENV_FILE"
+  echo "✅ Added ${ENV_VAR_NAME} to ${ENV_FILE}"
 fi
 chmod 600 "$ENV_FILE"
 
