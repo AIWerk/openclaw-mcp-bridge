@@ -1,26 +1,14 @@
 import { spawn, ChildProcess } from "child_process";
-import { McpTransport, McpRequest, McpResponse, McpServerConfig, nextRequestId } from "./types.js";
+import { McpRequest, McpResponse, McpServerConfig, nextRequestId } from "./types.js";
+import { BaseTransport, resolveEnvRecord, resolveArgs } from "./transport-base.js";
 
-export class StdioTransport implements McpTransport {
-  private config: McpServerConfig;
-  private clientConfig: any;
+export class StdioTransport extends BaseTransport {
   private process: ChildProcess | null = null;
-  private connected = false;
-  private pendingRequests = new Map<number, { resolve: Function; reject: Function; timeout: NodeJS.Timeout }>();
-  private logger: any;
-  private reconnectTimer: NodeJS.Timeout | null = null;
-  private onReconnected?: () => Promise<void>;
-  private backoffDelay = 0;
   private framingMode: "auto" | "lsp" | "newline" = "auto";
   private stdoutBuffer = Buffer.alloc(0);
   private isShuttingDown = false;
 
-  constructor(config: McpServerConfig, clientConfig: any, logger: any, onReconnected?: () => Promise<void>) {
-    this.config = config;
-    this.clientConfig = clientConfig;
-    this.logger = logger;
-    this.onReconnected = onReconnected;
-  }
+  protected get transportName(): string { return "stdio"; }
 
   async connect(): Promise<void> {
     if (!this.config.command) {
@@ -41,8 +29,8 @@ export class StdioTransport implements McpTransport {
   private async startProcess(): Promise<void> {
     if (!this.config.command) return;
 
-    const env = { ...process.env, ...this.resolveEnv(this.config.env || {}) };
-    const args = this.resolveArgs(this.config.args || [], env);
+    const env = { ...process.env, ...resolveEnvRecord(this.config.env || {}, "env key") };
+    const args = resolveArgs(this.config.args || [], env);
 
     this.process = spawn(this.config.command, args, {
       stdio: ["pipe", "pipe", "pipe"],
@@ -67,23 +55,15 @@ export class StdioTransport implements McpTransport {
       this.processStdoutBuffer();
     });
 
-    // Setup stderr handler for debugging
     this.process.stderr.on("data", (data: Buffer) => {
       this.logger.debug(`MCP server stderr: ${data.toString()}`);
     });
 
-    // Handle process exit
     this.process.on("exit", (code, signal) => {
       this.logger.debug(`MCP server process exited: code=${code}, signal=${signal}`);
       this.connected = false;
       this.process = null;
-
-      // Reject all pending requests
-      for (const [id, pending] of this.pendingRequests) {
-        clearTimeout(pending.timeout);
-        pending.reject(new Error("Process exited"));
-      }
-      this.pendingRequests.clear();
+      this.rejectAllPending("Process exited");
 
       if (!this.isShuttingDown) {
         this.scheduleReconnect();
@@ -94,13 +74,7 @@ export class StdioTransport implements McpTransport {
       this.logger.error("MCP server process error:", error);
       this.connected = false;
       this.process = null;
-
-      // Reject all pending requests
-      for (const [id, pending] of this.pendingRequests) {
-        clearTimeout(pending.timeout);
-        pending.reject(new Error("Process error"));
-      }
-      this.pendingRequests.clear();
+      this.rejectAllPending("Process error");
 
       if (!this.isShuttingDown) {
         this.scheduleReconnect();
@@ -146,34 +120,6 @@ export class StdioTransport implements McpTransport {
         settleResolve();
       }, connectionTimeout);
     });
-  }
-
-  private handleMessage(message: any): void {
-    if (!message.id && message.method === "notifications/tools/list_changed") {
-      if (this.onReconnected) {
-        this.onReconnected().catch((error) => {
-          this.logger.error("[mcp-client] Failed to refresh tools after list_changed notification:", error);
-        });
-      }
-      return;
-    }
-
-    if (!message.id && message.method) {
-      this.logger.debug(`[mcp-client] Unhandled stdio notification: ${message.method}`);
-      return;
-    }
-
-    if (message.id && this.pendingRequests.has(message.id)) {
-      const pending = this.pendingRequests.get(message.id)!;
-      clearTimeout(pending.timeout);
-      this.pendingRequests.delete(message.id);
-
-      if (message.error) {
-        pending.reject(new Error(message.error.message || "MCP error"));
-      } else {
-        pending.resolve(message);
-      }
-    }
   }
 
   private writeMessage(message: any): void {
@@ -235,38 +181,28 @@ export class StdioTransport implements McpTransport {
       }
 
       if (this.framingMode === "lsp") {
-        const consumed = this.parseLspMessageFromBuffer();
-        if (!consumed) {
-          return;
-        }
+        if (!this.parseLspMessageFromBuffer()) return;
         continue;
       }
 
-      const consumed = this.parseNewlineMessageFromBuffer();
-      if (!consumed) {
-        return;
-      }
+      if (!this.parseNewlineMessageFromBuffer()) return;
     }
   }
 
   private parseNewlineMessageFromBuffer(): boolean {
     const newlineIndex = this.stdoutBuffer.indexOf(0x0a);
-    if (newlineIndex === -1) {
-      return false;
-    }
+    if (newlineIndex === -1) return false;
 
     const lineBuffer = this.stdoutBuffer.subarray(0, newlineIndex);
     this.stdoutBuffer = this.stdoutBuffer.subarray(newlineIndex + 1);
 
     const line = lineBuffer.toString("utf8").trim();
-    if (!line) {
-      return true;
-    }
+    if (!line) return true;
 
     try {
       const message = JSON.parse(line);
       this.handleMessage(message);
-    } catch (error) {
+    } catch {
       this.logger.debug("Failed to parse stdout JSON:", line);
     }
     return true;
@@ -283,9 +219,7 @@ export class StdioTransport implements McpTransport {
       headerLength = altSeparator.length;
     }
 
-    if (headerEndIndex === -1) {
-      return false;
-    }
+    if (headerEndIndex === -1) return false;
 
     const headerText = this.stdoutBuffer.subarray(0, headerEndIndex).toString("utf8");
     const contentLengthMatch = headerText.match(/Content-Length:\s*(\d+)/i);
@@ -299,9 +233,7 @@ export class StdioTransport implements McpTransport {
     const bodyStart = headerEndIndex + headerLength;
     const bodyEnd = bodyStart + contentLength;
 
-    if (this.stdoutBuffer.length < bodyEnd) {
-      return false;
-    }
+    if (this.stdoutBuffer.length < bodyEnd) return false;
 
     const body = this.stdoutBuffer.subarray(bodyStart, bodyEnd).toString("utf8");
     this.stdoutBuffer = this.stdoutBuffer.subarray(bodyEnd);
@@ -309,93 +241,24 @@ export class StdioTransport implements McpTransport {
     try {
       const message = JSON.parse(body);
       this.handleMessage(message);
-    } catch (error) {
+    } catch {
       this.logger.debug("Failed to parse LSP stdout JSON:", body);
     }
 
     return true;
   }
 
-  private resolveArgs(args: string[], env: Record<string, string>): string[] {
-    return args.map(arg =>
-      arg.replace(/\$\{(\w+)\}/g, (_, varName) => {
-        const value = env[varName] ?? process.env[varName];
-        if (value === undefined) {
-          throw new Error(`[mcp-client] Missing required environment variable "${varName}" while resolving arg "${arg}"`);
-        }
-        return value;
-      })
-    );
-  }
-
-  private resolveEnv(env: Record<string, string>): Record<string, string> {
-    const resolved: Record<string, string> = {};
-    for (const [key, value] of Object.entries(env)) {
-      resolved[key] = value.replace(/\$\{(\w+)\}/g, (_, envVar) => {
-        const envValue = process.env[envVar];
-        if (envValue === undefined) {
-          throw new Error(`[mcp-client] Missing required environment variable "${envVar}" while resolving env key "${key}"`);
-        }
-        return envValue;
-      });
-    }
-    return resolved;
-  }
-
-  private scheduleReconnect(): void {
-    if (this.reconnectTimer) return;
-
-    // Clear and reject all pending requests (fix memory leak)
-    for (const [id, pending] of this.pendingRequests) {
-      clearTimeout(pending.timeout);
-      pending.reject(new Error("Connection lost, request cancelled"));
-    }
-    this.pendingRequests.clear();
-
-    const baseDelay = this.clientConfig.reconnectIntervalMs || 30000;
-    if (this.backoffDelay <= 0) {
-      this.backoffDelay = baseDelay;
-    }
-    const jitter = 0.5 + Math.random(); // 0.5x-1.5x jitter
-    const reconnectInterval = Math.round(this.backoffDelay * jitter);
-    this.reconnectTimer = setTimeout(async () => {
-      this.reconnectTimer = null;
-      try {
-        await this.connect();
-        this.logger.info("Stdio transport reconnected successfully");
-        this.backoffDelay = baseDelay;
-        
-        // Call the reconnection callback to re-initialize protocol and tools
-        if (this.onReconnected) {
-          await this.onReconnected();
-        }
-      } catch (error) {
-        this.logger.error("Reconnection failed:", error);
-        this.backoffDelay = Math.min(this.backoffDelay * 2, 300000);
-        // Schedule another reconnect attempt
-        this.scheduleReconnect();
-      }
-    }, reconnectInterval);
-  }
-
   async disconnect(): Promise<void> {
     this.isShuttingDown = true;
     this.connected = false;
-    
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
-    }
+    this.cleanupReconnectTimer();
 
     const activeProcess = this.process;
     if (activeProcess) {
       if (activeProcess.stdin && !activeProcess.stdin.destroyed) {
         try {
-          this.writeMessage({
-            jsonrpc: "2.0",
-            method: "close"
-          });
-        } catch (error) {
+          this.writeMessage({ jsonrpc: "2.0", method: "close" });
+        } catch {
           this.logger.debug("[mcp-client] Failed to send close notification during stdio disconnect");
         }
       }
@@ -406,12 +269,7 @@ export class StdioTransport implements McpTransport {
       }
     }
 
-    // Reject all pending requests
-    for (const [id, pending] of this.pendingRequests) {
-      clearTimeout(pending.timeout);
-      pending.reject(new Error("Connection closed"));
-    }
-    this.pendingRequests.clear();
+    this.rejectAllPending("Connection closed");
   }
 
   isConnected(): boolean {
@@ -419,9 +277,7 @@ export class StdioTransport implements McpTransport {
   }
 
   private async terminateProcessGracefully(proc: ChildProcess): Promise<void> {
-    if (proc.exitCode !== null || proc.killed) {
-      return;
-    }
+    if (proc.exitCode !== null || proc.killed) return;
 
     await new Promise<void>((resolve) => {
       let done = false;
@@ -430,9 +286,7 @@ export class StdioTransport implements McpTransport {
       const finish = () => {
         if (done) return;
         done = true;
-        if (forceKillTimer) {
-          clearTimeout(forceKillTimer);
-        }
+        if (forceKillTimer) clearTimeout(forceKillTimer);
         proc.off("exit", onExit);
         resolve();
       };
@@ -442,18 +296,14 @@ export class StdioTransport implements McpTransport {
 
       try {
         proc.kill("SIGINT");
-      } catch (error) {
+      } catch {
         finish();
         return;
       }
 
       forceKillTimer = setTimeout(() => {
         if (proc.exitCode === null && !proc.killed) {
-          try {
-            proc.kill("SIGTERM");
-          } catch (error) {
-            // Ignore kill errors during shutdown.
-          }
+          try { proc.kill("SIGTERM"); } catch { /* ignore */ }
         }
         setTimeout(finish, 200);
       }, 2000);

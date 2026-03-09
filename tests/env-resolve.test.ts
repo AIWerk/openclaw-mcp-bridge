@@ -1,45 +1,68 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { StdioTransport } from "../transport-stdio.ts";
-import { SseTransport } from "../transport-sse.ts";
-import { StreamableHttpTransport } from "../transport-streamable-http.ts";
+import { resolveEnvVars, resolveEnvRecord, resolveArgs } from "../transport-base.ts";
 
-const logger = {
-  info: () => {},
-  warn: () => {},
-  error: () => {},
-  debug: () => {}
-};
-
-test("stdio resolveEnv throws when env var is missing", () => {
-  const transport = new StdioTransport({ transport: "stdio", command: "echo" }, {}, logger);
-  assert.throws(() => (transport as any).resolveEnv({ TOKEN: "${MISSING_TEST_ENV}" }), /Missing required environment variable/);
+test("resolveEnvRecord throws when env var is missing", () => {
+  assert.throws(
+    () => resolveEnvRecord({ TOKEN: "${MISSING_TEST_ENV}" }, "env key"),
+    /Missing required environment variable/
+  );
 });
 
-test("stdio resolveArgs resolves env vars in args", () => {
-  const transport = new StdioTransport({ transport: "stdio", command: "echo" }, {}, logger);
+test("resolveArgs resolves env vars in args", () => {
   const env = { MY_TOKEN: "secret123" };
-  const result = (transport as any).resolveArgs(["--token", "${MY_TOKEN}", "--verbose"], env);
+  const result = resolveArgs(["--token", "${MY_TOKEN}", "--verbose"], env);
   assert.deepStrictEqual(result, ["--token", "secret123", "--verbose"]);
 });
 
-test("stdio resolveArgs throws when env var is missing in args", () => {
-  const transport = new StdioTransport({ transport: "stdio", command: "echo" }, {}, logger);
-  assert.throws(() => (transport as any).resolveArgs(["--token", "${MISSING_TEST_ENV}"], {}), /Missing required environment variable/);
+test("resolveArgs throws when env var is missing in args", () => {
+  assert.throws(
+    () => resolveArgs(["--token", "${MISSING_TEST_ENV}"], {}),
+    /Missing required environment variable/
+  );
 });
 
-test("stdio resolveArgs passes through args without variables", () => {
-  const transport = new StdioTransport({ transport: "stdio", command: "echo" }, {}, logger);
-  const result = (transport as any).resolveArgs(["-y", "@llmindset/mcp-miro", "--verbose"], {});
+test("resolveArgs passes through args without variables", () => {
+  const result = resolveArgs(["-y", "@llmindset/mcp-miro", "--verbose"], {});
   assert.deepStrictEqual(result, ["-y", "@llmindset/mcp-miro", "--verbose"]);
 });
 
-test("sse resolveHeaders throws when env var is missing", () => {
-  const transport = new SseTransport({ transport: "sse", url: "http://localhost:3000" }, {}, logger);
-  assert.throws(() => (transport as any).resolveHeaders({ Authorization: "Bearer ${MISSING_TEST_ENV}" }), /Missing required environment variable/);
+test("resolveEnvRecord resolves headers with env vars", () => {
+  process.env.__TEST_MCP_TOKEN = "test-secret-456";
+  try {
+    const result = resolveEnvRecord(
+      { Authorization: "Bearer ${__TEST_MCP_TOKEN}" },
+      "header"
+    );
+    assert.deepStrictEqual(result, { Authorization: "Bearer test-secret-456" });
+  } finally {
+    delete process.env.__TEST_MCP_TOKEN;
+  }
 });
 
-test("streamable-http resolveHeaders throws when env var is missing", () => {
-  const transport = new StreamableHttpTransport({ transport: "streamable-http", url: "http://localhost:3000" }, {}, logger);
-  assert.throws(() => (transport as any).resolveHeaders({ Authorization: "Bearer ${MISSING_TEST_ENV}" }), /Missing required environment variable/);
+test("resolveEnvRecord throws for missing header env var", () => {
+  assert.throws(
+    () => resolveEnvRecord({ Authorization: "Bearer ${MISSING_TEST_ENV}" }, "header"),
+    /Missing required environment variable/
+  );
+});
+
+test("resolveEnvVars resolves single value", () => {
+  process.env.__TEST_MCP_SINGLE = "hello";
+  try {
+    const result = resolveEnvVars("prefix-${__TEST_MCP_SINGLE}-suffix", "test");
+    assert.equal(result, "prefix-hello-suffix");
+  } finally {
+    delete process.env.__TEST_MCP_SINGLE;
+  }
+});
+
+test("resolveEnvVars uses extraEnv before process.env", () => {
+  process.env.__TEST_MCP_PRIO = "from-process";
+  try {
+    const result = resolveEnvVars("${__TEST_MCP_PRIO}", "test", { __TEST_MCP_PRIO: "from-extra" });
+    assert.equal(result, "from-extra");
+  } finally {
+    delete process.env.__TEST_MCP_PRIO;
+  }
 });

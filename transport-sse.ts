@@ -1,36 +1,24 @@
-import { McpTransport, McpRequest, McpResponse, McpServerConfig, nextRequestId } from "./types.js";
+import { McpRequest, McpResponse, McpServerConfig, nextRequestId } from "./types.js";
+import { BaseTransport, resolveEnvRecord, warnIfNonTlsRemoteUrl } from "./transport-base.js";
 
-export class SseTransport implements McpTransport {
-  private config: McpServerConfig;
-  private clientConfig: any;
+export class SseTransport extends BaseTransport {
   private endpointUrl: string | null = null;
-  private connected = false;
-  private pendingRequests = new Map<number, { resolve: Function; reject: Function; timeout: NodeJS.Timeout }>();
-  private logger: any;
-  private reconnectTimer: NodeJS.Timeout | null = null;
   private sseAbortController: AbortController | null = null;
-  private onReconnected?: () => Promise<void>;
-  private backoffDelay = 0;
   private currentDataBuffer: string[] = [];
 
-  constructor(config: McpServerConfig, clientConfig: any, logger: any, onReconnected?: () => Promise<void>) {
-    this.config = config;
-    this.clientConfig = clientConfig;
-    this.logger = logger;
-    this.onReconnected = onReconnected;
-  }
+  protected get transportName(): string { return "SSE"; }
 
   async connect(): Promise<void> {
     if (!this.config.url) {
       throw new Error("SSE transport requires URL");
     }
 
-    this.warnIfNonTlsRemoteUrl(this.config.url);
-    this.resolveHeaders(this.config.headers || {});
+    warnIfNonTlsRemoteUrl(this.config.url, this.logger);
+    // Validate that all header env vars resolve (fail fast)
+    resolveEnvRecord(this.config.headers || {}, "header");
 
     this.sseAbortController = new AbortController();
-    
-    // Start event stream in background (it runs forever)
+
     const connectionTimeout = this.clientConfig.connectionTimeoutMs || 10000;
     const streamReady = new Promise<void>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error("SSE endpoint URL not received within timeout")), connectionTimeout);
@@ -45,22 +33,21 @@ export class SseTransport implements McpTransport {
       }
     });
 
-    // Wait only until we get the endpoint URL
     await streamReady;
     this.connected = true;
     this.backoffDelay = this.clientConfig.reconnectIntervalMs || 30000;
   }
-  
+
   private _onEndpointReceived: (() => void) | null = null;
 
   private async startEventStream(): Promise<void> {
     if (!this.config.url) return;
 
-    const headers = this.resolveHeaders({
+    const headers = resolveEnvRecord({
       ...this.config.headers,
       "Accept": "text/event-stream"
-    });
-    
+    }, "header");
+
     try {
       const response = await fetch(this.config.url, {
         method: "GET",
@@ -78,7 +65,7 @@ export class SseTransport implements McpTransport {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      
+
       let buffer = "";
       let currentEvent = "";
 
@@ -88,26 +75,22 @@ export class SseTransport implements McpTransport {
 
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split('\n');
-        buffer = lines.pop() || ""; // Keep partial line in buffer
+        buffer = lines.pop() || "";
 
         for (const line of lines) {
           const trimmed = line.trim();
-          // Update event type BEFORE processing data lines
           if (trimmed.startsWith("event: ")) {
             currentEvent = trimmed.substring(7).trim();
-            // event: lines only set the type — no processEventLine needed
           } else if (trimmed === "") {
             this.processEventLine(line, currentEvent);
-            currentEvent = ""; // Reset only after processing completed event
+            currentEvent = "";
           } else {
             this.processEventLine(line, currentEvent);
           }
         }
       }
     } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        return; // Clean disconnection
-      }
+      if (error instanceof Error && error.name === 'AbortError') return;
       this.logger.error("SSE stream error:", error);
       this.scheduleReconnect();
     }
@@ -128,10 +111,8 @@ export class SseTransport implements McpTransport {
       const data = this.currentDataBuffer.join("\n");
       this.currentDataBuffer = [];
 
-      // Handle endpoint event (SSE event type "endpoint" with URL as data)
       if (currentEvent === "endpoint") {
         if (data.startsWith("/")) {
-          // Relative URL — resolve against base
           const base = new URL(this.config.url!);
           this.endpointUrl = `${base.origin}${data}`;
         } else if (data.startsWith("http")) {
@@ -152,40 +133,11 @@ export class SseTransport implements McpTransport {
         return;
       }
 
-      // Try to parse as JSON-RPC message
       try {
         const message = JSON.parse(data);
         this.handleMessage(message);
-      } catch (error) {
+      } catch {
         this.logger.debug("Failed to parse SSE data as JSON:", data);
-      }
-    }
-  }
-
-  private handleMessage(message: any): void {
-    if (!message.id && message.method === "notifications/tools/list_changed") {
-      if (this.onReconnected) {
-        this.onReconnected().catch((error) => {
-          this.logger.error("[mcp-client] Failed to refresh tools after list_changed notification:", error);
-        });
-      }
-      return;
-    }
-
-    if (!message.id && message.method) {
-      this.logger.debug(`[mcp-client] Unhandled SSE notification: ${message.method}`);
-      return;
-    }
-
-    if (message.id && this.pendingRequests.has(message.id)) {
-      const pending = this.pendingRequests.get(message.id)!;
-      clearTimeout(pending.timeout);
-      this.pendingRequests.delete(message.id);
-
-      if (message.error) {
-        pending.reject(new Error(message.error.message || "MCP error"));
-      } else {
-        pending.resolve(message);
       }
     }
   }
@@ -194,10 +146,10 @@ export class SseTransport implements McpTransport {
     if (!this.connected || !this.endpointUrl) {
       throw new Error("SSE transport not connected or no endpoint URL");
     }
-    const headers = this.resolveHeaders({
+    const headers = resolveEnvRecord({
       ...this.config.headers,
       "Content-Type": "application/json"
-    });
+    }, "header");
     const response = await fetch(this.endpointUrl!, {
       method: "POST",
       headers,
@@ -225,12 +177,14 @@ export class SseTransport implements McpTransport {
 
       this.pendingRequests.set(id, { resolve, reject, timeout });
 
-      // Send request to the endpoint URL
-      const headers = this.resolveHeaders({
+      const headers = resolveEnvRecord({
         ...this.config.headers,
         "Content-Type": "application/json"
-      });
+      }, "header");
 
+      // The response arrives via the SSE stream (handleMessage), not from this fetch.
+      // The fetch only confirms the server accepted the request (HTTP 200).
+      // If the fetch fails, we reject immediately; otherwise we wait for the SSE stream.
       fetch(this.endpointUrl!, {
         method: "POST",
         headers,
@@ -253,107 +207,24 @@ export class SseTransport implements McpTransport {
 
   private isSameOrigin(url: string): boolean {
     try {
-      if (!this.config.url) {
-        return false;
-      }
+      if (!this.config.url) return false;
       const incoming = new URL(url);
       const base = new URL(this.config.url);
       return incoming.origin === base.origin;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
 
-  private resolveHeaders(headers: Record<string, string>): Record<string, string> {
-    const resolved: Record<string, string> = {};
-    for (const [key, value] of Object.entries(headers)) {
-      resolved[key] = value.replace(/\$\{(\w+)\}/g, (_, envVar) => {
-        const envValue = process.env[envVar];
-        if (envValue === undefined) {
-          throw new Error(`[mcp-client] Missing required environment variable "${envVar}" while resolving header "${key}"`);
-        }
-        return envValue;
-      });
-    }
-    return resolved;
-  }
-
-  private warnIfNonTlsRemoteUrl(rawUrl: string): void {
-    try {
-      const parsed = new URL(rawUrl);
-      if (parsed.protocol !== "http:") {
-        return;
-      }
-      const host = parsed.hostname;
-      if (host === "localhost" || host === "127.0.0.1" || host === "::1") {
-        return;
-      }
-      this.logger.warn(`[mcp-client] WARNING: Non-TLS connection to ${host} — credentials may be transmitted in plaintext`);
-    } catch (error) {
-      // Ignore malformed URL here; connect() validation will fail later.
-    }
-  }
-
-  private scheduleReconnect(): void {
-    if (this.reconnectTimer) return;
-
-    this.connected = false;
-    
-    // Clear and reject all pending requests (fix memory leak)
-    for (const [id, pending] of this.pendingRequests) {
-      clearTimeout(pending.timeout);
-      pending.reject(new Error("Connection lost, request cancelled"));
-    }
-    this.pendingRequests.clear();
-
-    const baseDelay = this.clientConfig.reconnectIntervalMs || 30000;
-    if (this.backoffDelay <= 0) {
-      this.backoffDelay = baseDelay;
-    }
-    const jitter = 0.5 + Math.random(); // 0.5x-1.5x jitter
-    const reconnectInterval = Math.round(this.backoffDelay * jitter);
-    this.reconnectTimer = setTimeout(async () => {
-      this.reconnectTimer = null;
-      try {
-        await this.connect();
-        this.logger.info("SSE transport reconnected successfully");
-        this.backoffDelay = baseDelay;
-        
-        // Call the reconnection callback to re-initialize protocol and tools
-        if (this.onReconnected) {
-          await this.onReconnected();
-        }
-      } catch (error) {
-        this.logger.error("Reconnection failed:", error);
-        this.backoffDelay = Math.min(this.backoffDelay * 2, 300000);
-        // Schedule another reconnect attempt
-        this.scheduleReconnect();
-      }
-    }, reconnectInterval);
-  }
-
   async disconnect(): Promise<void> {
     this.connected = false;
-    
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
-    }
+    this.cleanupReconnectTimer();
 
     if (this.sseAbortController) {
       this.sseAbortController.abort();
       this.sseAbortController = null;
     }
 
-    // Reject all pending requests
-    for (const [id, pending] of this.pendingRequests) {
-      clearTimeout(pending.timeout);
-      pending.reject(new Error("Connection closed"));
-    }
-    this.pendingRequests.clear();
-  }
-
-  isConnected(): boolean {
-    return this.connected;
+    this.rejectAllPending("Connection closed");
   }
 }
