@@ -222,16 +222,23 @@ if [[ -z "$RESTART" || "$RESTART" =~ ^[Yy]$ ]]; then
         echo "⚠️  Auto-restart failed. Run: systemctl --user restart openclaw-gateway"
         exit 0
     }
-    echo "Waiting for gateway..."
-    sleep 8
-    if ! systemctl --user is-active --quiet openclaw-gateway 2>/dev/null; then
-        echo "❌ Gateway failed! Check: journalctl --user -u openclaw-gateway --since '30 sec ago' --no-pager"
-        exit 1
-    fi
-    if journalctl --user -u openclaw-gateway --since "30 sec ago" --no-pager 2>/dev/null | grep -qi "$SERVER_NAME.*registered"; then
+    echo "Waiting for gateway and MCP server startup..."
+    CONFIRMED=false
+    for i in 1 2 3 4 5 6; do
+        sleep 5
+        if ! systemctl --user is-active --quiet openclaw-gateway 2>/dev/null; then
+            echo "❌ Gateway failed! Check: journalctl --user -u openclaw-gateway --since '1 min ago' --no-pager"
+            exit 1
+        fi
+        if journalctl --user -u openclaw-gateway --since "1 min ago" --no-pager 2>/dev/null | grep -qi "Server ${SERVER_NAME} initialized"; then
+            CONFIRMED=true
+            break
+        fi
+    done
+    if $CONFIRMED; then
         echo "✅ ${SERVER_TITLE} MCP Server installed and running!"
     else
-        echo "⚠️  Gateway running but ${SERVER_TITLE} not confirmed in logs. Check: journalctl --user -u openclaw-gateway -f"
+        echo "⚠️  Gateway running but ${SERVER_TITLE} not confirmed after 30s. Check: journalctl --user -u openclaw-gateway -f"
     fi
 else
     echo "⏭️  Run manually: systemctl --user restart openclaw-gateway"
