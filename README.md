@@ -1,5 +1,7 @@
 # OpenClaw MCP Bridge
 
+[![Tests](https://github.com/AIWerk/openclaw-mcp-bridge/actions/workflows/test.yml/badge.svg)](https://github.com/AIWerk/openclaw-mcp-bridge/actions/workflows/test.yml)
+
 Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server into OpenClaw — tools are automatically discovered and made available to the agent.
 
 > **Naming:** The project is called **OpenClaw MCP Bridge**. It registers as `mcp-client` in OpenClaw's plugin config (the plugin ID). The repo is `openclaw-mcp-bridge`.
