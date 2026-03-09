@@ -245,3 +245,65 @@ test("generateDescription includes configured servers", () => {
   assert.match(description, /action='call'/);
   assert.match(description, /action='refresh'/);
 });
+
+test("status action returns all servers with connection state", async () => {
+  const router = new McpRouter(
+    {
+      alpha: { transport: "stdio", command: "node", args: ["fake.js"] },
+      beta: { transport: "sse", url: "http://localhost:9999/sse" }
+    },
+    { servers: {} },
+    console,
+    {
+      sse: FakeTransport as any,
+      stdio: FakeTransport as any,
+      streamableHttp: FakeTransport as any
+    }
+  );
+
+  const result = await router.dispatch(undefined, "status");
+  assert.equal("action" in result && result.action, "status");
+  if ("servers" in result) {
+    assert.equal(result.servers.length, 2);
+    const alpha = result.servers.find(s => s.name === "alpha");
+    assert.ok(alpha);
+    assert.equal(alpha!.status, "disconnected");
+    assert.equal(alpha!.tools, 0);
+    assert.equal(alpha!.transport, "stdio");
+    const beta = result.servers.find(s => s.name === "beta");
+    assert.ok(beta);
+    assert.equal(beta!.status, "disconnected");
+    assert.equal(beta!.transport, "sse");
+  }
+});
+
+test("status action shows connected server after call", async () => {
+  const router = new McpRouter(
+    { alpha: { transport: "stdio", command: "node", args: ["fake.js"] } },
+    { servers: {} },
+    console,
+    {
+      sse: FakeTransport as any,
+      stdio: FakeTransport as any,
+      streamableHttp: FakeTransport as any
+    }
+  );
+
+  // Call a tool to trigger connection
+  await router.dispatch("alpha", "list");
+
+  const result = await router.dispatch(undefined, "status");
+  if ("servers" in result) {
+    const alpha = result.servers.find(s => s.name === "alpha");
+    assert.ok(alpha);
+    assert.equal(alpha!.status, "connected");
+    assert.equal(alpha!.tools, 2);
+  }
+});
+
+test("generateDescription includes status action", () => {
+  const description = McpRouter.generateDescription({
+    test: { transport: "stdio", command: "node", args: [] }
+  });
+  assert.match(description, /action='status'/);
+});

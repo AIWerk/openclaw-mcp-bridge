@@ -5,73 +5,121 @@
       "description": "web scraping & automation",
       "transport": "streamable-http",
       "authRequired": true,
-      "homepage": "https://apify.com/"
+      "homepage": "https://apify.com/",
+      "installMethod": "npx",
+      "envVars": [
+        "APIFY_TOKEN"
+      ]
     },
     "github": {
       "description": "repos, issues, PRs",
       "transport": "stdio",
       "authRequired": true,
-      "homepage": "https://github.com/github/github-mcp-server"
+      "homepage": "https://github.com/github/github-mcp-server",
+      "installMethod": "npx",
+      "envVars": [
+        "GITHUB_MCP_TOKEN"
+      ]
     },
     "google-maps": {
       "description": "places, geocoding, directions",
       "transport": "stdio",
       "authRequired": true,
-      "homepage": "https://developers.google.com/maps"
+      "homepage": "https://developers.google.com/maps",
+      "installMethod": "npx",
+      "envVars": [
+        "GOOGLE_MAPS_API_KEY"
+      ]
     },
     "hetzner": {
       "description": "cloud infrastructure",
       "transport": "stdio",
       "authRequired": true,
-      "homepage": "https://www.hetzner.com/cloud"
+      "homepage": "https://www.hetzner.com/cloud",
+      "installMethod": "npx",
+      "envVars": [
+        "HETZNER_API_TOKEN"
+      ]
     },
     "hostinger": {
       "description": "web hosting management",
       "transport": "stdio",
       "authRequired": true,
-      "homepage": "https://www.hostinger.com/"
+      "homepage": "https://www.hostinger.com/",
+      "installMethod": "npx",
+      "envVars": [
+        "HOSTINGER_API_TOKEN"
+      ]
     },
     "linear": {
       "description": "project management",
       "transport": "stdio",
       "authRequired": true,
-      "homepage": "https://linear.app/"
+      "homepage": "https://linear.app/",
+      "installMethod": "npx",
+      "envVars": [
+        "LINEAR_API_KEY"
+      ]
     },
     "miro": {
       "description": "collaborative whiteboard",
       "transport": "stdio",
       "authRequired": true,
-      "homepage": "https://miro.com/"
+      "homepage": "https://miro.com/",
+      "installMethod": "npx",
+      "envVars": [
+        "MIRO_API_TOKEN"
+      ]
     },
     "notion": {
       "description": "notes & databases",
       "transport": "stdio",
       "authRequired": true,
-      "homepage": "https://www.notion.so/"
+      "homepage": "https://www.notion.so/",
+      "installMethod": "npx",
+      "envVars": [
+        "NOTION_API_KEY"
+      ]
     },
     "stripe": {
       "description": "payments & billing",
       "transport": "stdio",
       "authRequired": true,
-      "homepage": "https://stripe.com/"
+      "homepage": "https://stripe.com/",
+      "installMethod": "npx",
+      "envVars": [
+        "STRIPE_API_KEY"
+      ]
     },
     "tavily": {
       "description": "AI-optimized web search",
       "transport": "stdio",
       "authRequired": true,
-      "homepage": "https://tavily.com/"
+      "homepage": "https://tavily.com/",
+      "installMethod": "npx",
+      "envVars": [
+        "TAVILY_API_KEY"
+      ]
     },
     "todoist": {
       "description": "task management",
       "transport": "stdio",
       "authRequired": true,
-      "homepage": "https://todoist.com/"
+      "homepage": "https://todoist.com/",
+      "installMethod": "npx",
+      "envVars": [
+        "TODOIST_API_TOKEN"
+      ]
     },
     "wise": {
       "description": "international payments",
       "transport": "stdio",
       "authRequired": true,
-      "homepage": "https://wise.com/"
+      "homepage": "https://wise.com/",
+      "installMethod": "npx",
+      "envVars": [
+        "WISE_API_TOKEN"
+      ]
     }
   }
 }

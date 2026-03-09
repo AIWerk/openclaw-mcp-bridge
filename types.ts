@@ -1,20 +1,26 @@
-// OpenClaw Plugin API surface (partial — covers what this plugin uses)
+// OpenClaw Plugin API surface — covers all methods this plugin uses.
+// If OpenClaw adds new API surface, extend this interface.
 export interface OpenClawToolDefinition {
   name: string;
+  label?: string;
   description: string;
   parameters?: Record<string, unknown>;
   execute: (toolId: string, params: Record<string, unknown>) => Promise<unknown>;
 }
 
+export interface OpenClawLogger {
+  info: (...args: unknown[]) => void;
+  warn: (...args: unknown[]) => void;
+  error: (...args: unknown[]) => void;
+  debug: (...args: unknown[]) => void;
+}
+
 export interface OpenClawPluginApi {
+  pluginConfig: McpClientConfig;
+  logger: OpenClawLogger;
   registerTool: (tool: OpenClawToolDefinition) => void;
-  log: {
-    info: (...args: unknown[]) => void;
-    warn: (...args: unknown[]) => void;
-    error: (...args: unknown[]) => void;
-    debug: (...args: unknown[]) => void;
-  };
-  config: McpClientConfig;
+  unregisterTool: (name: string) => void;
+  on: (event: string, handler: (...args: unknown[]) => void | Promise<void>) => void;
 }
 
 export interface McpServerConfig {

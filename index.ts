@@ -66,9 +66,7 @@ export function pickRegisteredToolName(
   return candidate;
 }
 
-// OpenClaw plugin API is dynamically shaped — we type what we use
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export default function activate(api: any) {
+export default function activate(api: OpenClawPluginApi) {
   const config = (api.pluginConfig ?? {}) as McpClientConfig;
   const mode = config.mode ?? "direct";
   setSchemaLogger(api.logger);
