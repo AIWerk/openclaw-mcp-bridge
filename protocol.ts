@@ -2,7 +2,13 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import { McpRequest, McpResponse, McpTool, McpTransport } from "./types.js";
 
-export const PLUGIN_VERSION: string = JSON.parse(readFileSync(join(__dirname, "package.json"), "utf-8")).version;
+export const PLUGIN_VERSION: string = (() => {
+  try {
+    return JSON.parse(readFileSync(join(__dirname, "package.json"), "utf-8")).version;
+  } catch {
+    return "0.0.0";
+  }
+})();
 
 export async function initializeProtocol(transport: McpTransport, version: string): Promise<void> {
   const initRequest: McpRequest = {
