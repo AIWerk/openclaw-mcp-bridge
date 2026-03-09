@@ -156,6 +156,18 @@ if ($Remove) {
     Write-Host "✅ Removed $ServerName from config" -ForegroundColor Green
     Write-Host "ℹ️  Server recipe kept in servers\$ServerName\ (reinstall anytime)" -ForegroundColor Cyan
 
+    # Remove env var from .env
+    $envVarsFile = Join-Path $ServerDir "env_vars"
+    if ((Test-Path $envVarsFile) -and (Test-Path $EnvFile)) {
+        $envVarName = (Get-Content $envVarsFile -TotalCount 1).Trim()
+        $envContent = Get-Content $EnvFile
+        $filtered = $envContent | Where-Object { $_ -notmatch "^$envVarName=" }
+        if ($filtered.Count -lt $envContent.Count) {
+            $filtered | Set-Content $EnvFile -Encoding UTF8
+            Write-Host "🔑 Removed $envVarName from $EnvFile" -ForegroundColor Green
+        }
+    }
+
     $restart = Read-Host "Restart gateway now? [Y/n]"
     if ([string]::IsNullOrEmpty($restart) -or $restart -match '^[Yy]$') {
         try {

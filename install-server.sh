@@ -166,6 +166,15 @@ print('✅ Removed $SERVER_NAME from config')
 print('ℹ️  Server recipe kept in servers/$SERVER_NAME/ (reinstall anytime)')
 " 2>/dev/null
 
+    # Remove env var from .env if exists
+    if [[ -f "$ENV_VARS_FILE" ]] && [[ -s "$ENV_VARS_FILE" ]] && [[ -f "$ENV_FILE" ]]; then
+        ENV_VAR_NAME="$(head -n 1 "$ENV_VARS_FILE" | tr -d '[:space:]')"
+        if grep -q "^${ENV_VAR_NAME}=" "$ENV_FILE" 2>/dev/null; then
+            sed -i "/^${ENV_VAR_NAME}=/d" "$ENV_FILE"
+            echo "🔑 Removed ${ENV_VAR_NAME} from ${ENV_FILE}"
+        fi
+    fi
+
     # Restart
     echo ""
     RESTART="y"
