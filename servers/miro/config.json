@@ -1,8 +1,6 @@
 {
   "transport": "stdio",
   "command": "npx",
-  "args": ["-y", "@anthropic-pb/miro-mcp-server"],
-  "env": {
-    "MIRO_API_TOKEN": "${MIRO_API_TOKEN}"
-  }
+  "args": ["-y", "@llmindset/mcp-miro", "--token", "${MIRO_API_TOKEN}"],
+  "env": {}
 }
