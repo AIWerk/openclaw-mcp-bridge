@@ -6,7 +6,7 @@ $EnvFile = Join-Path $OpenclawDir ".env"
 $OpenclawJson = Join-Path $OpenclawDir "openclaw.json"
 
 if ($args.Count -eq 0) {
-    Write-Host "Usage: install-server.ps1 <server-name> [--dry-run]"
+    Write-Host "Usage: install-server.ps1 <server-name> [--dry-run] [--remove]"
     Write-Host ""
     Write-Host "Available servers:"
     Get-ChildItem -Path (Join-Path $ScriptDir "servers") -Directory | ForEach-Object { Write-Host "  - $($_.Name)" }
@@ -15,6 +15,7 @@ if ($args.Count -eq 0) {
 
 $ServerName = $args[0]
 $DryRun = $args -contains "--dry-run"
+$Remove = $args -contains "--remove"
 
 $ServerDir = Join-Path $ScriptDir "servers\$ServerName"
 if (-not (Test-Path $ServerDir)) {
@@ -124,6 +125,53 @@ function Ensure-Property {
     return $Object.$Name
 }
 
+# ========================================
+# REMOVE MODE
+# ========================================
+if ($Remove) {
+    Write-Host "========================================"
+    Write-Host "Removing $ServerTitle MCP Server"
+    Write-Host "========================================"
+
+    if (-not (Test-Path $OpenclawJson)) {
+        Write-Host "❌ Config not found: $OpenclawJson" -ForegroundColor Red
+        exit 1
+    }
+
+    $cfg = Get-Content $OpenclawJson -Raw | ConvertFrom-Json
+    $servers = $cfg.plugins.entries.'mcp-client'.config.servers
+    if (-not ($servers.PSObject.Properties.Name -contains $ServerName)) {
+        Write-Host "ℹ️  Server '$ServerName' not found in config. Nothing to remove." -ForegroundColor Yellow
+        exit 0
+    }
+
+    # Backup
+    $backupFile = "$OpenclawJson.bak-$(Get-Date -Format 'yyyyMMddHHmmss')"
+    Copy-Item $OpenclawJson $backupFile
+    Write-Host "Backup: $backupFile"
+
+    # Remove server entry
+    $servers.PSObject.Properties.Remove($ServerName)
+    $cfg | ConvertTo-Json -Depth 10 | Set-Content $OpenclawJson -Encoding UTF8
+    Write-Host "✅ Removed $ServerName from config" -ForegroundColor Green
+    Write-Host "ℹ️  Server recipe kept in servers\$ServerName\ (reinstall anytime)" -ForegroundColor Cyan
+
+    $restart = Read-Host "Restart gateway now? [Y/n]"
+    if ([string]::IsNullOrEmpty($restart) -or $restart -match '^[Yy]$') {
+        try {
+            Restart-Service openclaw-gateway -ErrorAction Stop
+            Write-Host "✅ Gateway restarted. $ServerTitle removed." -ForegroundColor Green
+        } catch {
+            Write-Host "⚠️  Auto-restart failed. Run: Restart-Service openclaw-gateway" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "⏭️  Run manually: Restart-Service openclaw-gateway"
+    }
+    exit 0
+}
+
+# ========================================
+# INSTALL MODE
 # ========================================
 Write-Host "========================================"
 Write-Host "Installing $ServerTitle MCP Server"

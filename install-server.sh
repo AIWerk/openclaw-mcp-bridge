@@ -7,7 +7,7 @@ OPENCLAW_JSON="${OPENCLAW_DIR}/openclaw.json"
 ENV_FILE="${OPENCLAW_DIR}/.env"
 
 usage() {
-    echo "Usage: $0 <server-name> [--dry-run]"
+    echo "Usage: $0 <server-name> [--dry-run] [--remove]"
     echo ""
     echo "Available servers:"
     for server_dir in "$SCRIPT_DIR/servers"/*; do
@@ -20,7 +20,15 @@ usage() {
 
 SERVER_NAME="$1"
 DRY_RUN=false
-[[ "$2" == "--dry-run" ]] && DRY_RUN=true
+REMOVE=false
+shift
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --dry-run) DRY_RUN=true ;;
+        --remove)  REMOVE=true ;;
+    esac
+    shift
+done
 
 SERVER_DIR="$SCRIPT_DIR/servers/$SERVER_NAME"
 if [[ ! -d "$SERVER_DIR" ]]; then
@@ -112,6 +120,80 @@ resolve_path_override() {
     esac
 }
 
+# ========================================
+# REMOVE MODE
+# ========================================
+if [[ "$REMOVE" == "true" ]]; then
+    echo "========================================"
+    echo "Removing ${SERVER_TITLE} MCP Server"
+    echo "========================================"
+
+    if [[ ! -f "$OPENCLAW_JSON" ]]; then
+        echo "❌ Config not found: $OPENCLAW_JSON"
+        exit 1
+    fi
+
+    # Check if server exists in config
+    HAS_SERVER=$(python3 -c "
+import json
+with open('$OPENCLAW_JSON') as f:
+    cfg = json.load(f)
+servers = cfg.get('plugins',{}).get('entries',{}).get('mcp-client',{}).get('config',{}).get('servers',{})
+print('yes' if '$SERVER_NAME' in servers else 'no')
+" 2>/dev/null)
+
+    if [[ "$HAS_SERVER" != "yes" ]]; then
+        echo "ℹ️  Server '$SERVER_NAME' not found in config. Nothing to remove."
+        exit 0
+    fi
+
+    # Backup
+    BACKUP_FILE="${OPENCLAW_JSON}.bak-$(date +%Y%m%d%H%M%S)"
+    cp "$OPENCLAW_JSON" "$BACKUP_FILE"
+    echo "Backup: ${BACKUP_FILE}"
+
+    # Remove server entry from config (keep servers/<name>/ directory)
+    python3 -c "
+import json
+with open('$OPENCLAW_JSON') as f:
+    cfg = json.load(f)
+servers = cfg['plugins']['entries']['mcp-client']['config']['servers']
+del servers['$SERVER_NAME']
+with open('$OPENCLAW_JSON', 'w') as f:
+    json.dump(cfg, f, indent=2)
+    f.write('\n')
+print('✅ Removed $SERVER_NAME from config')
+print('ℹ️  Server recipe kept in servers/$SERVER_NAME/ (reinstall anytime)')
+" 2>/dev/null
+
+    # Restart
+    echo ""
+    RESTART="y"
+    if [ -e /dev/tty ]; then
+        read -r -p "Restart gateway now? [Y/n]: " RESTART </dev/tty
+    fi
+    if [[ -z "$RESTART" || "$RESTART" =~ ^[Yy]$ ]]; then
+        systemctl --user restart openclaw-gateway 2>/dev/null || {
+            echo "⚠️  Auto-restart failed. Run: systemctl --user restart openclaw-gateway"
+            exit 0
+        }
+        sleep 3
+        if systemctl --user is-active --quiet openclaw-gateway 2>/dev/null; then
+            echo "✅ Gateway restarted. ${SERVER_TITLE} removed."
+        else
+            echo "❌ Gateway failed to start! Restoring backup..."
+            cp "$BACKUP_FILE" "$OPENCLAW_JSON"
+            systemctl --user restart openclaw-gateway 2>/dev/null
+            echo "Restored from backup."
+        fi
+    else
+        echo "⏭️  Run manually: systemctl --user restart openclaw-gateway"
+    fi
+    exit 0
+fi
+
+# ========================================
+# INSTALL MODE
 # ========================================
 echo "========================================"
 echo "Installing ${SERVER_TITLE} MCP Server"
