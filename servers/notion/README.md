@@ -32,6 +32,44 @@ The installer will:
 - Merge the server config into `openclaw.json` (with backup)
 - Restart the gateway and verify the server is running
 
+### Manual setup
+
+Save your token:
+```bash
+# Option A: Add to .env directly
+echo "NOTION_API_KEY=ntn_xxxxx" >> ~/.openclaw/.env
+
+# Option B: Using pass (password-store)
+pass insert api/notion-api-key
+```
+
+Add to `openclaw.json`:
+```json
+{
+  "notion": {
+    "transport": "stdio",
+    "command": "npx",
+    "args": ["-y", "@notionhq/notion-mcp-server"],
+    "env": {
+      "NOTION_API_KEY": "${NOTION_API_KEY}"
+    }
+  }
+}
+```
+
+Restart and verify:
+```bash
+openclaw gateway restart
+journalctl --user -u openclaw-gateway.service | grep "notion"
+```
+
+## Windows
+
+OpenClaw runs on Windows (WSL2 recommended). Adapt paths:
+- Config: `%USERPROFILE%\.openclaw\openclaw.json`
+- Logs: `openclaw gateway logs` (no journalctl)
+- `pip`/`npm`/`npx` commands work the same on Windows
+
 ## Notes
 - Uses `npx` — no global install needed, downloads automatically on first run
 - First start may be slow (~10s) as npx downloads the package
