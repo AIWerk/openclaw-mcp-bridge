@@ -23,7 +23,27 @@ echo "📦 Installing dependencies..."
 cd "$PLUGIN_DIR" && npm install --production 2>&1 | tail -1
 echo ""
 
-# 3. Add to openclaw.json if not already present
+# 3. Choose mode
+echo ""
+echo "🔧 Choose plugin mode:"
+echo ""
+echo "  [1] Router (recommended)"
+echo "      Single 'mcp' tool, ~300 tokens. Agent discovers tools on-demand."
+echo "      Best for 3+ servers. Saves ~98% context tokens."
+echo ""
+echo "  [2] Direct"
+echo "      All tools registered individually as native tools."
+echo "      Simple, but ~80 tokens per tool (can add up with many servers)."
+echo ""
+read -r -p "Mode [1/2, default=1]: " MODE_CHOICE </dev/tty
+case "$MODE_CHOICE" in
+  2) PLUGIN_MODE="direct" ;;
+  *) PLUGIN_MODE="router" ;;
+esac
+echo "  → Using $PLUGIN_MODE mode"
+echo ""
+
+# 4. Add to openclaw.json if not already present
 if [ -f "$CONFIG_FILE" ]; then
   if python3 -c "
 import json, sys
@@ -43,6 +63,7 @@ if 'mcp-client' not in entries:
     entries['mcp-client'] = {
         'enabled': True,
         'config': {
+            'mode': '$PLUGIN_MODE',
             'servers': {},
             'toolPrefix': True,
             'reconnectIntervalMs': 30000,
@@ -51,9 +72,16 @@ if 'mcp-client' not in entries:
         }
     }
     changed = True
-    print('✅ Plugin added to config')
+    print('✅ Plugin added to config (mode: $PLUGIN_MODE)')
 else:
-    print('ℹ️  Plugin already in config')
+    # Update mode if plugin already exists
+    existing = entries['mcp-client'].setdefault('config', {})
+    if existing.get('mode') != '$PLUGIN_MODE':
+        existing['mode'] = '$PLUGIN_MODE'
+        changed = True
+        print('✅ Plugin mode updated to $PLUGIN_MODE')
+    else:
+        print('ℹ️  Plugin already in config (mode: $PLUGIN_MODE)')
 
 if changed:
     with open('$CONFIG_FILE', 'w') as f:

@@ -27,7 +27,24 @@ npm install --production 2>&1 | Select-Object -Last 1
 Pop-Location
 Write-Host ""
 
-# 3. Add to openclaw.json if not already present
+# 3. Choose mode
+Write-Host ""
+Write-Host "🔧 Choose plugin mode:" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "  [1] Router (recommended)"
+Write-Host "      Single 'mcp' tool, ~300 tokens. Agent discovers tools on-demand."
+Write-Host "      Best for 3+ servers. Saves ~98% context tokens."
+Write-Host ""
+Write-Host "  [2] Direct"
+Write-Host "      All tools registered individually as native tools."
+Write-Host "      Simple, but ~80 tokens per tool (can add up with many servers)."
+Write-Host ""
+$ModeChoice = Read-Host "Mode [1/2, default=1]"
+if ($ModeChoice -eq "2") { $PluginMode = "direct" } else { $PluginMode = "router" }
+Write-Host "  → Using $PluginMode mode" -ForegroundColor Green
+Write-Host ""
+
+# 4. Add to openclaw.json if not already present
 if (Test-Path $ConfigFile) {
     $cfg = Get-Content $ConfigFile -Raw | ConvertFrom-Json
 
@@ -43,6 +60,7 @@ if (Test-Path $ConfigFile) {
         $cfg.plugins.entries | Add-Member -NotePropertyName "mcp-client" -NotePropertyValue ([PSCustomObject]@{
             enabled = $true
             config = [PSCustomObject]@{
+                mode = $PluginMode
                 servers = [PSCustomObject]@{}
                 toolPrefix = $true
                 reconnectIntervalMs = 30000
@@ -50,9 +68,15 @@ if (Test-Path $ConfigFile) {
                 requestTimeoutMs = 60000
             }
         })
-        Write-Host "✅ Plugin added to config" -ForegroundColor Green
+        Write-Host "✅ Plugin added to config (mode: $PluginMode)" -ForegroundColor Green
     } else {
-        Write-Host "ℹ️  Plugin already in config" -ForegroundColor Yellow
+        $existingConfig = $cfg.plugins.entries."mcp-client".config
+        if ($existingConfig.mode -ne $PluginMode) {
+            $existingConfig | Add-Member -NotePropertyName mode -NotePropertyValue $PluginMode -Force
+            Write-Host "✅ Plugin mode updated to $PluginMode" -ForegroundColor Green
+        } else {
+            Write-Host "ℹ️  Plugin already in config (mode: $PluginMode)" -ForegroundColor Yellow
+        }
     }
 
     $cfg | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
