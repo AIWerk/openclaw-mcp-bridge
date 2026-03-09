@@ -319,6 +319,10 @@ export class McpRouter {
         this.logger.warn(`[mcp-client] Router idle disconnect failed for ${server}:`, error);
       });
     }, this.idleTimeoutMs);
+    // Don't keep the process alive just for idle disconnect
+    if (state.idleTimer && typeof state.idleTimer.unref === "function") {
+      state.idleTimer.unref();
+    }
   }
 
   private createTransport(serverName: string, serverConfig: McpServerConfig): McpTransport {

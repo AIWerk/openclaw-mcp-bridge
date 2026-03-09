@@ -59,8 +59,10 @@ test("falls back when TypeBox is missing", async () => {
     const schema = await convertJsonSchemaToTypeBox({ type: "string" });
     const params = await createToolParameters({ type: "object" });
 
-    assert.equal(schema.type, "any");
-    assert.equal(params.type, "any");
+    // convertJsonSchemaToTypeBox fallback: empty schema {}
+    assert.deepStrictEqual(schema, {});
+    // createToolParameters fallback: returns raw inputSchema as-is
+    assert.deepStrictEqual(params, { type: "object" });
   } finally {
     // Restore default loader
     setTypeBoxLoader(null);
