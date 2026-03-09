@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "servers": {
+    "apify": {
+      "description": "web scraping & automation",
+      "transport": "streamable-http",
+      "authRequired": true,
+      "homepage": "https://apify.com/"
+    },
+    "github": {
+      "description": "repos, issues, PRs",
+      "transport": "stdio",
+      "authRequired": true,
+      "homepage": "https://github.com/github/github-mcp-server"
+    },
+    "google-maps": {
+      "description": "places, geocoding, directions",
+      "transport": "stdio",
+      "authRequired": true,
+      "homepage": "https://developers.google.com/maps"
+    },
+    "hetzner": {
+      "description": "cloud infrastructure",
+      "transport": "stdio",
+      "authRequired": true,
+      "homepage": "https://www.hetzner.com/cloud"
+    },
+    "hostinger": {
+      "description": "web hosting management",
+      "transport": "stdio",
+      "authRequired": true,
+      "homepage": "https://www.hostinger.com/"
+    },
+    "linear": {
+      "description": "project management",
+      "transport": "stdio",
+      "authRequired": true,
+      "homepage": "https://linear.app/"
+    },
+    "miro": {
+      "description": "collaborative whiteboard",
+      "transport": "stdio",
+      "authRequired": true,
+      "homepage": "https://miro.com/"
+    },
+    "notion": {
+      "description": "notes & databases",
+      "transport": "stdio",
+      "authRequired": true,
+      "homepage": "https://www.notion.so/"
+    },
+    "stripe": {
+      "description": "payments & billing",
+      "transport": "stdio",
+      "authRequired": true,
+      "homepage": "https://stripe.com/"
+    },
+    "tavily": {
+      "description": "AI-optimized web search",
+      "transport": "stdio",
+      "authRequired": true,
+      "homepage": "https://tavily.com/"
+    },
+    "todoist": {
+      "description": "task management",
+      "transport": "stdio",
+      "authRequired": true,
+      "homepage": "https://todoist.com/"
+    },
+    "wise": {
+      "description": "international payments",
+      "transport": "stdio",
+      "authRequired": true,
+      "homepage": "https://wise.com/"
+    }
+  }
+}
