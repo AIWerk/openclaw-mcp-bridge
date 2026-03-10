@@ -1,0 +1,21 @@
+# CI & GitHub
+.github/
+
+# Tests
+tests/
+
+# Internal docs
+docs/
+
+# Development config
+tsconfig.json
+tsconfig.test.json
+TODO.md
+
+# OS & editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo

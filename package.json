@@ -1,11 +1,30 @@
 {
   "name": "openclaw-mcp-bridge",
-  "version": "1.5.0",
-  "description": "MCP client plugin for OpenClaw — bridge to any MCP server",
+  "version": "0.9.0",
+  "description": "MCP client plugin for OpenClaw — bridge to any MCP server with 3 transports, smart router, and a pre-configured server catalog",
+  "main": "index.ts",
   "license": "MIT",
+  "author": "AIWerk <kontakt@aiwerk.ch> (https://aiwerk.ch)",
+  "homepage": "https://github.com/AIWerk/openclaw-mcp-bridge#readme",
+  "bugs": {
+    "url": "https://github.com/AIWerk/openclaw-mcp-bridge/issues"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/AIWerk/openclaw-mcp-bridge"
+  },
+  "keywords": [
+    "openclaw",
+    "mcp",
+    "model-context-protocol",
+    "plugin",
+    "bridge",
+    "ai",
+    "agent",
+    "tools"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
   },
   "scripts": {
     "test": "node --import tsx --test tests/*.test.ts"

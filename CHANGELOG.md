@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.9.0] - 2026-03-10 — First public release (npm)
+
+First npm publish. All features from pre-release development included:
+- Smart Router mode (~98% token reduction)
+- 3 transports: stdio, SSE, streamable-http
+- 12 pre-configured MCP servers with install scripts
+- Lazy connect with LRU eviction and idle timeout
+- Auto collision handling for tool names
+- 38 tests, GitHub Actions CI (Node 20+22)
+
+---
+
+### Pre-release history (internal development)
+
 ## [1.6.0] - 2026-03-09
 
 ### Added
