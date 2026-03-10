@@ -52,3 +52,6 @@
 
 - [ ] **Router edge case tests**
   Test coverage for connection drops mid-call, request timeouts, concurrent requests to the same server, and server crash recovery. `mcp-router.test.ts` has 26 tests for happy paths — these would cover failure scenarios.
+
+- [ ] **Local script wrapper MCP server**
+  Bundle local shell/Python scripts as an MCP server so they appear as typed tools with schemas instead of requiring manual `exec` calls. A single "local-tools" MCP server would wrap scripts (email, Life360, crypto, calendar checks etc.) with proper input/output schemas, making them discoverable through the smart router. Eliminates the need for TOOLS.md-style documentation — the tool schemas *are* the documentation. Could use a convention-based approach: `scripts/*.mcp.json` defines the tool name, description, parameters, and the command to run.
