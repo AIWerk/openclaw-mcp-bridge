@@ -28,6 +28,15 @@
 - [ ] **Configurable retries**
   Add retry logic for failed tool calls with configurable retry count and timeout per server. Defaults: `retries: 2`, `timeout: 30000ms`. Handles transient network errors and server hiccups without failing the entire agent turn.
 
+- [ ] **Schema compression for tool descriptions**
+  Compress tool schemas before registering them with the agent. Truncate descriptions to ~80 chars, keep only required parameters in full, and reduce optional parameters to hints. A ~350 token schema becomes ~60 tokens — significant savings when exposing many tools. Critical enabler for smart mode where dozens of tools may be presented.
+
+- [ ] **Graceful server failure isolation**
+  A failed or unresponsive MCP server should not block or crash other servers. On connection failure, mark the server as degraded and skip it in tool routing. Log the failure, continue serving tools from healthy servers. Include proper shutdown lifecycle handling (process `beforeExit` fallback) to clean up connections on gateway stop.
+
+- [ ] **Dual-mode support (smart + traditional)**
+  Support both modes in a single plugin via config toggle (`mode: "smart" | "traditional"`). Traditional mode registers all tools at startup as direct proxies (simple, no filtering). Smart mode uses relevance ranking and lazy activation. Users who don't want filtering complexity get immediate value; power users get intelligent routing. This wraps the existing smart mode TODO into a clean UX.
+
 - [ ] **Args env var resolution**
   The `${VAR}` syntax currently only resolves in `config.env` fields (via `resolveEnv`). It does NOT resolve in `args` fields — e.g. `--token ${MIRO_API_TOKEN}` is passed literally. Implement args interpolation to match env behavior. Known bug causing Miro 401 on Pico VPS.
 
