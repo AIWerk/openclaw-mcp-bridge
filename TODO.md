@@ -1,9 +1,5 @@
 # TODO
 
-## Bugfix
-- [ ] **Args env var resolution**
-  The `${VAR}` syntax currently only resolves in `config.env` fields (via `resolveEnv`). It does NOT resolve in `args` fields — e.g. `--token ${MIRO_API_TOKEN}` is passed literally. Implement args interpolation to match env behavior. Known bug causing Miro 401 on Pico VPS.
-
 ## Smart Mode (v2)
 - [ ] **Dual-mode support (smart + traditional)**
   Support both modes in a single plugin via config toggle (`mode: "smart" | "traditional"`). Traditional mode registers all tools at startup as direct proxies (simple, no filtering). Smart mode uses relevance ranking and lazy activation. Users who don't want filtering complexity get immediate value; power users get intelligent routing.
