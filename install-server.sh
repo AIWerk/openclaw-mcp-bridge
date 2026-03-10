@@ -138,7 +138,7 @@ if [[ "$REMOVE" == "true" ]]; then
 import json
 with open('$OPENCLAW_JSON') as f:
     cfg = json.load(f)
-servers = cfg.get('plugins',{}).get('entries',{}).get('mcp-client',{}).get('config',{}).get('servers',{})
+servers = cfg.get('plugins',{}).get('entries',{}).get('openclaw-mcp-bridge',{}).get('config',{}).get('servers',{})
 print('yes' if '$SERVER_NAME' in servers else 'no')
 " 2>/dev/null)
 
@@ -157,7 +157,7 @@ print('yes' if '$SERVER_NAME' in servers else 'no')
 import json
 with open('$OPENCLAW_JSON') as f:
     cfg = json.load(f)
-servers = cfg['plugins']['entries']['mcp-client']['config']['servers']
+servers = cfg['plugins']['entries']['openclaw-mcp-bridge']['config']['servers']
 del servers['$SERVER_NAME']
 with open('$OPENCLAW_JSON', 'w') as f:
     json.dump(cfg, f, indent=2)
@@ -286,10 +286,10 @@ if path_override:
 
 plugins = cfg.setdefault("plugins", {})
 allow = plugins.setdefault("allow", [])
-if "mcp-client" not in allow:
-    allow.append("mcp-client")
+if "openclaw-mcp-bridge" not in allow:
+    allow.append("openclaw-mcp-bridge")
 entries = plugins.setdefault("entries", {})
-mcp_client = entries.setdefault("mcp-client", {})
+mcp_client = entries.setdefault("openclaw-mcp-bridge", {})
 mcp_client.setdefault("enabled", True)
 mcp_cfg = mcp_client.setdefault("config", {})
 mcp_cfg.setdefault("toolPrefix", True)

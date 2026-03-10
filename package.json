@@ -1,6 +1,6 @@
 {
   "name": "@aiwerk/openclaw-mcp-bridge",
-  "version": "0.9.2",
+  "version": "0.9.3",
   "description": "MCP client plugin for OpenClaw \u2014 bridge to any MCP server with 3 transports, smart router, and a pre-configured server catalog",
   "main": "index.ts",
   "license": "MIT",

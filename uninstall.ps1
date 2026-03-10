@@ -1,7 +1,7 @@
 # OpenClaw MCP Client Plugin - Windows Uninstaller
 $ErrorActionPreference = "Stop"
 
-$PluginDir = "$env:USERPROFILE\.openclaw\extensions\mcp-client"
+$PluginDir = "$env:USERPROFILE\.openclaw\extensions\openclaw-mcp-bridge"
 $ConfigFile = "$env:USERPROFILE\.openclaw\openclaw.json"
 $EnvFile = "$env:USERPROFILE\.openclaw\.env"
 
@@ -39,19 +39,19 @@ if (Test-Path $ConfigFile) {
     try {
         $cfg = Get-Content $ConfigFile -Raw | ConvertFrom-Json
         $changed = $false
-        if ($cfg.plugins.entries.PSObject.Properties.Name -contains 'mcp-client') {
-            $cfg.plugins.entries.PSObject.Properties.Remove('mcp-client')
+        if ($cfg.plugins.entries.PSObject.Properties.Name -contains 'openclaw-mcp-bridge') {
+            $cfg.plugins.entries.PSObject.Properties.Remove('openclaw-mcp-bridge')
             $changed = $true
         }
-        if ($cfg.plugins.allow -contains 'mcp-client') {
-            $cfg.plugins.allow = @($cfg.plugins.allow | Where-Object { $_ -ne 'mcp-client' })
+        if ($cfg.plugins.allow -contains 'openclaw-mcp-bridge') {
+            $cfg.plugins.allow = @($cfg.plugins.allow | Where-Object { $_ -ne 'openclaw-mcp-bridge' })
             $changed = $true
         }
         if ($changed) {
             $cfg | ConvertTo-Json -Depth 10 | Set-Content $ConfigFile -Encoding UTF8
-            Write-Host "📋 Removed mcp-client from openclaw.json" -ForegroundColor Green
+            Write-Host "📋 Removed openclaw-mcp-bridge from openclaw.json" -ForegroundColor Green
         } else {
-            Write-Host "📋 mcp-client not found in config (already clean)" -ForegroundColor Yellow
+            Write-Host "📋 openclaw-mcp-bridge not found in config (already clean)" -ForegroundColor Yellow
         }
     } catch {
         Write-Host "⚠️  Could not update config: $_" -ForegroundColor Yellow

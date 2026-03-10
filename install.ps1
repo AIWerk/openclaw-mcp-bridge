@@ -2,7 +2,7 @@
 # Usage: irm https://raw.githubusercontent.com/AIWerk/openclaw-mcp-bridge/master/install.ps1 | iex
 $ErrorActionPreference = "Stop"
 
-$PluginDir = "$env:USERPROFILE\.openclaw\extensions\mcp-client"
+$PluginDir = "$env:USERPROFILE\.openclaw\extensions\openclaw-mcp-bridge"
 $ConfigFile = "$env:USERPROFILE\.openclaw\openclaw.json"
 
 Write-Host "📦 Installing OpenClaw MCP Client Plugin..." -ForegroundColor Cyan
@@ -52,12 +52,12 @@ if (Test-Path $ConfigFile) {
     if (-not $cfg.plugins.allow) { $cfg.plugins | Add-Member -NotePropertyName allow -NotePropertyValue @() }
     if (-not $cfg.plugins.entries) { $cfg.plugins | Add-Member -NotePropertyName entries -NotePropertyValue ([PSCustomObject]@{}) }
 
-    if ($cfg.plugins.allow -notcontains "mcp-client") {
-        $cfg.plugins.allow = @($cfg.plugins.allow) + "mcp-client"
+    if ($cfg.plugins.allow -notcontains "openclaw-mcp-bridge") {
+        $cfg.plugins.allow = @($cfg.plugins.allow) + "openclaw-mcp-bridge"
     }
 
-    if (-not $cfg.plugins.entries."mcp-client") {
-        $cfg.plugins.entries | Add-Member -NotePropertyName "mcp-client" -NotePropertyValue ([PSCustomObject]@{
+    if (-not $cfg.plugins.entries."openclaw-mcp-bridge") {
+        $cfg.plugins.entries | Add-Member -NotePropertyName "openclaw-mcp-bridge" -NotePropertyValue ([PSCustomObject]@{
             enabled = $true
             config = [PSCustomObject]@{
                 mode = $PluginMode
@@ -70,7 +70,7 @@ if (Test-Path $ConfigFile) {
         })
         Write-Host "✅ Plugin added to config (mode: $PluginMode)" -ForegroundColor Green
     } else {
-        $existingConfig = $cfg.plugins.entries."mcp-client".config
+        $existingConfig = $cfg.plugins.entries."openclaw-mcp-bridge".config
         if ($existingConfig.mode -ne $PluginMode) {
             $existingConfig | Add-Member -NotePropertyName mode -NotePropertyValue $PluginMode -Force
             Write-Host "✅ Plugin mode updated to $PluginMode" -ForegroundColor Green
@@ -132,11 +132,11 @@ Write-Host "✅ MCP Client Plugin installed!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:"
 Write-Host "  1. Install an MCP server:"
-Write-Host "     cd $env:USERPROFILE\.openclaw\extensions\mcp-client"
+Write-Host "     cd $env:USERPROFILE\.openclaw\extensions\openclaw-mcp-bridge"
 Write-Host "     .\install-server.ps1 <SERVER_NAME>"
 Write-Host ""
 Write-Host "  2. Or ask your agent: 'Add the X MCP server'"
 Write-Host "     (uses the add-mcp-server skill)"
 Write-Host ""
-Write-Host "  Available servers: dir $env:USERPROFILE\.openclaw\extensions\mcp-client\servers\"
+Write-Host "  Available servers: dir $env:USERPROFILE\.openclaw\extensions\openclaw-mcp-bridge\servers\"
 Write-Host ""

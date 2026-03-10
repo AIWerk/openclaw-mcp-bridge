@@ -3,7 +3,7 @@
 # Usage: curl -sL https://raw.githubusercontent.com/AIWerk/openclaw-mcp-bridge/master/install.sh | bash
 set -e
 
-PLUGIN_DIR="${HOME}/.openclaw/extensions/mcp-client"
+PLUGIN_DIR="${HOME}/.openclaw/extensions/openclaw-mcp-bridge"
 CONFIG_FILE="${HOME}/.openclaw/openclaw.json"
 
 echo "📦 Installing OpenClaw MCP Client Plugin..."
@@ -55,12 +55,12 @@ entries = plugins.setdefault('entries', {})
 
 changed = False
 
-if 'mcp-client' not in allow:
-    allow.append('mcp-client')
+if 'openclaw-mcp-bridge' not in allow:
+    allow.append('openclaw-mcp-bridge')
     changed = True
 
-if 'mcp-client' not in entries:
-    entries['mcp-client'] = {
+if 'openclaw-mcp-bridge' not in entries:
+    entries['openclaw-mcp-bridge'] = {
         'enabled': True,
         'config': {
             'mode': '$PLUGIN_MODE',
@@ -75,7 +75,7 @@ if 'mcp-client' not in entries:
     print('✅ Plugin added to config (mode: $PLUGIN_MODE)')
 else:
     # Update mode if plugin already exists
-    existing = entries['mcp-client'].setdefault('config', {})
+    existing = entries['openclaw-mcp-bridge'].setdefault('config', {})
     if existing.get('mode') != '$PLUGIN_MODE':
         existing['mode'] = '$PLUGIN_MODE'
         changed = True
@@ -90,7 +90,7 @@ sys.exit(0)
 " 2>&1; then
     true
   else
-    echo "⚠️  Could not update config automatically. Add mcp-client to plugins manually."
+    echo "⚠️  Could not update config automatically. Add openclaw-mcp-bridge to plugins manually."
   fi
 else
   echo "⚠️  Config not found at $CONFIG_FILE"
@@ -152,11 +152,11 @@ echo "✅ MCP Client Plugin installed!"
 echo ""
 echo "Next steps:"
 echo "  1. Install an MCP server:"
-echo "     cd ~/.openclaw/extensions/mcp-client"
+echo "     cd ~/.openclaw/extensions/openclaw-mcp-bridge"
 echo "     ./install-server.sh <SERVER_NAME>"
 echo ""
 echo "  2. Or ask your agent: 'Add the X MCP server'"
 echo "     (uses the add-mcp-server skill)"
 echo ""
-echo "  Available servers: ls ~/.openclaw/extensions/mcp-client/servers/"
+echo "  Available servers: ls ~/.openclaw/extensions/openclaw-mcp-bridge/servers/"
 echo ""

@@ -2,7 +2,7 @@
 # OpenClaw MCP Client Plugin - Uninstaller
 set -e
 
-PLUGIN_DIR="${HOME}/.openclaw/extensions/mcp-client"
+PLUGIN_DIR="${HOME}/.openclaw/extensions/openclaw-mcp-bridge"
 CONFIG_FILE="${HOME}/.openclaw/openclaw.json"
 ENV_FILE="${HOME}/.openclaw/.env"
 
@@ -44,19 +44,19 @@ import json
 with open('$CONFIG_FILE') as f:
     cfg = json.load(f)
 changed = False
-if 'mcp-client' in cfg.get('plugins', {}).get('entries', {}):
-    del cfg['plugins']['entries']['mcp-client']
+if 'openclaw-mcp-bridge' in cfg.get('plugins', {}).get('entries', {}):
+    del cfg['plugins']['entries']['openclaw-mcp-bridge']
     changed = True
-if 'mcp-client' in cfg.get('plugins', {}).get('allow', []):
-    cfg['plugins']['allow'].remove('mcp-client')
+if 'openclaw-mcp-bridge' in cfg.get('plugins', {}).get('allow', []):
+    cfg['plugins']['allow'].remove('openclaw-mcp-bridge')
     changed = True
 if changed:
     with open('$CONFIG_FILE', 'w') as f:
         json.dump(cfg, f, indent=2)
         f.write('\n')
-    print('📋 Removed mcp-client from openclaw.json')
+    print('📋 Removed openclaw-mcp-bridge from openclaw.json')
 else:
-    print('📋 mcp-client not found in config (already clean)')
+    print('📋 openclaw-mcp-bridge not found in config (already clean)')
 " 2>/dev/null
 fi
 

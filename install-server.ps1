@@ -139,7 +139,7 @@ if ($Remove) {
     }
 
     $cfg = Get-Content $OpenclawJson -Raw | ConvertFrom-Json
-    $servers = $cfg.plugins.entries.'mcp-client'.config.servers
+    $servers = $cfg.plugins.entries.'openclaw-mcp-bridge'.config.servers
     if (-not ($servers.PSObject.Properties.Name -contains $ServerName)) {
         Write-Host "ℹ️  Server '$ServerName' not found in config. Nothing to remove." -ForegroundColor Yellow
         exit 0
@@ -260,13 +260,13 @@ if ($pathOverride -and $serverConfig.args -and $serverConfig.args.Count -gt 0) {
 
 $plugins = Ensure-Property -Object $cfg -Name "plugins" -DefaultValue ([PSCustomObject]@{})
 $allow = Ensure-Property -Object $plugins -Name "allow" -DefaultValue @()
-if ($allow -notcontains "mcp-client") { $plugins.allow = @($allow) + "mcp-client" }
+if ($allow -notcontains "openclaw-mcp-bridge") { $plugins.allow = @($allow) + "openclaw-mcp-bridge" }
 $entries = Ensure-Property -Object $plugins -Name "entries" -DefaultValue ([PSCustomObject]@{})
 
-if (-not ($entries.PSObject.Properties.Name -contains "mcp-client")) {
-    $entries | Add-Member -NotePropertyName "mcp-client" -NotePropertyValue ([PSCustomObject]@{})
+if (-not ($entries.PSObject.Properties.Name -contains "openclaw-mcp-bridge")) {
+    $entries | Add-Member -NotePropertyName "openclaw-mcp-bridge" -NotePropertyValue ([PSCustomObject]@{})
 }
-$mcpClient = $entries."mcp-client"
+$mcpClient = $entries."openclaw-mcp-bridge"
 if (-not ($mcpClient.PSObject.Properties.Name -contains "enabled")) {
     $mcpClient | Add-Member -NotePropertyName "enabled" -NotePropertyValue $true
 }

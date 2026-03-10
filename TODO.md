@@ -7,6 +7,9 @@
 - [ ] **Relevance-based tool filtering**
   Route only the most relevant tools to the agent per request. Instead of exposing all 200+ tools at once (which wastes context and confuses the model), analyze the user's intent and return a ranked subset. Configurable threshold and max tools per turn.
 
+- [ ] **Vector search for tool discovery**
+  Add semantic vector search as an alternative to keyword-based tool matching. Embed tool names and descriptions into a vector store (e.g., LanceDB), then find the best-matching tools via cosine similarity at runtime. This improves discovery when the user's phrasing doesn't match tool names literally (e.g., "send a message" → `slack_post_message`). Inspired by `openclaw-mcp-router` (lunarmoon26). Should work with local embedding models (Ollama) or API-based ones, with a zero-dependency fallback to the existing keyword matching.
+
 - [ ] **Schema compression for tool descriptions**
   Compress tool schemas before registering them with the agent. Truncate descriptions to ~80 chars, keep only required parameters in full, and reduce optional parameters to hints. A ~350 token schema becomes ~60 tokens — significant savings when exposing many tools. Critical enabler for smart mode where dozens of tools may be presented.
 
