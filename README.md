@@ -1,6 +1,8 @@
 # OpenClaw MCP Bridge
 
 [![Tests](https://github.com/AIWerk/openclaw-mcp-bridge/actions/workflows/test.yml/badge.svg)](https://github.com/AIWerk/openclaw-mcp-bridge/actions/workflows/test.yml)
+[![npm version](https://img.shields.io/npm/v/@aiwerk/openclaw-mcp-bridge.svg)](https://www.npmjs.com/package/@aiwerk/openclaw-mcp-bridge)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Bridges any [MCP (Model Context Protocol)](https://modelcontextprotocol.io/) server into OpenClaw — tools are automatically discovered and made available to the agent.
 
@@ -122,14 +124,27 @@ The agent sees: *"Call any MCP server tool. Servers: todoist (task management), 
 
 ## Installation
 
-### Method 1: Clone (recommended)
+### Method 1: npm (recommended)
+
+```bash
+npm install @aiwerk/openclaw-mcp-bridge
+# Then move to extensions:
+mv node_modules/@aiwerk/openclaw-mcp-bridge ~/.openclaw/extensions/mcp-client
+```
+
+Or if OpenClaw supports `plugins install`:
+```bash
+openclaw plugins install @aiwerk/openclaw-mcp-bridge
+```
+
+### Method 2: Clone
 
 ```bash
 git clone https://github.com/AIWerk/openclaw-mcp-bridge.git \
   ~/.openclaw/extensions/mcp-client
 ```
 
-### Method 2: Install script
+### Method 3: Install script
 
 ```bash
 # Review first:
