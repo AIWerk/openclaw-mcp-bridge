@@ -1,5 +1,5 @@
 {
-  "name": "openclaw-mcp-bridge",
+  "name": "@aiwerk/openclaw-mcp-bridge",
   "version": "0.9.0",
   "description": "MCP client plugin for OpenClaw — bridge to any MCP server with 3 transports, smart router, and a pre-configured server catalog",
   "main": "index.ts",
