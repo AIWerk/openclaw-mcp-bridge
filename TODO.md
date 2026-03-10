@@ -16,6 +16,18 @@
 - [ ] **Auto-reconnect on failure**
   Currently the router disconnects idle servers after a timeout. Add automatic reconnection when a server connection dies unexpectedly (crash, network drop). On the next tool call, detect the dead connection, reconnect transparently, and retry the call. Distinct from idle timeout — this is crash recovery.
 
+- [ ] **Trust levels for MCP server results**
+  Security layer for tool results. Three levels: `trusted` (results passed directly), `untrusted` (results prefixed with security warning, default), `sanitize` (HTML/scripts stripped, images removed, data URIs cleaned). Configurable per server. Protects the agent from prompt injection via MCP tool responses.
+
+- [ ] **Tool deny list (toolFilter)**
+  Allow blocking specific dangerous tools per server. Config example: `toolFilter: { deny: ["write_file", "delete_file"] }`. Prevents the agent from accessing tools that could cause harm, even if the MCP server exposes them. Useful for untrusted or overly permissive servers.
+
+- [ ] **Max result size limit (maxResultChars)**
+  Cap the character count of tool call results before passing them to the agent. Prevents a single tool response from consuming too much of the context window. Configurable globally via `defaults.maxResultChars` and per server. Truncated results get a warning suffix.
+
+- [ ] **Configurable retries**
+  Add retry logic for failed tool calls with configurable retry count and timeout per server. Defaults: `retries: 2`, `timeout: 30000ms`. Handles transient network errors and server hiccups without failing the entire agent turn.
+
 - [ ] **Args env var resolution**
   The `${VAR}` syntax currently only resolves in `config.env` fields (via `resolveEnv`). It does NOT resolve in `args` fields — e.g. `--token ${MIRO_API_TOKEN}` is passed literally. Implement args interpolation to match env behavior. Known bug causing Miro 401 on Pico VPS.
 
