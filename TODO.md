@@ -10,6 +10,15 @@
 - [ ] **Standalone MCP server mode**
   Run the bridge as a standalone MCP server (stdio transport) so it can be used from Claude Desktop, Cursor, and other MCP clients — not just OpenClaw. Single config file, no OpenClaw dependency required.
 
+- [ ] **npm publish**
+  Publish to npm so users can install with `openclaw plugins install mcp-bridge` instead of cloning the repo. Includes proper package.json metadata, prepublish build step, and versioned releases.
+
+- [ ] **Auto-reconnect on failure**
+  Currently the router disconnects idle servers after a timeout. Add automatic reconnection when a server connection dies unexpectedly (crash, network drop). On the next tool call, detect the dead connection, reconnect transparently, and retry the call. Distinct from idle timeout — this is crash recovery.
+
+- [ ] **Args env var resolution**
+  The `${VAR}` syntax currently only resolves in `config.env` fields (via `resolveEnv`). It does NOT resolve in `args` fields — e.g. `--token ${MIRO_API_TOKEN}` is passed literally. Implement args interpolation to match env behavior. Known bug causing Miro 401 on Pico VPS.
+
 ## Future
 - [ ] **Submission automation (`accept-submission.sh`)**
   Automate the server addition workflow. Issue template and `install-server.sh` already exist — this script would parse a GitHub issue (from the existing Server Submission template), generate `servers/<name>/config.json`, run a test install, commit, and close the issue. Currently submissions are processed manually.
