@@ -1,5 +1,12 @@
 # TODO
 
+## 🔥 Standalone Mode (PRIORITY)
+- [ ] **Standalone MCP server mode**
+  Run the bridge as a standalone MCP server (stdio transport) so it can be used from Claude Desktop, Cursor, Cline, Windsurf, and any other MCP client — not just OpenClaw. Single config file, no OpenClaw dependency required. This is the #1 priority because it unlocks 100x the potential user base. The core (Smart Router, Server Manager, Config parser) is already framework-independent — this just adds a CLI entry point with stdio/HTTP transport.
+
+- [ ] **MCP Catalog server**
+  A standalone MCP server that serves the server catalog. Tools: `catalog.search(query, country, category)`, `catalog.info(server)`, `catalog.install(server)`. Any MCP client can discover and install servers from the catalog. Web frontend for humans alongside.
+
 ## Smart Mode (v2)
 - [ ] **Dual-mode support (smart + traditional)**
   Support both modes in a single plugin via config toggle (`mode: "smart" | "traditional"`). Traditional mode registers all tools at startup as direct proxies (simple, no filtering). Smart mode uses relevance ranking and lazy activation. Users who don't want filtering complexity get immediate value; power users get intelligent routing.
@@ -37,11 +44,7 @@
   Add retry logic for failed tool calls with configurable retry count and timeout per server. Defaults: `retries: 2`, `timeout: 30000ms`. Handles transient network errors and server hiccups without failing the entire agent turn.
 
 ## Distribution
-- [ ] **npm publish**
-  Publish to npm so users can install with `openclaw plugins install mcp-bridge` instead of cloning the repo. Includes proper package.json metadata, prepublish build step, and versioned releases.
-
-- [ ] **Standalone MCP server mode**
-  Run the bridge as a standalone MCP server (stdio transport) so it can be used from Claude Desktop, Cursor, and other MCP clients — not just OpenClaw. Single config file, no OpenClaw dependency required.
+- [x] **npm publish** ✅ `@aiwerk/openclaw-mcp-bridge@0.9.3`
 
 ## Future
 - [ ] **Submission automation (`accept-submission.sh`)**
