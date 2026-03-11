@@ -46,6 +46,10 @@ if [[ ! -d "$SERVER_DIR" ]]; then
     usage
 fi
 
+# Build artifacts (cloned repos) go into the plugin dir, not node_modules
+SERVER_BUILD_DIR="$SCRIPT_DIR/server-builds/$SERVER_NAME"
+mkdir -p "$SCRIPT_DIR/server-builds"
+
 SERVER_TITLE="$(tr '-' ' ' <<<"$SERVER_NAME" | awk '{for(i=1;i<=NF;i++){$i=toupper(substr($i,1,1))substr($i,2)};print}')"
 SERVER_CONFIG_FILE="$SERVER_DIR/config.json"
 ENV_VARS_FILE="$SERVER_DIR/env_vars"
@@ -95,7 +99,7 @@ install_dependencies() {
             echo "Installing @anthropic-pb/linear-mcp-server globally..."
             npm install -g @anthropic-pb/linear-mcp-server ;;
         wise)
-            local clone_dir="$SERVER_DIR/mcp-server"
+            local clone_dir="$SERVER_BUILD_DIR/mcp-server"
             if [ -d "$clone_dir/.git" ]; then
                 echo "Updating wise mcp-server..."; git -C "$clone_dir" pull --ff-only
             else
@@ -104,7 +108,7 @@ install_dependencies() {
             echo "Building wise mcp-server..."
             (cd "$clone_dir" && npm install && npm run build) ;;
         hetzner)
-            local clone_dir="$SERVER_DIR/mcp-server"
+            local clone_dir="$SERVER_BUILD_DIR/mcp-server"
             if [ -d "$clone_dir/.git" ]; then
                 echo "Updating hetzner mcp-server..."; git -C "$clone_dir" pull --ff-only
             else
@@ -124,8 +128,8 @@ resolve_path_override() {
             else
                 echo "$npm_root/@anthropic-pb/linear-mcp-server/build/index.js"
             fi ;;
-        wise)   echo "$SERVER_DIR/mcp-server/dist/cli.js" ;;
-        hetzner) echo "$SERVER_DIR/mcp-server/dist/index.js" ;;
+        wise)   echo "$SERVER_BUILD_DIR/mcp-server/dist/cli.js" ;;
+        hetzner) echo "$SERVER_BUILD_DIR/mcp-server/dist/index.js" ;;
         *)      echo "" ;;
     esac
 }
