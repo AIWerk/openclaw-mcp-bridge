@@ -13,6 +13,7 @@ import { StreamableHttpTransport } from "./transport-streamable-http.js";
 import { createToolParameters, setSchemaLogger } from "./schema-convert.js";
 import { McpRouter } from "./mcp-router.js";
 import { fetchToolsList, initializeProtocol, PLUGIN_VERSION } from "./protocol.js";
+import { checkForUpdate, getUpdateNotice, runUpdate } from "./update-checker.js";
 
 function isNameTaken(name: string, localNames: Set<string>, globalNames: Set<string>): boolean {
   return localNames.has(name) || globalNames.has(name);
@@ -79,11 +80,78 @@ export default function activate(api: OpenClawPluginApi) {
     return;
   }
 
+  // Fire-and-forget version check (non-blocking)
+  checkForUpdate(api.logger).catch(() => {});
+
+  // Register the manual update tool
+  registerUpdateTool();
+
   if (mode === "router") {
     registerRouterTool();
   } else {
     // Initialize connections to all configured servers
     initializeServers();
+  }
+
+  function injectUpdateNotice(result: any): any {
+    const notice = getUpdateNotice();
+    if (!notice) return result;
+    // Append notice to the last text content item
+    if (result?.content && Array.isArray(result.content) && result.content.length > 0) {
+      const lastText = [...result.content].reverse().find((c: any) => c.type === "text");
+      if (lastText) {
+        lastText.text += notice;
+        return result;
+      }
+    }
+    // Fallback: if result is a string
+    if (typeof result === "string") return result + notice;
+    // Fallback: add as new content item
+    if (result?.content && Array.isArray(result.content)) {
+      result.content.push({ type: "text", text: notice });
+    }
+    return result;
+  }
+
+  function registerUpdateTool() {
+    api.registerTool({
+      name: "mcp_bridge_update",
+      label: "Update MCP Bridge plugin",
+      description: "Check for and install updates to the MCP Bridge plugin (@aiwerk/openclaw-mcp-bridge). Run this when an update is available or to check manually.",
+      parameters: {
+        type: "object",
+        properties: {
+          check_only: {
+            type: "boolean",
+            description: "If true, only check for updates without installing"
+          }
+        }
+      },
+      async execute(_toolId: string, params: Record<string, unknown>) {
+        const checkOnly = params?.check_only === true;
+        if (checkOnly) {
+          const info = await checkForUpdate(api.logger);
+          if (info.updateAvailable) {
+            return {
+              content: [{
+                type: "text",
+                text: `⬆️ Update available: ${info.currentVersion} → ${info.latestVersion}\nRun this tool again without check_only to install.`
+              }]
+            };
+          }
+          return {
+            content: [{
+              type: "text",
+              text: `✅ MCP Bridge v${info.currentVersion} is up to date.`
+            }]
+          };
+        }
+        const result = await runUpdate(api.logger);
+        return {
+          content: [{ type: "text", text: result }]
+        };
+      }
+    });
   }
 
   function registerRouterTool() {
@@ -102,12 +170,13 @@ export default function activate(api: OpenClawPluginApi) {
         required: ["server"]
       },
       async execute(_toolId: string, params: Record<string, unknown>) {
-        return router!.dispatch(
+        const result = await router!.dispatch(
           params?.server as string,
           params?.action as string,
           params?.tool as string,
           params?.params as Record<string, unknown> | undefined
         );
+        return injectUpdateNotice(result);
       }
     });
   }
@@ -383,7 +452,7 @@ export default function activate(api: OpenClawPluginApi) {
         text: String(item.text || item.content || JSON.stringify(item))
       }));
 
-      return { content: formattedContent };
+      return injectUpdateNotice({ content: formattedContent });
     } catch (error) {
       // Wrap connection-related errors with server context
       if (error instanceof Error) {
