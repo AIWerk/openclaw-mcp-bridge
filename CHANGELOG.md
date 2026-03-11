@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.10.2] - 2026-03-11
+
+### Changed
+- **Breaking refactor**: Core code extracted to `@aiwerk/mcp-bridge` (standalone package)
+- Plugin is now a thin wrapper — imports all transports, router, protocol, schema from core
+- Removed 8 bundled .ts files (transport-*.ts, mcp-router.ts, schema-convert.ts, protocol.ts, update-checker.ts)
+- Removed duplicate `servers/` catalog — install scripts read from `@aiwerk/mcp-bridge/servers/`
+- Server builds (git clone + npm build) go to `server-builds/` instead of `node_modules/`
+- `toolPrefix` default changed from `"auto"` to `true` (always prefix, matching core behavior)
+- Tests removed from plugin (run in core repo)
+
+### Fixed
+- Install script path resolution for servers cloned into node_modules (TS path error on VPS)
+
 ## [0.9.4] - 2026-03-11
 
 ### Added

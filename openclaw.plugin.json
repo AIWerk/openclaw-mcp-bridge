@@ -1,7 +1,7 @@
 {
   "id": "openclaw-mcp-bridge",
   "name": "openclaw-mcp-bridge",
-  "version": "0.9.3",
+  "version": "0.10.2",
   "entryPoint": "index.ts",
   "configSchema": {
     "servers": {
@@ -69,8 +69,8 @@
     },
     "toolPrefix": {
       "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["auto"]}],
-      "default": "auto",
-      "description": "Tool naming: true = always prefix with server name, false = never prefix, 'auto' = prefix only on collision (default)"
+      "default": true,
+      "description": "Tool naming: true = always prefix with server name (default), false = never prefix, 'auto' = prefix only on collision"
     },
     "reconnectIntervalMs": {
       "type": "number",

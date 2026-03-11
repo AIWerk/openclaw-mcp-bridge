@@ -59,8 +59,8 @@ Environment variables are resolved from `~/.openclaw/.env` and system env.
 
 | Mode | How it works | Best for |
 |------|-------------|----------|
-| `router` (default) | Single `mcp` tool — agent discovers and calls server tools through it | 3+ servers, saves ~99% tool tokens |
-| `direct` | All tools registered individually (`todoist_find_tasks`, etc.) | Few servers, simpler models |
+| `direct` (default) | All tools registered individually (`todoist_find_tasks`, etc.) | Few servers, simpler models |
+| `router` | Single `mcp` tool — agent discovers and calls server tools through it | 3+ servers, saves ~99% tool tokens |
 
 ## Server Catalog
 

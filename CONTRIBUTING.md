@@ -4,7 +4,7 @@
 Use the `add-mcp-server` skill to add a server end-to-end (config, install wrappers, validation, local test, optional submission issue).
 
 ## 2. Manual path: submit a server via GitHub issue
-Open an issue in `AIWerk/openclaw-mcp-bridge` using the server submission template.
+Open an issue in [`AIWerk/mcp-bridge`](https://github.com/AIWerk/mcp-bridge) (the core repo where the server catalog lives) using the server submission template.
 Include full `config.json`, install method, and local test results.
 
 ## 3. Quality requirements
@@ -33,6 +33,6 @@ Provide:
 Maintainers verify legitimacy, transport correctness, env var names, install reproducibility, credentials URL, and security constraints.
 
 Review outcomes:
-- Approved: added to `servers/<name>/` and merged
+- Approved: added to `servers/<name>/` in the [mcp-bridge core repo](https://github.com/AIWerk/mcp-bridge) and merged
 - Needs info: feedback posted, waiting for updates
 - Rejected: closed with rationale (duplicate, unmaintained, security risk, or invalid config)
