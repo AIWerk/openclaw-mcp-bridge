@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { BaseTransport } from "../transport-base.ts";
-import type { McpRequest, McpResponse, McpServerConfig } from "../types.ts";
+import { BaseTransport } from "@aiwerk/mcp-bridge";
+import type { McpRequest, McpResponse, McpServerConfig } from "@aiwerk/mcp-bridge";
 
 class TestableTransport extends BaseTransport {
   protected get transportName(): string {

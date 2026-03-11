@@ -4,7 +4,7 @@ import {
   convertJsonSchemaToTypeBox,
   createToolParameters,
   setTypeBoxLoader
-} from "../schema-convert.ts";
+} from "@aiwerk/mcp-bridge";
 
 test("converts string schema", async () => {
   const schema = await convertJsonSchemaToTypeBox({ type: "string", minLength: 1 });

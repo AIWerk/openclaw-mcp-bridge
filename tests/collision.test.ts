@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { pickRegisteredToolName } from "../index.ts";
+import { pickRegisteredToolName } from "@aiwerk/mcp-bridge";
 
 test("auto mode: collision causes second server tool to be prefixed", () => {
   const globalNames = new Set<string>();
@@ -27,7 +27,7 @@ test("auto mode: no collision means no prefix", () => {
   assert.equal(second, "list");
 });
 
-test("auto mode: undefined defaults to auto", () => {
+test("undefined defaults to true (always prefix)", () => {
   const globalNames = new Set<string>();
 
   const first = pickRegisteredToolName("alpha", "search", undefined, new Set<string>(), globalNames);
@@ -35,7 +35,7 @@ test("auto mode: undefined defaults to auto", () => {
 
   const second = pickRegisteredToolName("beta", "search", undefined, new Set<string>(), globalNames);
 
-  assert.equal(first, "search");
+  assert.equal(first, "alpha_search");
   assert.equal(second, "beta_search");
 });
 

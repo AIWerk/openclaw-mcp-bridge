@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { McpRouter } from "../mcp-router.ts";
-import type { McpRequest, McpResponse, McpServerConfig, McpTransport, McpTool } from "../types.ts";
+import { McpRouter } from "@aiwerk/mcp-bridge";
+import type { McpRequest, McpResponse, McpServerConfig, McpTransport, McpTool } from "@aiwerk/mcp-bridge";
 
 type Behavior = {
   tools: McpTool[];

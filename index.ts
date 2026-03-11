@@ -1,71 +1,20 @@
 import {
-  McpClientConfig,
-  McpRequest,
-  McpServerConfig,
-  McpServerConnection,
-  McpTransport,
-  McpTool,
-  OpenClawPluginApi
-} from "./types.js";
-import { SseTransport } from "./transport-sse.js";
-import { StdioTransport } from "./transport-stdio.js";
-import { StreamableHttpTransport } from "./transport-streamable-http.js";
-import { createToolParameters, setSchemaLogger } from "./schema-convert.js";
-import { McpRouter } from "./mcp-router.js";
-import { fetchToolsList, initializeProtocol, PLUGIN_VERSION } from "./protocol.js";
-import { checkForUpdate, getUpdateNotice, runUpdate } from "./update-checker.js";
-
-function isNameTaken(name: string, localNames: Set<string>, globalNames: Set<string>): boolean {
-  return localNames.has(name) || globalNames.has(name);
-}
-
-export function pickRegisteredToolName(
-  serverName: string,
-  toolName: string,
-  toolPrefix: boolean | "auto" | undefined,
-  localNames: Set<string>,
-  globalNames: Set<string>,
-  logger?: { warn: (...args: unknown[]) => void }
-): string {
-  // toolPrefix: true = always prefix, false = never prefix, "auto" = prefix only on collision (default)
-  const effectivePrefix = toolPrefix === undefined ? "auto" : toolPrefix;
-
-  let candidate: string;
-  if (effectivePrefix === true) {
-    // Always prefix with server name
-    candidate = `${serverName}_${toolName}`.replace(/[^a-zA-Z0-9_]/g, "_");
-  } else if (effectivePrefix === false) {
-    // Never prefix — use raw tool name, no collision fallback
-    candidate = toolName.replace(/[^a-zA-Z0-9_]/g, "_");
-  } else {
-    // "auto" — try without prefix, auto-prefix on collision
-    const unprefixed = toolName.replace(/[^a-zA-Z0-9_]/g, "_");
-    if (isNameTaken(unprefixed, localNames, globalNames)) {
-      const prefixedName = `${serverName}_${toolName}`.replace(/[^a-zA-Z0-9_]/g, "_");
-      logger?.warn(
-        `[mcp-client] Global tool name collision detected for "${unprefixed}". Auto-prefixing with server name: "${prefixedName}"`
-      );
-      candidate = prefixedName;
-    } else {
-      candidate = unprefixed;
-    }
-  }
-
-  const uniqueBase = candidate;
-  let suffix = 2;
-  while (isNameTaken(candidate, localNames, globalNames)) {
-    candidate = `${uniqueBase}_${suffix}`;
-    suffix += 1;
-  }
-
-  if (candidate !== uniqueBase) {
-    logger?.warn(
-      `[mcp-client] Tool name collision after sanitization on server ${serverName}: "${uniqueBase}" -> "${candidate}"`
-    );
-  }
-
-  return candidate;
-}
+  McpRouter,
+  SseTransport,
+  StdioTransport,
+  StreamableHttpTransport,
+  createToolParameters,
+  setSchemaLogger,
+  fetchToolsList,
+  initializeProtocol,
+  PACKAGE_VERSION,
+  pickRegisteredToolName,
+  checkForUpdate,
+  getUpdateNotice,
+  runUpdate,
+} from "@aiwerk/mcp-bridge";
+import type { McpClientConfig, McpServerConfig, McpServerConnection, McpTransport, McpTool, McpRequest } from "@aiwerk/mcp-bridge";
+import type { OpenClawPluginApi } from "./types.js";
 
 export default function activate(api: OpenClawPluginApi) {
   const config = (api.pluginConfig ?? {}) as McpClientConfig;
@@ -74,7 +23,7 @@ export default function activate(api: OpenClawPluginApi) {
   const connections = new Map<string, McpServerConnection>();
   const globalRegisteredToolNames = new Set<string>();
   const router = mode === "router" ? new McpRouter(config.servers || {}, config, api.logger) : null;
-  
+
   if (!config.servers || Object.keys(config.servers).length === 0) {
     api.logger.info("[mcp-client] No servers configured, plugin inactive");
     return;
@@ -248,8 +197,8 @@ export default function activate(api: OpenClawPluginApi) {
         api.logger.info(`[mcp-client] Re-initializing server: ${name}`);
         connection.isInitialized = false;
         connection.tools = [];
-        
-        await initializeProtocol(connection.transport, PLUGIN_VERSION);
+
+        await initializeProtocol(connection.transport, PACKAGE_VERSION);
         await discoverTools(connection);
         await registerServerTools(connection);
 
@@ -290,8 +239,8 @@ export default function activate(api: OpenClawPluginApi) {
       api.logger.info(`[mcp-client] Connected to server: ${name}`);
 
       // Initialize the MCP protocol
-      await initializeProtocol(connection.transport, PLUGIN_VERSION);
-      
+      await initializeProtocol(connection.transport, PACKAGE_VERSION);
+
       // Get available tools
       await discoverTools(connection);
       if (registerTools) {
@@ -300,7 +249,7 @@ export default function activate(api: OpenClawPluginApi) {
         connection.isInitialized = true;
         api.logger.info(`[mcp-client] Server ${name} initialized, registered ${connection.tools.length} tools`);
       }
-      
+
     } catch (error) {
       api.logger.error(`[mcp-client] Failed to initialize server ${name}:`, error);
       connections.delete(name);
@@ -367,7 +316,7 @@ export default function activate(api: OpenClawPluginApi) {
 
   async function registerMcpTool(connection: McpServerConnection, mcpTool: McpTool, validToolName: string): Promise<string> {
     // Create tool description (truncate for label)
-    const label = mcpTool.description.length > 80 
+    const label = mcpTool.description.length > 80
       ? mcpTool.description.substring(0, 77) + "..."
       : mcpTool.description;
 
@@ -400,8 +349,8 @@ export default function activate(api: OpenClawPluginApi) {
   }
 
   async function executeMcpTool(
-    connection: McpServerConnection, 
-    toolName: string, 
+    connection: McpServerConnection,
+    toolName: string,
     params: Record<string, unknown>
   ): Promise<{ content: Array<{ type: string; text: string }> }> {
     try {
@@ -425,7 +374,7 @@ export default function activate(api: OpenClawPluginApi) {
       };
 
       const response = await connection.transport.sendRequest(callRequest);
-      
+
       if (response.error) {
         const code = response.error.code ? ` [code ${response.error.code}]` : "";
         throw new Error(`MCP error from ${connection.name}${code}: ${response.error.message}`);

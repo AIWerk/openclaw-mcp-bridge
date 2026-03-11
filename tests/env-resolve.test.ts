@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { resolveEnvVars, resolveEnvRecord, resolveArgs } from "../transport-base.ts";
+import { resolveEnvVars, resolveEnvRecord, resolveArgs } from "@aiwerk/mcp-bridge";
 
 test("resolveEnvRecord throws when env var is missing", () => {
   assert.throws(

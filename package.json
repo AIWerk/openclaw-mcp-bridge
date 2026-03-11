@@ -1,7 +1,8 @@
 {
   "name": "@aiwerk/openclaw-mcp-bridge",
-  "version": "0.9.4",
-  "description": "MCP client plugin for OpenClaw — bridge to any MCP server with 3 transports, smart router, and a pre-configured server catalog",
+  "version": "0.10.0",
+  "description": "OpenClaw MCP plugin — thin wrapper around @aiwerk/mcp-bridge for seamless MCP server integration",
+  "type": "module",
   "main": "index.ts",
   "license": "MIT",
   "author": "AIWerk <kontakt@aiwerk.ch> (https://aiwerk.ch)",
@@ -35,6 +36,7 @@
     "test": "node --import tsx --test tests/*.test.ts"
   },
   "dependencies": {
+    "@aiwerk/mcp-bridge": "^1.0.2",
     "@sinclair/typebox": "^0.34.0"
   },
   "devDependencies": {
