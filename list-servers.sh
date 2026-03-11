@@ -2,10 +2,20 @@
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Resolve servers directory: prefer core package, fallback to local
+if [[ -d "$SCRIPT_DIR/node_modules/@aiwerk/mcp-bridge/servers" ]]; then
+    SERVERS_DIR="$SCRIPT_DIR/node_modules/@aiwerk/mcp-bridge/servers"
+elif [[ -d "$SCRIPT_DIR/servers" ]]; then
+    SERVERS_DIR="$SCRIPT_DIR/servers"
+else
+    echo "Error: No servers catalog found." >&2
+    exit 1
+fi
+
 echo "Available MCP Servers:"
 echo "====================="
 
-for server_dir in "$SCRIPT_DIR/servers"/*; do
+for server_dir in "$SERVERS_DIR"/*; do
     if [[ -d "$server_dir" ]]; then
         server_name=$(basename "$server_dir")
         config_file="$server_dir/config.json"

@@ -6,11 +6,21 @@ OPENCLAW_DIR="${HOME}/.openclaw"
 OPENCLAW_JSON="${OPENCLAW_DIR}/openclaw.json"
 ENV_FILE="${OPENCLAW_DIR}/.env"
 
+# Resolve servers directory: prefer core package, fallback to local
+if [[ -d "$SCRIPT_DIR/node_modules/@aiwerk/mcp-bridge/servers" ]]; then
+    SERVERS_BASE="$SCRIPT_DIR/node_modules/@aiwerk/mcp-bridge/servers"
+elif [[ -d "$SCRIPT_DIR/servers" ]]; then
+    SERVERS_BASE="$SCRIPT_DIR/servers"
+else
+    echo "Error: No servers catalog found." >&2
+    exit 1
+fi
+
 usage() {
     echo "Usage: $0 <server-name> [--dry-run] [--remove]"
     echo ""
     echo "Available servers:"
-    for server_dir in "$SCRIPT_DIR/servers"/*; do
+    for server_dir in "$SERVERS_BASE"/*; do
         [[ -d "$server_dir" ]] && echo "  - $(basename "$server_dir")"
     done
     exit 1
@@ -30,7 +40,7 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-SERVER_DIR="$SCRIPT_DIR/servers/$SERVER_NAME"
+SERVER_DIR="$SERVERS_BASE/$SERVER_NAME"
 if [[ ! -d "$SERVER_DIR" ]]; then
     echo "Error: Server '$SERVER_NAME' not found."
     usage
