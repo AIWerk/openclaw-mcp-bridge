@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.4] - 2026-03-11
+
+### Added
+- feat: Automatic update checker — checks npm registry on startup (non-blocking, 10s timeout)
+- feat: Update notice injected into the first tool response when a newer version is available
+- feat: `mcp_bridge_update` tool — agents can check for and install updates (`check_only` param for dry run)
+
 ## [0.9.0] - 2026-03-10 — First public release (npm)
 
 First npm publish. All features from pre-release development included:
