@@ -7,6 +7,21 @@
 - feat: Update notice injected into the first tool response when a newer version is available
 - feat: `mcp_bridge_update` tool — agents can check for and install updates (`check_only` param for dry run)
 
+## [0.9.3] - 2026-03-10
+
+### Fixed
+- fix: Renamed all internal `mcp-client` references to `openclaw-mcp-bridge` in scripts and plugin config
+
+## [0.9.2] - 2026-03-10
+
+### Fixed
+- fix: Renamed plugin id from `mcp-client` to `openclaw-mcp-bridge` (breaking change for existing installs — reinstall required)
+
+## [0.9.1] - 2026-03-10
+
+### Fixed
+- fix: Added `openclaw.extensions` field to `package.json` (required for OpenClaw plugin discovery via npm install)
+
 ## [0.9.0] - 2026-03-10 — First public release (npm)
 
 First npm publish. All features from pre-release development included:
