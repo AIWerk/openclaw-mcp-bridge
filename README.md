@@ -75,6 +75,30 @@ Environment variables are resolved from `~/.openclaw/.env` and system env.
 #            hetzner, miro, wise, tavily, apify
 ```
 
+## Docker Sandbox
+
+If you run OpenClaw with Docker sandbox enabled (`agents.defaults.sandbox.mode: "all"` or `"non-main"`), plugin-registered tools are **not included** in the default sandbox tool allowlist. You need to explicitly allow them:
+
+```json
+{
+  "tools": {
+    "sandbox": {
+      "tools": {
+        "allow": ["group:openclaw", "mcp", "mcp_bridge_update"]
+      }
+    }
+  }
+}
+```
+
+- `group:openclaw` — keeps all built-in OpenClaw tools
+- `mcp` — the MCP Bridge router tool
+- `mcp_bridge_update` — the plugin update tool
+
+You can verify with `openclaw sandbox explain --json` — check that `mcp` appears in `sandbox.tools.allow`.
+
+> **Note:** Without sandbox (`sandbox.mode: "off"`), no extra config is needed — plugin tools are available automatically.
+
 ## Update
 
 ```bash
