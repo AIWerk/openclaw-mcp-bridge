@@ -10,6 +10,8 @@ This is a thin wrapper around [@aiwerk/mcp-bridge](https://www.npmjs.com/package
 openclaw plugins install @aiwerk/openclaw-mcp-bridge
 ```
 
+> ⚠️ **Important:** Always use the full scoped name `@aiwerk/openclaw-mcp-bridge`. The unscoped `openclaw-mcp-bridge` on npm is a **different, unrelated package**.
+
 ## Quick Start
 
 ```bash
