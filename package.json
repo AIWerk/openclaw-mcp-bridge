@@ -33,7 +33,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "test": "echo 'Core tests run in @aiwerk/mcp-bridge repo. Plugin-specific tests: TODO.'"
+    "test": "node --import tsx --test tests/smart-filter.test.ts"
   },
   "dependencies": {
     "@aiwerk/mcp-bridge": "^1.0.2",

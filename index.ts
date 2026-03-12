@@ -14,10 +14,11 @@ import {
   runUpdate,
 } from "@aiwerk/mcp-bridge";
 import type { McpClientConfig, McpServerConfig, McpServerConnection, McpTransport, McpTool, McpRequest } from "@aiwerk/mcp-bridge";
-import type { OpenClawPluginApi } from "./types.js";
+import type { OpenClawPluginApi, PluginClientConfig } from "./types.js";
+import { filterServers, buildFilteredDescription } from "./smart-filter.js";
 
 export default function activate(api: OpenClawPluginApi) {
-  const config = (api.pluginConfig ?? {}) as McpClientConfig;
+  const config = (api.pluginConfig ?? {}) as PluginClientConfig;
   const mode = config.mode ?? "direct";
   setSchemaLogger(api.logger);
   const connections = new Map<string, McpServerConnection>();
@@ -103,11 +104,27 @@ export default function activate(api: OpenClawPluginApi) {
     });
   }
 
+  /**
+   * Build the router tool description, optionally filtered by smart filter.
+   * Synchronous — the smart filter is pure keyword matching, no I/O.
+   */
+  function getRouterDescription(userTurns?: string[]): string {
+    const sf = config.smartFilter;
+    if (!sf?.enabled) {
+      return McpRouter.generateDescription(config.servers);
+    }
+    const result = filterServers(config.servers, userTurns ?? [], sf, api.logger);
+    if (result.reason !== "filtered") {
+      return McpRouter.generateDescription(config.servers);
+    }
+    return buildFilteredDescription(config.servers, result.filteredServers);
+  }
+
   function registerRouterTool() {
     api.registerTool({
       name: "mcp",
       label: "MCP Router",
-      description: McpRouter.generateDescription(config.servers),
+      description: getRouterDescription(),
       parameters: {
         type: "object",
         properties: {
