@@ -97,6 +97,13 @@ If you run OpenClaw with Docker sandbox enabled (`agents.defaults.sandbox.mode: 
 
 You can verify with `openclaw sandbox explain --json` — check that `mcp` appears in `sandbox.tools.allow`.
 
+**Alternative ways to apply this:**
+
+- **Control UI:** Open `http://localhost:18789/config` → navigate to `tools` → `sandbox` → `tools` → `allow` → add `mcp` and `mcp_bridge_update` alongside `group:openclaw`.
+- **CLI:** `openclaw config set tools.sandbox.tools.allow '["group:openclaw", "mcp", "mcp_bridge_update"]'`
+
+The gateway hot-reloads the config automatically.
+
 > **Note:** Without sandbox (`sandbox.mode: "off"`), no extra config is needed — plugin tools are available automatically.
 
 ## Update
