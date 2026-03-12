@@ -12,10 +12,11 @@ import {
   checkForUpdate,
   getUpdateNotice,
   runUpdate,
+  filterServers,
+  buildFilteredDescription,
 } from "@aiwerk/mcp-bridge";
 import type { McpClientConfig, McpServerConfig, McpServerConnection, McpTransport, McpTool, McpRequest } from "@aiwerk/mcp-bridge";
 import type { OpenClawPluginApi, PluginClientConfig } from "./types.js";
-import { filterServers, buildFilteredDescription } from "./smart-filter.js";
 
 export default function activate(api: OpenClawPluginApi) {
   const config = (api.pluginConfig ?? {}) as PluginClientConfig;
