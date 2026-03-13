@@ -57,6 +57,8 @@ The plugin config lives in `~/.openclaw/openclaw.json` under `plugins.entries.op
 
 Environment variables are resolved from `~/.openclaw/.env` and system env.
 
+> **Note (v0.10.4+):** If an env var exists in your shell as an empty string, the plugin falls back to reading `~/.openclaw/.env` directly. This prevents issues where `dotenv(override:false)` silently ignores the `.env` value.
+
 ## Modes
 
 | Mode | How it works | Best for |
