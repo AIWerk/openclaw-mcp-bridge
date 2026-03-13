@@ -1,5 +1,9 @@
 # @aiwerk/openclaw-mcp-bridge
 
+[![Tests](https://github.com/AIWerk/openclaw-mcp-bridge/actions/workflows/test.yml/badge.svg)](https://github.com/AIWerk/openclaw-mcp-bridge/actions/workflows/test.yml)
+[![npm version](https://img.shields.io/npm/v/@aiwerk/openclaw-mcp-bridge.svg)](https://www.npmjs.com/package/@aiwerk/openclaw-mcp-bridge)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 OpenClaw plugin for [MCP Bridge](https://github.com/AIWerk/mcp-bridge) — connect any MCP server to your OpenClaw agent.
 
 This is a thin wrapper around [@aiwerk/mcp-bridge](https://www.npmjs.com/package/@aiwerk/mcp-bridge) that handles OpenClaw tool registration, lifecycle, and configuration.
