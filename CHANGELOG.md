@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.10.4] - 2026-03-13
+
+### Fixed
+- Bumped `@aiwerk/mcp-bridge` to 1.2.2 — env var empty-string fallback (fixes #3)
+
+## [0.10.3] - 2026-03-13
+
+### Fixed
+- Bumped `@aiwerk/mcp-bridge` to 1.2.1 — correct npm package names for tavily, google-maps, stripe (fixes #4)
+
 ## [0.10.2] - 2026-03-11
 
 ### Changed
