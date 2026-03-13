@@ -1,7 +1,7 @@
 {
   "name": "@aiwerk/openclaw-mcp-bridge",
-  "version": "0.10.2",
-  "description": "OpenClaw MCP plugin \u2014 thin wrapper around @aiwerk/mcp-bridge for seamless MCP server integration",
+  "version": "0.10.3",
+  "description": "OpenClaw MCP plugin — thin wrapper around @aiwerk/mcp-bridge for seamless MCP server integration",
   "type": "module",
   "main": "index.ts",
   "license": "MIT",
@@ -33,7 +33,7 @@
     "node": ">=20.0.0"
   },
   "scripts": {
-    "test": "echo \"Tests moved to @aiwerk/mcp-bridge core \u2014 see npm run typecheck\" && exit 0",
+    "test": "echo \"Tests moved to @aiwerk/mcp-bridge core — see npm run typecheck\" && exit 0",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
