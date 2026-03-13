@@ -9,8 +9,7 @@
 - [x] add-mcp-server skill
 
 ## Open
-- [ ] PR #42283 leírás fix — shorten to one-liner per reviewer feedback
-- [ ] Version bump when core gets new features
+- [x] PR #42283 leírás fix — shortened per reviewer feedback (commit 9c3b31b)
 
 ## Launch / Marketing
 - [ ] Reddit post (r/openclaw, r/mcp)
