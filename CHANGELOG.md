@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.5] - 2026-03-15
+
+### Changed
+- Renamed all internal `[mcp-client]` log prefixes to `[mcp-bridge]`
+- Updated `test-config-example.json` and skill references from `mcp-client` to `openclaw-mcp-bridge`
+- Cosmetic only — no breaking changes
+
 ## [0.10.4] - 2026-03-13
 
 ### Fixed
