@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.6] - 2026-03-15
+
+### Changed
+- Bumped `@aiwerk/mcp-bridge` dependency to ^1.9.0 — brings Smart Router v2 features: result caching, batch calls, multi-server tool resolution
+
 ## [0.10.5] - 2026-03-15
 
 ### Changed
