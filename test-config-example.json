@@ -1,7 +1,7 @@
 {
   "plugins": {
     "entries": {
-      "mcp-client": {
+      "openclaw-mcp-bridge": {
         "enabled": true,
         "config": {
           "servers": {

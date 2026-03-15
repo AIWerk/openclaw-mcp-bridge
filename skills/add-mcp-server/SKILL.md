@@ -17,9 +17,9 @@ Activate when requests mention:
 ## Flow (Spec 4.2-4.6)
 
 ### 4.2 Trigger and scope
-1. **Check the catalog first:** look in `~/.openclaw/extensions/mcp-client/servers/` for a matching directory.
+1. **Check the catalog first:** look in `~/.openclaw/extensions/openclaw-mcp-bridge/servers/` for a matching directory.
    - If found (has `config.json`), skip to 4.6 — just run `install-server.sh <name>` and test.
-   - List available catalog servers: `ls ~/.openclaw/extensions/mcp-client/servers/`
+   - List available catalog servers: `ls ~/.openclaw/extensions/openclaw-mcp-bridge/servers/`
 2. If not in catalog: confirm target server and source (GitHub URL, npm package, PyPI package, Docker image, or remote endpoint URL).
 3. If the user gives only a vague name, search and propose candidate source URLs before writing files.
 
@@ -101,7 +101,7 @@ Before writing config, verify the package exists and is a real MCP server:
 **⚠️ IMPORTANT: NEVER edit `openclaw.json` directly!** Use `install-server.sh` which handles backup, config update, and restart safely.
 
 1. Create server files in `servers/<name>/` (config.json, install.sh, install.ps1).
-2. Run `~/.openclaw/extensions/mcp-client/install-server.sh <name>` — this handles:
+2. Run `~/.openclaw/extensions/openclaw-mcp-bridge/install-server.sh <name>` — this handles:
    - Backup of openclaw.json
    - Adding the server entry to config
    - Prompting for env vars / API tokens

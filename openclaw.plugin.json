@@ -1,7 +1,7 @@
 {
   "id": "openclaw-mcp-bridge",
   "name": "openclaw-mcp-bridge",
-  "version": "0.10.2",
+  "version": "0.10.5",
   "entryPoint": "index.ts",
   "configSchema": {
     "servers": {
@@ -13,7 +13,11 @@
           "properties": {
             "transport": {
               "type": "string",
-              "enum": ["sse", "stdio", "streamable-http"],
+              "enum": [
+                "sse",
+                "stdio",
+                "streamable-http"
+              ],
               "description": "Transport type: SSE (HTTP Server-Sent Events), stdio (subprocess), or streamable-http (MCP Streamable HTTP)"
             },
             "url": {
@@ -24,51 +28,91 @@
               "type": "object",
               "description": "HTTP headers for SSE transport (supports ${ENV_VAR} substitution)",
               "patternProperties": {
-                "^.*$": { "type": "string" }
+                "^.*$": {
+                  "type": "string"
+                }
               }
             },
             "command": {
-              "type": "string", 
+              "type": "string",
               "description": "Command to execute for stdio transport"
             },
             "args": {
               "type": "array",
-              "items": { "type": "string" },
+              "items": {
+                "type": "string"
+              },
               "description": "Command arguments for stdio transport"
             },
             "env": {
               "type": "object",
               "description": "Environment variables for stdio transport (supports ${ENV_VAR} substitution)",
               "patternProperties": {
-                "^.*$": { "type": "string" }
+                "^.*$": {
+                  "type": "string"
+                }
               }
             },
             "framing": {
               "type": "string",
-              "enum": ["auto", "lsp", "newline"],
+              "enum": [
+                "auto",
+                "lsp",
+                "newline"
+              ],
               "description": "Optional stdio framing mode override (default: auto)"
             }
           },
-          "required": ["transport"],
+          "required": [
+            "transport"
+          ],
           "oneOf": [
             {
-              "properties": { "transport": { "const": "sse" } },
-              "required": ["url"]
+              "properties": {
+                "transport": {
+                  "const": "sse"
+                }
+              },
+              "required": [
+                "url"
+              ]
             },
             {
-              "properties": { "transport": { "const": "stdio" } },
-              "required": ["command"]
+              "properties": {
+                "transport": {
+                  "const": "stdio"
+                }
+              },
+              "required": [
+                "command"
+              ]
             },
             {
-              "properties": { "transport": { "const": "streamable-http" } },
-              "required": ["url"]
+              "properties": {
+                "transport": {
+                  "const": "streamable-http"
+                }
+              },
+              "required": [
+                "url"
+              ]
             }
           ]
         }
       }
     },
     "toolPrefix": {
-      "oneOf": [{"type": "boolean"}, {"type": "string", "enum": ["auto"]}],
+      "oneOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "string",
+          "enum": [
+            "auto"
+          ]
+        }
+      ],
       "default": true,
       "description": "Tool naming: true = always prefix with server name (default), false = never prefix, 'auto' = prefix only on collision"
     },
@@ -79,7 +123,7 @@
       "description": "Auto-reconnect interval in milliseconds"
     },
     "connectionTimeoutMs": {
-      "type": "number", 
+      "type": "number",
       "default": 10000,
       "minimum": 1000,
       "description": "Initial connection timeout in milliseconds"
@@ -91,5 +135,7 @@
       "description": "Tool call / request timeout in milliseconds"
     }
   },
-  "required": ["servers"]
+  "required": [
+    "servers"
+  ]
 }

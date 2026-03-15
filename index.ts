@@ -27,7 +27,7 @@ export default function activate(api: OpenClawPluginApi) {
   const router = mode === "router" ? new McpRouter(config.servers || {}, config, api.logger) : null;
 
   if (!config.servers || Object.keys(config.servers).length === 0) {
-    api.logger.info("[mcp-client] No servers configured, plugin inactive");
+    api.logger.info("[mcp-bridge] No servers configured, plugin inactive");
     return;
   }
 
@@ -152,7 +152,7 @@ export default function activate(api: OpenClawPluginApi) {
     const serverEntries = Object.entries(config.servers);
     const results = await Promise.allSettled(
       serverEntries.map(async ([serverName, serverConfig]) => {
-        api.logger.info(`[mcp-client] Connecting to server: ${serverName} (${serverConfig.transport}: ${serverConfig.url || serverConfig.command})`);
+        api.logger.info(`[mcp-bridge] Connecting to server: ${serverName} (${serverConfig.transport}: ${serverConfig.url || serverConfig.command})`);
         await initializeServer(serverName, serverConfig, false);
         return serverName;
       })
@@ -166,7 +166,7 @@ export default function activate(api: OpenClawPluginApi) {
       const serverName = serverEntries[idx][0];
       if (result.status === "fulfilled") {
         succeeded += 1;
-        api.logger.info(`[mcp-client] Startup success: ${serverName}`);
+        api.logger.info(`[mcp-bridge] Startup success: ${serverName}`);
         const conn = connections.get(serverName);
         if (conn) {
           successfulConnections.push(conn);
@@ -174,7 +174,7 @@ export default function activate(api: OpenClawPluginApi) {
       } else {
         failed += 1;
         const reason = result.reason instanceof Error ? result.reason.message : String(result.reason);
-        api.logger.error(`[mcp-client] Startup failed: ${serverName}: ${reason}`);
+        api.logger.error(`[mcp-bridge] Startup failed: ${serverName}: ${reason}`);
       }
     });
 
@@ -182,10 +182,10 @@ export default function activate(api: OpenClawPluginApi) {
     for (const connection of successfulConnections) {
       await registerServerTools(connection);
       connection.isInitialized = true;
-      api.logger.info(`[mcp-client] Server ${connection.name} initialized, registered ${connection.tools.length} tools`);
+      api.logger.info(`[mcp-bridge] Server ${connection.name} initialized, registered ${connection.tools.length} tools`);
     }
 
-    api.logger.info(`[mcp-client] Server startup complete: ${succeeded} succeeded, ${failed} failed`);
+    api.logger.info(`[mcp-bridge] Server startup complete: ${succeeded} succeeded, ${failed} failed`);
   }
 
   async function initializeServer(name: string, serverConfig: McpServerConfig, registerTools = true): Promise<void> {
@@ -207,12 +207,12 @@ export default function activate(api: OpenClawPluginApi) {
     const refreshConnection = async () => {
       if (refreshInProgress) {
         refreshQueued = true;
-        api.logger.info(`[mcp-client] Refresh already in progress for ${name}, queuing`);
+        api.logger.info(`[mcp-bridge] Refresh already in progress for ${name}, queuing`);
         return;
       }
       refreshInProgress = true;
       try {
-        api.logger.info(`[mcp-client] Re-initializing server: ${name}`);
+        api.logger.info(`[mcp-bridge] Re-initializing server: ${name}`);
         connection.isInitialized = false;
         connection.tools = [];
 
@@ -221,14 +221,14 @@ export default function activate(api: OpenClawPluginApi) {
         await registerServerTools(connection);
 
         connection.isInitialized = true;
-        api.logger.info(`[mcp-client] Server ${name} re-initialized, registered ${connection.tools.length} tools`);
+        api.logger.info(`[mcp-bridge] Server ${name} re-initialized, registered ${connection.tools.length} tools`);
       } catch (error) {
-        api.logger.error(`[mcp-client] Failed to re-initialize server ${name}:`, error);
+        api.logger.error(`[mcp-bridge] Failed to re-initialize server ${name}:`, error);
       } finally {
         refreshInProgress = false;
         if (refreshQueued) {
           refreshQueued = false;
-          api.logger.info(`[mcp-client] Processing queued refresh for ${name}`);
+          api.logger.info(`[mcp-bridge] Processing queued refresh for ${name}`);
           await refreshConnection();
         }
       }
@@ -254,7 +254,7 @@ export default function activate(api: OpenClawPluginApi) {
     try {
       // Connect to the server
       await transport.connect();
-      api.logger.info(`[mcp-client] Connected to server: ${name}`);
+      api.logger.info(`[mcp-bridge] Connected to server: ${name}`);
 
       // Initialize the MCP protocol
       await initializeProtocol(connection.transport, PACKAGE_VERSION);
@@ -265,11 +265,11 @@ export default function activate(api: OpenClawPluginApi) {
         // Register tools with OpenClaw
         await registerServerTools(connection);
         connection.isInitialized = true;
-        api.logger.info(`[mcp-client] Server ${name} initialized, registered ${connection.tools.length} tools`);
+        api.logger.info(`[mcp-bridge] Server ${name} initialized, registered ${connection.tools.length} tools`);
       }
 
     } catch (error) {
-      api.logger.error(`[mcp-client] Failed to initialize server ${name}:`, error);
+      api.logger.error(`[mcp-bridge] Failed to initialize server ${name}:`, error);
       connections.delete(name);
       throw error;
     }
@@ -306,7 +306,7 @@ export default function activate(api: OpenClawPluginApi) {
           try {
             api.unregisterTool(oldName);
           } catch (error) {
-            api.logger.warn(`[mcp-client] Failed to unregister tool ${oldName}:`, error);
+            api.logger.warn(`[mcp-bridge] Failed to unregister tool ${oldName}:`, error);
           }
         }
       } else {
@@ -314,7 +314,7 @@ export default function activate(api: OpenClawPluginApi) {
         const nextSorted = [...nextToolNames].sort();
         const changed = oldSorted.length !== nextSorted.length || oldSorted.some((name, idx) => name !== nextSorted[idx]);
         if (changed) {
-          api.logger.warn(`[mcp-client] Tool list changed for ${connection.name}, but unregisterTool API is unavailable. Existing tool registrations may remain stale.`);
+          api.logger.warn(`[mcp-bridge] Tool list changed for ${connection.name}, but unregisterTool API is unavailable. Existing tool registrations may remain stale.`);
         }
       }
     }
@@ -327,7 +327,7 @@ export default function activate(api: OpenClawPluginApi) {
         connection.registeredToolNames.push(actualName);
         globalRegisteredToolNames.add(actualName);
       } catch (error) {
-        api.logger.error(`[mcp-client] Failed to register tool ${mcpTool.name}:`, error);
+        api.logger.error(`[mcp-bridge] Failed to register tool ${mcpTool.name}:`, error);
       }
     }
   }
@@ -352,7 +352,7 @@ export default function activate(api: OpenClawPluginApi) {
           return await executeMcpTool(connection, mcpTool.name, params);
         } catch (error) {
           const errorMsg = error instanceof Error ? error.message : String(error);
-          api.logger.error(`[mcp-client] Tool execution failed (server: ${connection.name}, tool: ${mcpTool.name}): ${errorMsg}`);
+          api.logger.error(`[mcp-bridge] Tool execution failed (server: ${connection.name}, tool: ${mcpTool.name}): ${errorMsg}`);
           return {
             content: [{
               type: "text",
@@ -435,13 +435,13 @@ export default function activate(api: OpenClawPluginApi) {
 
   // Cleanup on deactivation
   api.on("deactivate", async () => {
-    api.logger.info("[mcp-client] Deactivating, closing connections and unregistering tools");
+    api.logger.info("[mcp-bridge] Deactivating, closing connections and unregistering tools");
     if (mode === "router") {
       if (typeof api.unregisterTool === "function") {
         try {
           api.unregisterTool("mcp");
         } catch (error) {
-          api.logger.warn("[mcp-client] Failed to unregister mcp router tool during deactivation:", error);
+          api.logger.warn("[mcp-bridge] Failed to unregister mcp router tool during deactivation:", error);
         }
       }
       await router!.disconnectAll();
@@ -456,19 +456,19 @@ export default function activate(api: OpenClawPluginApi) {
             api.unregisterTool(toolName);
             globalRegisteredToolNames.delete(toolName);
           } catch (error) {
-            api.logger.warn(`[mcp-client] Failed to unregister tool ${toolName} during deactivation:`, error);
+            api.logger.warn(`[mcp-bridge] Failed to unregister tool ${toolName} during deactivation:`, error);
           }
         }
       }
       try {
         await connection.transport.disconnect();
       } catch (error) {
-        api.logger.error(`[mcp-client] Error disconnecting from ${connection.name}:`, error);
+        api.logger.error(`[mcp-bridge] Error disconnecting from ${connection.name}:`, error);
       }
     }
     connections.clear();
     globalRegisteredToolNames.clear();
   });
 
-  api.logger.info(`[mcp-client] Plugin activated with ${Object.keys(config.servers).length} servers configured`);
+  api.logger.info(`[mcp-bridge] Plugin activated with ${Object.keys(config.servers).length} servers configured`);
 }
