@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.10.7] - 2026-03-15
+
+### Changed
+- Bumped `@aiwerk/mcp-bridge` dependency to ^2.0.0 — adds HTTP auth, configurable retries, graceful shutdown
+
 ## [0.10.6] - 2026-03-15
 
 ### Changed
