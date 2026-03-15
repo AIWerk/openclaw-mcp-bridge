@@ -10,6 +10,7 @@ import {
   PACKAGE_VERSION,
   pickRegisteredToolName,
   checkForUpdate,
+  checkPluginUpdate,
   getUpdateNotice,
   runUpdate,
   filterServers,
@@ -31,8 +32,11 @@ export default function activate(api: OpenClawPluginApi) {
     return;
   }
 
-  // Fire-and-forget version check (non-blocking)
+  // Fire-and-forget version checks (non-blocking) — core + plugin
+  const PLUGIN_NAME = "@aiwerk/openclaw-mcp-bridge";
+  const PLUGIN_VERSION = require("./package.json").version as string;
   checkForUpdate(api.logger).catch(() => {});
+  checkPluginUpdate(PLUGIN_NAME, PLUGIN_VERSION, api.logger).catch(() => {});
 
   // Register the manual update tool
   registerUpdateTool();
