@@ -1,9 +1,15 @@
 {
   "id": "openclaw-mcp-bridge",
   "name": "openclaw-mcp-bridge",
-  "version": "0.10.5",
+  "version": "0.10.7",
   "entryPoint": "index.ts",
   "configSchema": {
+    "mode": {
+      "type": "string",
+      "enum": ["direct", "router"],
+      "default": "router",
+      "description": "direct = individual tools, router = single mcp meta-tool (~98% token reduction)"
+    },
     "servers": {
       "type": "object",
       "description": "Map of MCP server configurations",
@@ -13,24 +19,23 @@
           "properties": {
             "transport": {
               "type": "string",
-              "enum": [
-                "sse",
-                "stdio",
-                "streamable-http"
-              ],
-              "description": "Transport type: SSE (HTTP Server-Sent Events), stdio (subprocess), or streamable-http (MCP Streamable HTTP)"
+              "enum": ["sse", "stdio", "streamable-http"],
+              "description": "Transport type"
             },
             "url": {
               "type": "string",
-              "description": "Endpoint URL for SSE transport"
+              "description": "Endpoint URL for SSE/HTTP transport"
             },
             "headers": {
               "type": "object",
-              "description": "HTTP headers for SSE transport (supports ${ENV_VAR} substitution)",
-              "patternProperties": {
-                "^.*$": {
-                  "type": "string"
-                }
+              "description": "HTTP headers (supports ${ENV_VAR} substitution)",
+              "patternProperties": { "^.*$": { "type": "string" } }
+            },
+            "auth": {
+              "type": "object",
+              "description": "Transport auth: {type:'bearer',token:''}, {type:'header',headers:{}}, or {type:'oauth2',clientId,clientSecret,tokenUrl,scopes?,audience?}",
+              "properties": {
+                "type": { "type": "string", "enum": ["bearer", "header", "oauth2"] }
               }
             },
             "command": {
@@ -39,82 +44,120 @@
             },
             "args": {
               "type": "array",
-              "items": {
-                "type": "string"
-              },
+              "items": { "type": "string" },
               "description": "Command arguments for stdio transport"
             },
             "env": {
               "type": "object",
               "description": "Environment variables for stdio transport (supports ${ENV_VAR} substitution)",
-              "patternProperties": {
-                "^.*$": {
-                  "type": "string"
-                }
-              }
+              "patternProperties": { "^.*$": { "type": "string" } }
             },
             "framing": {
               "type": "string",
-              "enum": [
-                "auto",
-                "lsp",
-                "newline"
-              ],
+              "enum": ["auto", "lsp", "newline"],
               "description": "Optional stdio framing mode override (default: auto)"
+            },
+            "description": {
+              "type": "string",
+              "description": "Human-readable server description for router tool"
+            },
+            "trust": {
+              "type": "string",
+              "enum": ["trusted", "untrusted", "sanitize"],
+              "default": "trusted",
+              "description": "Trust level for results from this server"
+            },
+            "toolFilter": {
+              "type": "object",
+              "properties": {
+                "deny": { "type": "array", "items": { "type": "string" } },
+                "allow": { "type": "array", "items": { "type": "string" } }
+              },
+              "description": "Tool allow/deny filter"
+            },
+            "maxResultChars": {
+              "type": "number",
+              "description": "Max result size for this server (overrides global)"
+            },
+            "retry": {
+              "type": "object",
+              "properties": {
+                "maxAttempts": { "type": "number", "default": 1 },
+                "delayMs": { "type": "number", "default": 1000 },
+                "backoffMultiplier": { "type": "number", "default": 2 },
+                "retryOn": { "type": "array", "items": { "type": "string", "enum": ["timeout", "connection_error"] } }
+              },
+              "description": "Per-server retry policy for tool calls"
             }
           },
-          "required": [
-            "transport"
-          ],
-          "oneOf": [
-            {
-              "properties": {
-                "transport": {
-                  "const": "sse"
-                }
-              },
-              "required": [
-                "url"
-              ]
-            },
-            {
-              "properties": {
-                "transport": {
-                  "const": "stdio"
-                }
-              },
-              "required": [
-                "command"
-              ]
-            },
-            {
-              "properties": {
-                "transport": {
-                  "const": "streamable-http"
-                }
-              },
-              "required": [
-                "url"
-              ]
-            }
-          ]
+          "required": ["transport"]
         }
       }
     },
     "toolPrefix": {
-      "oneOf": [
-        {
-          "type": "boolean"
-        },
-        {
-          "type": "string",
-          "enum": [
-            "auto"
-          ]
-        }
-      ],
+      "oneOf": [{ "type": "boolean" }, { "type": "string", "enum": ["auto"] }],
       "default": true,
-      "description": "Tool naming: true = always prefix with server name (default), false = never prefix, 'auto' = prefix only on collision"
+      "description": "Tool naming: true = prefix with server name, false = no prefix, 'auto' = prefix on collision"
+    },
+    "schemaCompression": {
+      "type": "boolean",
+      "default": true,
+      "description": "Compress tool descriptions (~57% token reduction)"
+    },
+    "intentRouting": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable natural language intent routing (action=intent)"
+    },
+    "resultCache": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "maxEntries": { "type": "number", "default": 100 },
+        "defaultTtlMs": { "type": "number", "default": 300000 },
+        "cacheTtl": {
+          "type": "object",
+          "description": "Per-tool TTL overrides (key: 'server:tool', value: ms)",
+          "patternProperties": { "^.*$": { "type": "number" } }
+        }
+      },
+      "description": "LRU result cache for tool calls"
+    },
+    "adaptivePromotion": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "topN": { "type": "number", "default": 5 },
+        "windowSize": { "type": "number", "default": 50 }
+      },
+      "description": "Auto-promote frequently used tools as native tools"
+    },
+    "maxBatchSize": {
+      "type": "number",
+      "default": 10,
+      "description": "Maximum number of calls in a batch request"
+    },
+    "maxResultChars": {
+      "type": "number",
+      "default": 50000,
+      "description": "Global max result size in characters"
+    },
+    "retry": {
+      "type": "object",
+      "properties": {
+        "maxAttempts": { "type": "number", "default": 1 },
+        "delayMs": { "type": "number", "default": 1000 },
+        "backoffMultiplier": { "type": "number", "default": 2 }
+      },
+      "description": "Global retry policy (per-server overrides available)"
+    },
+    "smartFilter": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "default": true },
+        "maxServers": { "type": "number", "default": 5 }
+      },
+      "description": "Smart filter: show only relevant servers based on conversation context"
     },
     "reconnectIntervalMs": {
       "type": "number",
@@ -135,7 +178,5 @@
       "description": "Tool call / request timeout in milliseconds"
     }
   },
-  "required": [
-    "servers"
-  ]
+  "required": ["servers"]
 }

@@ -129,12 +129,14 @@ export default function activate(api: OpenClawPluginApi) {
       parameters: {
         type: "object",
         properties: {
-          server: { type: "string", description: "Server name" },
-          action: { type: "string", description: "list | call | refresh" },
-          tool: { type: "string", description: "Tool name for action=call" },
-          params: { type: "object", description: "Tool arguments" }
+          server: { type: "string", description: "Server name (optional for action=intent/batch/status)" },
+          action: { type: "string", description: "list | call | refresh | batch | status | intent | schema | promotions", default: "call" },
+          tool: { type: "string", description: "Tool name for action=call/schema" },
+          params: { type: "object", description: "Tool arguments for action=call" },
+          intent: { type: "string", description: "Natural language intent for action=intent" },
+          calls: { type: "array", description: "Array of {server, tool, params} for action=batch", items: { type: "object" } }
         },
-        required: ["server"]
+        required: []
       },
       async execute(_toolId: string, params: Record<string, unknown>) {
         const result = await router!.dispatch(

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.10.8] - 2026-03-15
+
+### Fixed
+- **Plugin manifest version** synced: openclaw.plugin.json now matches package.json
+- **Router tool schema** expanded: added `intent`, `calls`, `batch`, `status`, `schema`, `promotions` actions and parameters so LLMs can discover all Smart Router v2 capabilities
+
+### Added
+- **configSchema** expanded with all core 2.x features: `mode`, `auth` (bearer/header/oauth2), `trust`, `toolFilter`, `maxResultChars`, `schemaCompression`, `intentRouting`, `resultCache`, `adaptivePromotion`, `maxBatchSize`, `retry`, `smartFilter`
+
 ## [0.10.7] - 2026-03-15
 
 ### Changed
