@@ -3,6 +3,7 @@
   "name": "openclaw-mcp-bridge",
   "version": "0.11.1",
   "entryPoint": "index.ts",
+  "skills": ["skills/"],
   "configSchema": {
     "mode": {
       "type": "string",
