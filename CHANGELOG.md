@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.11.2] - 2026-03-16
+
+### Fixed
+- **Skill discovery**: declared `skills/` in `openclaw.plugin.json` so OpenClaw natively discovers plugin skills (no symlink needed)
+- **Skill name**: updated install.sh from `add-mcp-server` to `manage-mcp-servers` (old symlinks auto-cleaned)
+- **Install debug**: workspace path logged during skill symlink step
+
 ## [0.10.8] - 2026-03-15
 
 ### Fixed
