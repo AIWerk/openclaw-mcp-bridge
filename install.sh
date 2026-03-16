@@ -96,8 +96,8 @@ else
   echo "⚠️  Config not found at $CONFIG_FILE"
 fi
 
-# Register add-mcp-server skill via symlink
-SKILL_SOURCE="$PLUGIN_DIR/skills/add-mcp-server"
+# Register manage-mcp-servers skill via symlink
+SKILL_SOURCE="$PLUGIN_DIR/skills/manage-mcp-servers"
 if [ -d "$SKILL_SOURCE" ]; then
   SKILLS_DIR=""
 
@@ -137,13 +137,17 @@ except: pass
 
   # Create skills dir if needed and symlink
   mkdir -p "$SKILLS_DIR" 2>/dev/null
-  SKILL_LINK="$SKILLS_DIR/add-mcp-server"
+  # Clean up old skill name if present
+  OLD_LINK="$SKILLS_DIR/add-mcp-server"
+  [ -L "$OLD_LINK" ] && rm "$OLD_LINK" 2>/dev/null
+
+  SKILL_LINK="$SKILLS_DIR/manage-mcp-servers"
   if [ ! -e "$SKILL_LINK" ]; then
     ln -s "$SKILL_SOURCE" "$SKILL_LINK" 2>/dev/null && \
-      echo "🧠 Skill 'add-mcp-server' registered in $SKILLS_DIR/" || \
+      echo "🧠 Skill 'manage-mcp-servers' registered in $SKILLS_DIR/" || \
       echo "⚠️  Could not register skill. Create manually: ln -s $SKILL_SOURCE $SKILL_LINK"
   else
-    echo "🧠 Skill 'add-mcp-server' already registered in $SKILLS_DIR/"
+    echo "🧠 Skill 'manage-mcp-servers' already registered in $SKILLS_DIR/"
   fi
 fi
 
@@ -156,7 +160,7 @@ echo "     cd ~/.openclaw/extensions/openclaw-mcp-bridge"
 echo "     ./install-server.sh <SERVER_NAME>"
 echo ""
 echo "  2. Or ask your agent: 'Add the X MCP server'"
-echo "     (uses the add-mcp-server skill)"
+echo "     (uses the manage-mcp-servers skill)"
 echo ""
 echo "  Available servers: ls ~/.openclaw/extensions/openclaw-mcp-bridge/servers/"
 echo ""
