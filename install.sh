@@ -117,10 +117,11 @@ except: pass
 " 2>/dev/null)
     if [ -n "$WORKSPACE" ] && [ -d "$WORKSPACE" ]; then
       SKILLS_DIR="$WORKSPACE/skills"
+      echo "   Found workspace: $WORKSPACE"
     fi
   fi
 
-  # 2. Fallback: try common locations
+  # 2. Fallback: try common locations (only if workspace not found)
   if [ -z "$SKILLS_DIR" ]; then
     for CANDIDATE in "$HOME/clawd/skills" "$HOME/.openclaw/skills" "$HOME/openclaw/skills"; do
       if [ -d "$CANDIDATE" ]; then
@@ -145,7 +146,7 @@ except: pass
   if [ ! -e "$SKILL_LINK" ]; then
     ln -s "$SKILL_SOURCE" "$SKILL_LINK" 2>/dev/null && \
       echo "🧠 Skill 'manage-mcp-servers' registered in $SKILLS_DIR/" || \
-      echo "⚠️  Could not register skill. Create manually: ln -s $SKILL_SOURCE $SKILL_LINK"
+      echo "⚠️  Could not register skill. Run manually: ln -s $SKILL_SOURCE $SKILL_LINK"
   else
     echo "🧠 Skill 'manage-mcp-servers' already registered in $SKILLS_DIR/"
   fi
