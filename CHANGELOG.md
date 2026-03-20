@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.11.3] - 2026-03-20
+
+### Changed
+- **Dependency bump**: `@aiwerk/mcp-bridge` ^2.1.1 → ^2.7.0
+  - Cost & Rate Limiting (per-server daily/monthly call limits, actionable UX)
+  - Tool Manifest Hash (toolsHash) — runtime integrity verification
+  - 16 signed recipes, version pinning, Firecrawl recipe
+  - 291 tests
+
 ## [0.11.2] - 2026-03-16
 
 ### Fixed
