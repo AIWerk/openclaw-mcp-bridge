@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.11.6] - 2026-03-21
+
+### Fixed
+- **Dependency bump**: `@aiwerk/mcp-bridge` `2.7.1` → `2.7.2`
+  - Fixes stdio deadlock with servers that wait for client's `initialize` request before writing to stdout (e.g. firecrawl). Bridge now proceeds optimistically instead of killing the process.
+
 ## [0.11.5] - 2026-03-21
 
 ### Changed
