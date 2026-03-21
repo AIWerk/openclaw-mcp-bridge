@@ -37,7 +37,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aiwerk/mcp-bridge": "^2.7.0",
+    "@aiwerk/mcp-bridge": "2.7.0",
     "@sinclair/typebox": "^0.34.0"
   },
   "devDependencies": {
