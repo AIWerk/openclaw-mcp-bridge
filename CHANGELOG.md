@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.11.4] - 2026-03-21
+
+### Fixed
+- **Dependency pinning**: `@aiwerk/mcp-bridge` `^2.7.0` → `2.7.0` (exact pin). The caret range caused `mcp_bridge_update` to only update the plugin wrapper while the core library stayed locked to the old version in the lockfile. Exact pinning ensures the correct core version is always installed.
+
 ## [0.11.3] - 2026-03-20
 
 ### Changed
