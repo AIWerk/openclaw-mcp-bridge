@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.11.5] - 2026-03-21
+
+### Changed
+- **Dependency bump**: `@aiwerk/mcp-bridge` `2.7.0` → `2.7.1`
+  - npx-based servers: auto-detect extended timeout (30s instead of 5s)
+  - firecrawl recipe: fixed non-existent version (3.12.1 → 3.11.0)
+  - chrome-devtools recipe: updated (0.20.0 → 0.20.3)
+
 ## [0.11.4] - 2026-03-21
 
 ### Fixed
