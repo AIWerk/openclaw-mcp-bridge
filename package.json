@@ -1,6 +1,6 @@
 {
   "name": "@aiwerk/openclaw-mcp-bridge",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "OpenClaw MCP plugin — thin wrapper around @aiwerk/mcp-bridge for seamless MCP server integration",
   "type": "module",
   "main": "index.ts",
@@ -38,7 +38,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@aiwerk/mcp-bridge": "2.7.5",
+    "@aiwerk/mcp-bridge": "2.7.6",
     "@sinclair/typebox": "^0.34.0"
   },
   "devDependencies": {

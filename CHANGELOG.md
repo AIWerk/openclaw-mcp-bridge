@@ -1,9 +1,16 @@
 # Changelog
 
+## [0.12.1] - 2026-03-22
+
+### Fixed
+- **OAuth2 FileTokenStore missing** — `OAuth2TokenManager` was created without `FileTokenStore`, so stored tokens from `mcp-bridge auth login` couldn't be read. Now correctly passes `new FileTokenStore()`. (fixes #5, reported by @homkai)
+- **Dependency bump**: `@aiwerk/mcp-bridge` `2.7.5` → `2.7.6`
+  - MCP protocol version updated to `2025-06-18` (was `2024-11-05`)
+
 ## [0.12.0] - 2026-03-22
 
 ### Fixed
-- **OAuth2 Auth Code + Device Code support in OpenClaw** — pass `tokenManager` and `serverName` to SSE and StreamableHTTP transports. Previously, OAuth2 Authorization Code and Device Code flows threw `"serverName is required"` when running inside OpenClaw, even though CLI `mcp-bridge auth login` succeeded. (fixes #5)
+- **OAuth2 Auth Code + Device Code support in OpenClaw** — pass `tokenManager` and `serverName` to SSE and StreamableHTTP transports. Previously, OAuth2 Authorization Code and Device Code flows threw `"serverName is required"` when running inside OpenClaw, even though CLI `mcp-bridge auth login` succeeded.
 - **Dependency bump**: `@aiwerk/mcp-bridge` `2.7.2` → `2.7.5`
   - Token store `list()` double-encode fix (servers with special chars in name)
   - Rate limiter split: failed calls no longer consume quota

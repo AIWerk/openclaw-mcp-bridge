@@ -4,6 +4,7 @@ import {
   StdioTransport,
   StreamableHttpTransport,
   OAuth2TokenManager,
+  FileTokenStore,
   createToolParameters,
   setSchemaLogger,
   fetchToolsList,
@@ -26,7 +27,7 @@ export default function activate(api: OpenClawPluginApi) {
   setSchemaLogger(api.logger);
   const connections = new Map<string, McpServerConnection>();
   const globalRegisteredToolNames = new Set<string>();
-  const tokenManager = new OAuth2TokenManager(api.logger);
+  const tokenManager = new OAuth2TokenManager(api.logger, new FileTokenStore());
   const router = mode === "router" ? new McpRouter(config.servers || {}, config, api.logger) : null;
 
   if (!config.servers || Object.keys(config.servers).length === 0) {

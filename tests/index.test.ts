@@ -130,10 +130,16 @@ vi.mock("@aiwerk/mcp-bridge", () => {
       }
     },
     OAuth2TokenManager: class {
-      constructor() {}
+      constructor(_logger?: unknown, _tokenStore?: unknown) {}
       getTokenForAuthCode() { return Promise.resolve("mock-token"); }
       getTokenForDeviceCode() { return Promise.resolve("mock-token"); }
       getToken() { return Promise.resolve("mock-token"); }
+    },
+    FileTokenStore: class {
+      load() { return null; }
+      save() {}
+      remove() {}
+      list() { return {}; }
     },
     createToolParameters: state.createToolParameters,
     setSchemaLogger: state.setSchemaLogger,
