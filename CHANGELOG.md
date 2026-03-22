@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.11.7] - 2026-03-22
+
+### Fixed
+- **Dependency bump**: `@aiwerk/mcp-bridge` `2.7.2` → `2.7.5`
+  - Token store `list()` double-encode fix (servers with special chars in name)
+  - Rate limiter split: failed calls no longer consume quota
+  - SSE `endpointUrl` cleanup on disconnect
+  - `Math.max` stack overflow prevention for large arrays
+
 ## [0.11.6] - 2026-03-21
 
 ### Fixed
