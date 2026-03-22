@@ -3,6 +3,7 @@ import {
   SseTransport,
   StdioTransport,
   StreamableHttpTransport,
+  OAuth2TokenManager,
   createToolParameters,
   setSchemaLogger,
   fetchToolsList,
@@ -25,6 +26,7 @@ export default function activate(api: OpenClawPluginApi) {
   setSchemaLogger(api.logger);
   const connections = new Map<string, McpServerConnection>();
   const globalRegisteredToolNames = new Set<string>();
+  const tokenManager = new OAuth2TokenManager(api.logger);
   const router = mode === "router" ? new McpRouter(config.servers || {}, config, api.logger) : null;
 
   if (!config.servers || Object.keys(config.servers).length === 0) {
@@ -244,12 +246,13 @@ export default function activate(api: OpenClawPluginApi) {
     const onReconnected = refreshConnection;
 
     // Create appropriate transport with reconnection callback
+    // Pass tokenManager + serverName for OAuth2 Auth Code / Device Code flows
     if (serverConfig.transport === "sse") {
-      transport = new SseTransport(serverConfig, config, api.logger, onReconnected);
+      transport = new SseTransport(serverConfig, config, api.logger, onReconnected, tokenManager, undefined, name);
     } else if (serverConfig.transport === "stdio") {
       transport = new StdioTransport(serverConfig, config, api.logger, onReconnected);
     } else if (serverConfig.transport === "streamable-http") {
-      transport = new StreamableHttpTransport(serverConfig, config, api.logger, onReconnected);
+      transport = new StreamableHttpTransport(serverConfig, config, api.logger, onReconnected, tokenManager, undefined, name);
     } else {
       throw new Error(`Unsupported transport: ${serverConfig.transport}`);
     }

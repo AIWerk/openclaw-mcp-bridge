@@ -115,7 +115,7 @@ vi.mock("@aiwerk/mcp-bridge", () => {
     PACKAGE_VERSION: "9.9.9",
     McpRouter: MockRouter,
     SseTransport: class extends MockTransport {
-      constructor(serverConfig: unknown, clientConfig: unknown, logger: unknown, onReconnected?: () => Promise<void> | void) {
+      constructor(serverConfig: unknown, clientConfig: unknown, logger: unknown, onReconnected?: () => Promise<void> | void, _tokenManager?: unknown, _requestIdGenerator?: unknown, _serverName?: string) {
         super("sse", serverConfig, clientConfig, logger, onReconnected);
       }
     },
@@ -125,9 +125,15 @@ vi.mock("@aiwerk/mcp-bridge", () => {
       }
     },
     StreamableHttpTransport: class extends MockTransport {
-      constructor(serverConfig: unknown, clientConfig: unknown, logger: unknown, onReconnected?: () => Promise<void> | void) {
+      constructor(serverConfig: unknown, clientConfig: unknown, logger: unknown, onReconnected?: () => Promise<void> | void, _tokenManager?: unknown, _requestIdGenerator?: unknown, _serverName?: string) {
         super("streamable-http", serverConfig, clientConfig, logger, onReconnected);
       }
+    },
+    OAuth2TokenManager: class {
+      constructor() {}
+      getTokenForAuthCode() { return Promise.resolve("mock-token"); }
+      getTokenForDeviceCode() { return Promise.resolve("mock-token"); }
+      getToken() { return Promise.resolve("mock-token"); }
     },
     createToolParameters: state.createToolParameters,
     setSchemaLogger: state.setSchemaLogger,

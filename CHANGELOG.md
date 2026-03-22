@@ -1,13 +1,19 @@
 # Changelog
 
-## [0.11.7] - 2026-03-22
+## [0.12.0] - 2026-03-22
 
 ### Fixed
+- **OAuth2 Auth Code + Device Code support in OpenClaw** — pass `tokenManager` and `serverName` to SSE and StreamableHTTP transports. Previously, OAuth2 Authorization Code and Device Code flows threw `"serverName is required"` when running inside OpenClaw, even though CLI `mcp-bridge auth login` succeeded. (fixes #5)
 - **Dependency bump**: `@aiwerk/mcp-bridge` `2.7.2` → `2.7.5`
   - Token store `list()` double-encode fix (servers with special chars in name)
   - Rate limiter split: failed calls no longer consume quota
   - SSE `endpointUrl` cleanup on disconnect
   - `Math.max` stack overflow prevention for large arrays
+
+## [0.11.7] - 2026-03-22
+
+### Changed
+- **Dependency bump**: `@aiwerk/mcp-bridge` `2.7.2` → `2.7.5` (same fixes as 0.12.0, but without OAuth2 transport fix)
 
 ## [0.11.6] - 2026-03-21
 
