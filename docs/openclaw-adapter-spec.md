@@ -24,7 +24,7 @@ The adapter imports `@aiwerk/mcp-bridge` as a dependency. The core package owns:
 - MCP protocol handling (all three transports: stdio, SSE, streamable-http)
 - Tool discovery and call forwarding
 - Smart filter / router mode logic
-- Universal recipe format (`servers/`)
+- Universal recipe format + catalog client + local recipe cache
 
 The adapter owns:
 - Recipe -> OpenClaw config translation
@@ -36,7 +36,8 @@ The adapter owns:
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  @aiwerk/mcp-bridge (core, npm dependency)                │
-│  - Universal recipes (servers/)                           │
+│  - Universal recipes + catalog client                     │
+│  - Local recipe cache (fetched from catalog)              │
 │  - MCP client connections (stdio/SSE/streamable-http)     │
 │  - Tool discovery & call forwarding                       │
 │  - Smart filter / router mode                             │
@@ -55,6 +56,8 @@ The adapter owns:
 ```
 
 > **Note on transport layer:** MCP transport implementations (stdio, SSE, streamable-http) live in the `@aiwerk/mcp-bridge` core package. The adapter delegates all protocol handling to the core via its public API.
+>
+> **Note on recipe source:** The plugin does **not** maintain its own recipe registry. Recipe discovery and caching are handled by the bridge core via the catalog. The plugin only translates recipes into OpenClaw-native config.
 
 ## 2. Configuration
 
@@ -214,17 +217,18 @@ The install script bridges universal recipes and OpenClaw config:
 ```
 User runs: ./install-server.sh todoist
 
-1. Load recipe:     servers/todoist/recipe.json (v2)
-                    (fallback: servers/todoist/config.json for v1)
-2. Check prereqs:   node/npx/docker/uvx as needed
-3. Install deps:    npm install / docker pull / git clone+build
-4. Prompt auth:     Read recipe.auth.envVars -> prompt -> write .env
-5. Translate:       recipe -> OpenClaw native server config
-6. Apply override:  merge adapters/openclaw.json if exists
-7. Merge config:    Deep-merge into ~/.openclaw/openclaw.json
-8. Restart gateway: openclaw gateway restart
+1. Resolve recipe:  ask mcp-bridge catalog client for `todoist`
+                    (fallback: local bridge cache if offline)
+2. Cache recipe:    store in local recipe cache if fetched remotely
+3. Check prereqs:   node/npx/docker/uvx as needed
+4. Install deps:    npm install / docker pull / git clone+build
+5. Prompt auth:     Read recipe.auth.envVars -> prompt -> write .env
+6. Translate:       recipe -> OpenClaw native server config
+7. Apply override:  merge adapters/openclaw.json if present in cached recipe
+8. Merge config:    Deep-merge into ~/.openclaw/openclaw.json
+9. Restart gateway: openclaw gateway restart
                     (fallback: systemctl --user restart openclaw-gateway)
-9. Verify:          Check logs for server initialization
+10. Verify:         Check logs for server initialization
 ```
 
 ### 5.2 Uninstall
@@ -235,7 +239,7 @@ User runs: ./install-server.sh todoist --remove
 1. Remove server entry from openclaw.json
 2. Remove env var from .env (if recipe-managed)
 3. Restart gateway
-4. Keep recipe files (reinstall anytime)
+4. Keep cached recipe locally (reinstall anytime, offline capable)
 ```
 
 ### 5.3 Dry Run
