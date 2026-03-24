@@ -17,12 +17,43 @@ import {
   runUpdate,
   filterServers,
   buildFilteredDescription,
+  bootstrapCatalog,
+  mergeRecipesIntoConfig,
 } from "@aiwerk/mcp-bridge";
 import type { McpClientConfig, McpServerConfig, McpServerConnection, McpTransport, McpTool, McpRequest } from "@aiwerk/mcp-bridge";
 import type { OpenClawPluginApi, PluginClientConfig } from "./types.js";
 
 export default function activate(api: OpenClawPluginApi) {
   const config = (api.pluginConfig ?? {}) as PluginClientConfig;
+
+  // Catalog integration: bootstrap + auto-merge recipes
+  // This runs async in the background — we don't want to block plugin activation
+  (async () => {
+    try {
+      const cachedCount = await bootstrapCatalog({ logger: api.logger });
+      if (cachedCount.length > 0) {
+        api.logger.info(`[mcp-bridge] Catalog bootstrap: ${cachedCount.length} recipes cached`);
+      }
+    } catch (err) {
+      api.logger.warn('[mcp-bridge] Catalog bootstrap failed (non-blocking):', err);
+    }
+  })();
+
+  // Merge cached catalog recipes into config (sync — reads from local cache only)
+  const mergedConfig = mergeRecipesIntoConfig(
+    { servers: config.servers || {}, mode: config.mode || 'direct' } as any,
+    { logger: api.logger }
+  );
+
+  // Update config.servers with any newly discovered catalog recipes
+  if (Object.keys(mergedConfig.servers).length > Object.keys(config.servers || {}).length) {
+    const newServers = Object.keys(mergedConfig.servers).filter(
+      name => !config.servers?.[name]
+    );
+    api.logger.info(`[mcp-bridge] Auto-discovered from catalog: ${newServers.join(', ')}`);
+    config.servers = mergedConfig.servers as typeof config.servers;
+  }
+
   const mode = config.mode ?? "direct";
   setSchemaLogger(api.logger);
   const connections = new Map<string, McpServerConnection>();

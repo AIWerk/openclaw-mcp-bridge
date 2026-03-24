@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.13.0] - 2026-03-24
+
+### Features
+- **Catalog auto-discovery**: Plugin now bootstraps recipes from catalog.aiwerk.ch and auto-merges cached recipes with available env vars into config
+- Servers with matching env vars appear automatically — no config editing needed
+
 ## [0.12.2] - 2026-03-24
 
 ### Changed

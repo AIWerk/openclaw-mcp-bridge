@@ -152,6 +152,8 @@ vi.mock("@aiwerk/mcp-bridge", () => {
     runUpdate: state.runUpdate,
     filterServers: state.filterServers,
     buildFilteredDescription: state.buildFilteredDescription,
+    bootstrapCatalog: vi.fn().mockResolvedValue([]),
+    mergeRecipesIntoConfig: vi.fn().mockImplementation((cfg: any) => ({ ...cfg, servers: cfg.servers || {} })),
   };
 });
 
