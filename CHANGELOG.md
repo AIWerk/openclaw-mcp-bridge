@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.12.2] - 2026-03-24
+
+### Changed
+- Bump `@aiwerk/mcp-bridge` from 2.7.6 to 2.8.0 (catalog-first recipe resolution)
+
 ## [0.12.1] - 2026-03-22
 
 ### Fixed
