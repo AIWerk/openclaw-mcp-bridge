@@ -27,32 +27,34 @@ export default function activate(api: OpenClawPluginApi) {
   const config = (api.pluginConfig ?? {}) as PluginClientConfig;
 
   // Catalog integration: bootstrap + auto-merge recipes
-  // This runs async in the background — we don't want to block plugin activation
+  // Bootstrap fetches recipes to local cache, then merge reads from cache into config.
+  // We await bootstrap so first-run auto-discovery works (typically ~1-2s).
   (async () => {
     try {
-      const cachedCount = await bootstrapCatalog({ logger: api.logger });
-      if (cachedCount.length > 0) {
-        api.logger.info(`[mcp-bridge] Catalog bootstrap: ${cachedCount.length} recipes cached`);
+      const cachedNames = await bootstrapCatalog({ logger: api.logger });
+      if (cachedNames.length > 0) {
+        api.logger.info(`[mcp-bridge] Catalog bootstrap: ${cachedNames.length} recipes cached`);
       }
     } catch (err) {
       api.logger.warn('[mcp-bridge] Catalog bootstrap failed (non-blocking):', err);
     }
-  })();
 
-  // Merge cached catalog recipes into config (sync — reads from local cache only)
-  const mergedConfig = mergeRecipesIntoConfig(
-    { servers: config.servers || {}, mode: config.mode || 'direct' } as any,
-    { logger: api.logger }
-  );
-
-  // Update config.servers with any newly discovered catalog recipes
-  if (Object.keys(mergedConfig.servers).length > Object.keys(config.servers || {}).length) {
-    const newServers = Object.keys(mergedConfig.servers).filter(
-      name => !config.servers?.[name]
+    // Merge cached catalog recipes into config (sync — reads from local cache only)
+    const currentServers = config.servers || {};
+    const mergedConfig = mergeRecipesIntoConfig(
+      { servers: { ...currentServers }, mode: config.mode || 'direct' } as any,
+      { logger: api.logger }
     );
-    api.logger.info(`[mcp-bridge] Auto-discovered from catalog: ${newServers.join(', ')}`);
-    config.servers = mergedConfig.servers as typeof config.servers;
-  }
+
+    // Apply newly discovered catalog recipes (never overwrite manual config)
+    if (Object.keys(mergedConfig.servers).length > Object.keys(currentServers).length) {
+      const newServers = Object.keys(mergedConfig.servers).filter(
+        name => !currentServers[name]
+      );
+      api.logger.info(`[mcp-bridge] Auto-discovered from catalog: ${newServers.join(', ')}`);
+      config.servers = { ...config.servers, ...mergedConfig.servers } as typeof config.servers;
+    }
+  })();
 
   const mode = config.mode ?? "direct";
   setSchemaLogger(api.logger);
