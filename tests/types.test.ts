@@ -33,6 +33,18 @@ describe("types", () => {
     expect(Object.keys(cfg.servers)).toHaveLength(3);
   });
 
+  it("accepts catalog and autoMerge options", () => {
+    const cfg: PluginClientConfig = {
+      mode: "direct",
+      servers: { srv: { transport: "sse", url: "http://x" } },
+      catalog: false,
+      autoMerge: true,
+    };
+
+    expect(cfg.catalog).toBe(false);
+    expect(cfg.autoMerge).toBe(true);
+  });
+
   it("accepts SmartFilterConfig shape used by router mode", () => {
     const smartFilter: SmartFilterConfig = {
       enabled: true,

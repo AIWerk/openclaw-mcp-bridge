@@ -59,6 +59,29 @@ The plugin config lives in `~/.openclaw/openclaw.json` under `plugins.entries.op
 }
 ```
 
+### Catalog Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `catalog` | `boolean` | `true` | Whether to fetch catalog recipes on startup via `bootstrapCatalog()` |
+| `autoMerge` | `boolean` | `false` | Whether to auto-merge catalog recipes into your server config |
+
+> **Breaking change (v0.14.0+):** `autoMerge` now defaults to `false`. Previously, catalog recipes were always merged automatically. To restore the old behavior, set `autoMerge: true` in your plugin config.
+
+```json
+{
+  "plugins": {
+    "entries": {
+      "openclaw-mcp-bridge": {
+        "config": {
+          "autoMerge": true
+        }
+      }
+    }
+  }
+}
+```
+
 Environment variables are resolved from `~/.openclaw/.env` and system env.
 
 > **Note (v0.10.4+):** If an env var exists in your shell as an empty string, the plugin falls back to reading `~/.openclaw/.env` directly. This prevents issues where `dotenv(override:false)` silently ignores the `.env` value.

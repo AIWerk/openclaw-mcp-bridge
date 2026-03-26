@@ -31,7 +31,7 @@ export default function activate(api: OpenClawPluginApi) {
   // We await bootstrap so first-run auto-discovery works (typically ~1-2s).
   (async () => {
     try {
-      const cachedNames = await bootstrapCatalog({ logger: api.logger });
+      const cachedNames = await bootstrapCatalog({ catalog: config.catalog, logger: api.logger });
       if (cachedNames.length > 0) {
         api.logger.info(`[mcp-bridge] Catalog bootstrap: ${cachedNames.length} recipes cached`);
       }
@@ -42,7 +42,7 @@ export default function activate(api: OpenClawPluginApi) {
     // Merge cached catalog recipes into config (sync — reads from local cache only)
     const currentServers = config.servers || {};
     const mergedConfig = mergeRecipesIntoConfig(
-      { servers: { ...currentServers }, mode: config.mode || 'direct' } as any,
+      { servers: { ...currentServers }, mode: config.mode || 'direct', autoMerge: config.autoMerge } as any,
       { logger: api.logger }
     );
 
