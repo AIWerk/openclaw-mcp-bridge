@@ -1,10 +1,15 @@
 # Changelog
 
-## [0.13.0] - 2026-03-24
+## [0.13.0] - 2026-03-26
 
 ### Features
-- **Catalog auto-discovery**: Plugin now bootstraps recipes from catalog.aiwerk.ch and auto-merges cached recipes with available env vars into config
-- Servers with matching env vars appear automatically — no config editing needed
+- **Catalog auto-discovery**: Plugin bootstraps recipes from catalog.aiwerk.ch and merges cached recipes with available env vars into config
+- **`catalog` config option** (default: `true`) — controls catalog fetching
+- **`autoMerge` config option** (default: `false`) — controls auto-merge into config.servers (GitHub #4)
+- Both options forwarded to `@aiwerk/mcp-bridge` v2.8.2
+
+### Changed
+- Bump `@aiwerk/mcp-bridge` from 2.8.0 to 2.8.2
 
 ## [0.12.2] - 2026-03-24
 
