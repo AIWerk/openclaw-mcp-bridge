@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.13.2] - 2026-03-28
+
+### Changed
+- Bumped `@aiwerk/mcp-bridge` from 2.8.2 to 2.8.3 — fixes stdio servers that print banner text to stdout before MCP initialize
+
 ## [0.13.0] - 2026-03-26
 
 ### Features
