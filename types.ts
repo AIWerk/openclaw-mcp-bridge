@@ -26,10 +26,6 @@ export interface PluginServerConfig extends McpServerConfig {
 export interface PluginClientConfig extends Omit<McpClientConfig, "servers"> {
   servers: Record<string, PluginServerConfig>;
   smartFilter?: SmartFilterConfig;
-  /** Controls whether bootstrapCatalog() fetches recipes (default: true). */
-  catalog?: boolean;
-  /** Controls whether mergeRecipesIntoConfig() auto-merges catalog recipes (default: false). */
-  autoMerge?: boolean;
 }
 
 export interface OpenClawToolDefinition {

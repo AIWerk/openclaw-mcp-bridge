@@ -77,8 +77,7 @@ const bridgeMock = vi.hoisted(() => {
     runUpdate: vi.fn(async () => "updated"),
     filterServers: vi.fn(() => ({ reason: "not_enabled", filteredServers: [] as string[] })),
     buildFilteredDescription: vi.fn(() => "filtered-description"),
-    bootstrapCatalog: vi.fn().mockResolvedValue([]),
-    mergeRecipesIntoConfig: vi.fn().mockImplementation((cfg: any) => ({ ...cfg, servers: cfg.servers || {} })),
+
     reset() {
       transports.length = 0;
       routerInstances.length = 0;
@@ -102,10 +101,7 @@ const bridgeMock = vi.hoisted(() => {
       this.filterServers.mockReturnValue({ reason: "not_enabled", filteredServers: [] });
       this.buildFilteredDescription.mockReset();
       this.buildFilteredDescription.mockReturnValue("filtered-description");
-      this.bootstrapCatalog.mockReset();
-      this.bootstrapCatalog.mockResolvedValue([]);
-      this.mergeRecipesIntoConfig.mockReset();
-      this.mergeRecipesIntoConfig.mockImplementation((cfg: any) => ({ ...cfg, servers: cfg.servers || {} }));
+
       MockRouter.generateDescription.mockReset();
       MockRouter.generateDescription.mockReturnValue("router-description");
     },
@@ -158,8 +154,7 @@ vi.mock("@aiwerk/mcp-bridge", () => {
     runUpdate: state.runUpdate,
     filterServers: state.filterServers,
     buildFilteredDescription: state.buildFilteredDescription,
-    bootstrapCatalog: state.bootstrapCatalog,
-    mergeRecipesIntoConfig: state.mergeRecipesIntoConfig,
+
   };
 });
 
@@ -563,46 +558,4 @@ describe("openclaw-mcp-bridge plugin", () => {
     expect(ctx.logger.info).toHaveBeenCalledWith("[mcp-bridge] No servers configured, plugin inactive");
   });
 
-  describe("catalog and autoMerge passthrough", () => {
-    it("passes catalog option to bootstrapCatalog", async () => {
-      const { default: activate } = await import("../index");
-      const ctx = createApi({ mode: "router", catalog: false, servers: { srv: { transport: "sse", url: "http://x" } } });
-
-      activate(ctx.api as any);
-      await settle();
-
-      expect(bridgeMock.state.bootstrapCatalog).toHaveBeenCalledWith(
-        expect.objectContaining({ catalog: false })
-      );
-    });
-
-    it("passes autoMerge option to mergeRecipesIntoConfig", async () => {
-      const { default: activate } = await import("../index");
-      const ctx = createApi({ mode: "router", autoMerge: true, servers: { srv: { transport: "sse", url: "http://x" } } });
-
-      activate(ctx.api as any);
-      await settle();
-
-      expect(bridgeMock.state.mergeRecipesIntoConfig).toHaveBeenCalledWith(
-        expect.objectContaining({ autoMerge: true }),
-        expect.any(Object)
-      );
-    });
-
-    it("omits catalog and autoMerge when not set in config", async () => {
-      const { default: activate } = await import("../index");
-      const ctx = createApi({ mode: "router", servers: { srv: { transport: "sse", url: "http://x" } } });
-
-      activate(ctx.api as any);
-      await settle();
-
-      expect(bridgeMock.state.bootstrapCatalog).toHaveBeenCalledWith(
-        expect.objectContaining({ catalog: undefined })
-      );
-      expect(bridgeMock.state.mergeRecipesIntoConfig).toHaveBeenCalledWith(
-        expect.objectContaining({ autoMerge: undefined }),
-        expect.any(Object)
-      );
-    });
-  });
 });

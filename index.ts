@@ -17,44 +17,12 @@ import {
   runUpdate,
   filterServers,
   buildFilteredDescription,
-  bootstrapCatalog,
-  mergeRecipesIntoConfig,
 } from "@aiwerk/mcp-bridge";
 import type { McpClientConfig, McpServerConfig, McpServerConnection, McpTransport, McpTool, McpRequest } from "@aiwerk/mcp-bridge";
 import type { OpenClawPluginApi, PluginClientConfig } from "./types.js";
 
 export default function activate(api: OpenClawPluginApi) {
   const config = (api.pluginConfig ?? {}) as PluginClientConfig;
-
-  // Catalog integration: bootstrap + auto-merge recipes
-  // Bootstrap fetches recipes to local cache, then merge reads from cache into config.
-  // We await bootstrap so first-run auto-discovery works (typically ~1-2s).
-  (async () => {
-    try {
-      const cachedNames = await bootstrapCatalog({ catalog: config.catalog, logger: api.logger });
-      if (cachedNames.length > 0) {
-        api.logger.info(`[mcp-bridge] Catalog bootstrap: ${cachedNames.length} recipes cached`);
-      }
-    } catch (err) {
-      api.logger.warn('[mcp-bridge] Catalog bootstrap failed (non-blocking):', err);
-    }
-
-    // Merge cached catalog recipes into config (sync — reads from local cache only)
-    const currentServers = config.servers || {};
-    const mergedConfig = mergeRecipesIntoConfig(
-      { servers: { ...currentServers }, mode: config.mode || 'direct', autoMerge: config.autoMerge } as any,
-      { logger: api.logger }
-    );
-
-    // Apply newly discovered catalog recipes (never overwrite manual config)
-    if (Object.keys(mergedConfig.servers).length > Object.keys(currentServers).length) {
-      const newServers = Object.keys(mergedConfig.servers).filter(
-        name => !currentServers[name]
-      );
-      api.logger.info(`[mcp-bridge] Auto-discovered from catalog: ${newServers.join(', ')}`);
-      config.servers = { ...config.servers, ...mergedConfig.servers } as typeof config.servers;
-    }
-  })();
 
   const mode = config.mode ?? "direct";
   setSchemaLogger(api.logger);
@@ -170,7 +138,7 @@ export default function activate(api: OpenClawPluginApi) {
         type: "object",
         properties: {
           server: { type: "string", description: "Server name (optional for action=intent/batch/status)" },
-          action: { type: "string", description: "list | call | batch | refresh | status | intent | schema | promotions | search | catalog | install", default: "call" },
+          action: { type: "string", description: "list | call | batch | refresh | status | intent | schema | promotions | remove | set-mode | set-env", default: "call" },
           tool: { type: "string", description: "Tool name for action=call/schema" },
           params: { type: "object", description: "Tool arguments for action=call" },
           intent: { type: "string", description: "Natural language intent for action=intent" },
