@@ -30,8 +30,13 @@ export default function activate(api: OpenClawPluginApi) {
   const globalRegisteredToolNames = new Set<string>();
   const tokenManager = new OAuth2TokenManager(api.logger, new FileTokenStore());
   const router = mode === "router" ? new McpRouter(config.servers || {}, config, api.logger) : null;
+  const hasServers = !!config.servers && Object.keys(config.servers).length > 0;
 
-  if (!config.servers || Object.keys(config.servers).length === 0) {
+  // Direct mode without servers has nothing to do — early return.
+  // Router mode survives even with empty servers: we still register the `mcp` tool
+  // so it doesn't disappear from the agent's tool roster when OpenClaw's loader
+  // hands us an empty config in a follow-up activation pass (see issue #6).
+  if (mode === "direct" && !hasServers) {
     api.logger.info("[mcp-bridge] No servers configured, plugin inactive");
     return;
   }
@@ -481,5 +486,5 @@ export default function activate(api: OpenClawPluginApi) {
     globalRegisteredToolNames.clear();
   });
 
-  api.logger.info(`[mcp-bridge] Plugin activated with ${Object.keys(config.servers).length} servers configured`);
+  api.logger.info(`[mcp-bridge] Plugin activated with ${Object.keys(config.servers || {}).length} servers configured`);
 }

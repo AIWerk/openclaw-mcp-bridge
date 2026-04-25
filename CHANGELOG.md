@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.13.6] - 2026-04-25
+
+### Fixed
+- **Router tool no longer disappears when activated with empty config** (#6, reported by @Gutti-Openclaw) — in router mode, the plugin used to early-return and skip tool registration when `config.servers` was empty. OpenClaw's loader can run a follow-up activation pass with an empty config view, which wiped the previously-registered `mcp` router tool from the agent's tool roster. We now still register the `mcp` and `mcp_bridge_update` tools in router mode even with no servers; the router itself returns an informative "no servers configured" message on invocation. Direct mode behavior is unchanged. The root cause is on the OpenClaw loader side; this is a defensive guard.
+
 ## [0.13.2] - 2026-03-28
 
 ### Changed

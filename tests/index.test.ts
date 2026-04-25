@@ -548,7 +548,7 @@ describe("openclaw-mcp-bridge plugin", () => {
     });
   });
 
-  it("returns early when no servers configured", async () => {
+  it("returns early when no servers configured in direct mode", async () => {
     const { default: activate } = await import("../index");
     const ctx = createApi({ mode: "direct", servers: {} });
 
@@ -556,6 +556,27 @@ describe("openclaw-mcp-bridge plugin", () => {
 
     expect(ctx.api.registerTool).not.toHaveBeenCalled();
     expect(ctx.logger.info).toHaveBeenCalledWith("[mcp-bridge] No servers configured, plugin inactive");
+  });
+
+  it("router mode still registers mcp + update tools when servers map is empty (issue #6)", async () => {
+    const { default: activate } = await import("../index");
+    const ctx = createApi({ mode: "router", servers: {} });
+
+    activate(ctx.api as any);
+
+    expect(ctx.getTool("mcp")).toBeDefined();
+    expect(ctx.getTool("mcp_bridge_update")).toBeDefined();
+    expect(ctx.logger.info).not.toHaveBeenCalledWith("[mcp-bridge] No servers configured, plugin inactive");
+  });
+
+  it("router mode survives undefined servers field (issue #6)", async () => {
+    const { default: activate } = await import("../index");
+    const ctx = createApi({ mode: "router" });
+
+    activate(ctx.api as any);
+
+    expect(ctx.getTool("mcp")).toBeDefined();
+    expect(ctx.getTool("mcp_bridge_update")).toBeDefined();
   });
 
 });
