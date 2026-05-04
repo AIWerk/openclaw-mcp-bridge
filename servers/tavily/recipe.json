@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "id": "tavily",
+  "name": "Tavily",
+  "description": "AI-optimized web search — retrieve accurate, real-time search results and extract content from URLs tailored for AI agents",
+  "repository": "https://github.com/tavily-ai/tavily-mcp",
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "tavily-mcp@0.2.18"
+      ],
+      "env": {
+        "TAVILY_API_KEY": "${TAVILY_API_KEY}"
+      }
+    }
+  ],
+  "auth": {
+    "required": true,
+    "type": "api-key",
+    "envVars": [
+      "TAVILY_API_KEY"
+    ],
+    "credentialsUrl": "https://app.tavily.com/home",
+    "instructions": "Sign up at Tavily and copy your API key from the dashboard."
+  },
+  "install": {
+    "method": "npx",
+    "package": "tavily-mcp",
+    "version": "0.2.18"
+  },
+  "metadata": {
+    "homepage": "https://tavily.com/",
+    "author": "Tavily",
+    "tags": [
+      "search",
+      "web",
+      "ai-search",
+      "research",
+      "rag"
+    ],
+    "category": "search",
+    "pricing": "byok",
+    "maturity": "stable",
+    "subcategory": "ai-search",
+    "origin": "official",
+    "countries": [
+      "global"
+    ],
+    "audience": "developer",
+    "selfHosted": false,
+    "sideEffects": "read-only",
+    "authSummary": "api-key"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false,
+    "sampling": false
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "publisherId": "aiwerk",
+    "value": "a4nc94mlhdcxxQ38NKJ3ez++KBp5KyoPsS05uyzCfoR1YaIpejFRKYJ/5D3YlgI/BKQrOo6uzcBfWXMtxHGuBA==",
+    "signedFields": [
+      "id",
+      "name",
+      "description",
+      "transports",
+      "auth",
+      "install",
+      "metadata"
+    ],
+    "signedAt": "2026-03-20T14:25:14.930Z"
+  }
+}

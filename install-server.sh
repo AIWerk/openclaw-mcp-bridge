@@ -6,23 +6,82 @@ OPENCLAW_DIR="${HOME}/.openclaw"
 OPENCLAW_JSON="${OPENCLAW_DIR}/openclaw.json"
 ENV_FILE="${OPENCLAW_DIR}/.env"
 
-# Resolve servers directory: prefer core package, fallback to local
-if [[ -d "$SCRIPT_DIR/node_modules/@aiwerk/mcp-bridge/servers" ]]; then
-    SERVERS_BASE="$SCRIPT_DIR/node_modules/@aiwerk/mcp-bridge/servers"
-elif [[ -d "$SCRIPT_DIR/servers" ]]; then
+# User-installed recipes via `npx @aiwerk/mcp-bridge install <name>` land here.
+# Universal Recipe Spec v2 format; converted on the fly to OpenClaw config.json.
+USER_RECIPES_DIR="${HOME}/.mcp-bridge/recipes"
+
+# Resolve servers directory: prefer plugin's own bundle, then core package, then user dir hint
+if [[ -d "$SCRIPT_DIR/servers" ]]; then
     SERVERS_BASE="$SCRIPT_DIR/servers"
+elif [[ -d "$SCRIPT_DIR/node_modules/@aiwerk/mcp-bridge/servers" ]]; then
+    SERVERS_BASE="$SCRIPT_DIR/node_modules/@aiwerk/mcp-bridge/servers"
 else
-    echo "Error: No servers catalog found." >&2
-    exit 1
+    SERVERS_BASE=""
 fi
+
+# Convert a Universal Recipe Spec v2 recipe.json to a legacy config.json (in-memory).
+# Args: $1 = recipe.json path. Outputs: writes config.json into $2 dir.
+convert_recipe_to_config() {
+    local recipe_path="$1"
+    local target_dir="$2"
+    mkdir -p "$target_dir"
+    python3 - "$recipe_path" "$target_dir" <<'PY'
+import json, sys, os
+recipe_path, target_dir = sys.argv[1:3]
+with open(recipe_path) as f:
+    r = json.load(f)
+t = (r.get("transports") or [{}])[0]
+auth = r.get("auth") or {}
+meta = r.get("metadata") or {}
+config = {
+    "schemaVersion": 1,
+    "name": r.get("id") or r.get("name"),
+    "description": r.get("description", ""),
+    "transport": t.get("type", ""),
+    "authRequired": bool(auth.get("required")),
+    "credentialsUrl": auth.get("credentialsUrl", ""),
+    "homepage": meta.get("homepage", r.get("repository", "")),
+}
+if t.get("type") in ("streamable-http", "sse", "websocket", "http"):
+    if t.get("url"): config["url"] = t["url"]
+    if t.get("headers"): config["headers"] = t["headers"]
+elif t.get("type") == "stdio":
+    if t.get("command"): config["command"] = t["command"]
+    if t.get("args"): config["args"] = t["args"]
+    if t.get("env"): config["env"] = t["env"]
+with open(os.path.join(target_dir, "config.json"), "w") as f:
+    json.dump(config, f, indent=2)
+env_vars = (auth.get("envVars") or [])
+if env_vars:
+    with open(os.path.join(target_dir, "env_vars"), "w") as f:
+        f.write(env_vars[0] + "\n")
+PY
+}
 
 usage() {
     echo "Usage: $0 <server-name> [--dry-run] [--remove]"
     echo ""
     echo "Available servers:"
-    for server_dir in "$SERVERS_BASE"/*; do
-        [[ -d "$server_dir" ]] && echo "  - $(basename "$server_dir")"
-    done
+    declare -A seen
+    if [[ -d "$USER_RECIPES_DIR" ]]; then
+        for recipe_dir in "$USER_RECIPES_DIR"/*; do
+            if [[ -f "$recipe_dir/recipe.json" ]]; then
+                name=$(basename "$recipe_dir")
+                echo "  - $name (user-installed via mcp-bridge)"
+                seen[$name]=1
+            fi
+        done
+    fi
+    if [[ -n "$SERVERS_BASE" ]]; then
+        for server_dir in "$SERVERS_BASE"/*; do
+            if [[ -d "$server_dir" ]]; then
+                name=$(basename "$server_dir")
+                [[ -z "${seen[$name]:-}" ]] && echo "  - $name (bundled)"
+            fi
+        done
+    fi
+    echo ""
+    echo "Install more recipes with: npx @aiwerk/mcp-bridge install <name>"
     exit 1
 }
 
@@ -40,9 +99,21 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-SERVER_DIR="$SERVERS_BASE/$SERVER_NAME"
-if [[ ! -d "$SERVER_DIR" ]]; then
+# Resolve SERVER_DIR: prefer user recipes (Universal Recipe Spec v2), fallback to bundled.
+SERVER_DIR=""
+if [[ -f "$USER_RECIPES_DIR/$SERVER_NAME/recipe.json" ]]; then
+    SYNTH_DIR="$SCRIPT_DIR/server-builds/_synthesized/$SERVER_NAME"
+    convert_recipe_to_config "$USER_RECIPES_DIR/$SERVER_NAME/recipe.json" "$SYNTH_DIR"
+    SERVER_DIR="$SYNTH_DIR"
+    echo "Using user-installed recipe from $USER_RECIPES_DIR/$SERVER_NAME"
+elif [[ -n "$SERVERS_BASE" && -d "$SERVERS_BASE/$SERVER_NAME" ]]; then
+    SERVER_DIR="$SERVERS_BASE/$SERVER_NAME"
+else
     echo "Error: Server '$SERVER_NAME' not found."
+    echo ""
+    echo "Try installing it first with the standalone bridge:"
+    echo "  npx @aiwerk/mcp-bridge install $SERVER_NAME"
+    echo "Then re-run this script."
     usage
 fi
 

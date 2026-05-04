@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 2,
+  "id": "atlassian",
+  "name": "Atlassian (Confluence + Jira)",
+  "description": "Confluence wiki and Jira project management — search, create, and update pages and issues",
+  "repository": "https://github.com/sooperset/mcp-atlassian",
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "mcp-atlassian@2.1.0"
+      ],
+      "env": {
+        "CONFLUENCE_URL": "${CONFLUENCE_URL}",
+        "CONFLUENCE_USERNAME": "${CONFLUENCE_USERNAME}",
+        "CONFLUENCE_API_TOKEN": "${CONFLUENCE_API_TOKEN}",
+        "JIRA_URL": "${JIRA_URL}",
+        "JIRA_USERNAME": "${JIRA_USERNAME}",
+        "JIRA_API_TOKEN": "${JIRA_API_TOKEN}"
+      }
+    }
+  ],
+  "auth": {
+    "required": true,
+    "type": "api-key",
+    "envVars": [
+      "CONFLUENCE_URL",
+      "CONFLUENCE_USERNAME",
+      "CONFLUENCE_API_TOKEN",
+      "JIRA_URL",
+      "JIRA_USERNAME",
+      "JIRA_API_TOKEN"
+    ],
+    "credentialsUrl": "https://id.atlassian.com/manage-profile/security/api-tokens",
+    "instructions": "Create an API token at Atlassian account settings. Set CONFLUENCE_URL and JIRA_URL to your instance URLs (e.g., https://yourcompany.atlassian.net/wiki and https://yourcompany.atlassian.net)."
+  },
+  "install": {
+    "method": "uvx",
+    "package": "mcp-atlassian",
+    "version": "2.1.0"
+  },
+  "metadata": {
+    "homepage": "https://github.com/sooperset/mcp-atlassian",
+    "author": "sooperset",
+    "tags": [
+      "wiki",
+      "project-management",
+      "confluence",
+      "jira",
+      "atlassian"
+    ],
+    "category": "productivity",
+    "pricing": "byok",
+    "maturity": "stable",
+    "subcategory": "project-management",
+    "origin": "community",
+    "countries": [
+      "global"
+    ],
+    "audience": "business",
+    "selfHosted": false,
+    "sideEffects": "read-write",
+    "authSummary": "api-key"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false,
+    "sampling": false
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "publisherId": "aiwerk",
+    "value": "ysHKVAb4IwPRJF3XtEEtumZC2xjt32ouGu5Dt3VrMl7DIp6PWb56JzewqLe4zJ14lVlksIgmDVrFCrVnVJ1QDw==",
+    "signedFields": [
+      "id",
+      "name",
+      "description",
+      "transports",
+      "auth",
+      "install",
+      "metadata"
+    ],
+    "signedAt": "2026-03-20T14:24:29.672Z"
+  }
+}

@@ -257,7 +257,7 @@ export default function activate(api: OpenClawPluginApi) {
     if (serverConfig.transport === "sse") {
       transport = new SseTransport(serverConfig, config, api.logger, onReconnected, tokenManager, undefined, name);
     } else if (serverConfig.transport === "stdio") {
-      transport = new StdioTransport(serverConfig, config, api.logger, onReconnected);
+      transport = new StdioTransport(serverConfig, config, api.logger, onReconnected, undefined, tokenManager, name);
     } else if (serverConfig.transport === "streamable-http") {
       transport = new StreamableHttpTransport(serverConfig, config, api.logger, onReconnected, tokenManager, undefined, name);
     } else {

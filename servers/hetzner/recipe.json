@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "id": "hetzner",
+  "name": "Hetzner Cloud",
+  "description": "Manage Hetzner Cloud infrastructure — servers, networks, load balancers, volumes, firewalls, and more via the Hetzner Cloud API",
+  "repository": "https://github.com/dkruyt/mcp-hetzner",
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "dist/index.js"
+      ],
+      "env": {
+        "HCLOUD_TOKEN": "${HETZNER_API_TOKEN}"
+      }
+    }
+  ],
+  "auth": {
+    "required": true,
+    "type": "api-key",
+    "envVars": [
+      "HETZNER_API_TOKEN"
+    ],
+    "credentialsUrl": "https://console.hetzner.cloud/",
+    "instructions": "Create an API token in the Hetzner Cloud Console under your project > Security > API Tokens."
+  },
+  "install": {
+    "method": "git",
+    "repository": "https://github.com/dkruyt/mcp-hetzner",
+    "buildCommand": "npm install && npm run build",
+    "version": "latest"
+  },
+  "metadata": {
+    "homepage": "https://www.hetzner.com/cloud",
+    "author": "dkruyt",
+    "tags": [
+      "cloud",
+      "infrastructure",
+      "servers",
+      "vps",
+      "hetzner"
+    ],
+    "category": "infrastructure",
+    "pricing": "byok",
+    "maturity": "stable",
+    "subcategory": "cloud",
+    "origin": "community",
+    "countries": [
+      "EU"
+    ],
+    "audience": "developer",
+    "selfHosted": false,
+    "sideEffects": "billing-impact",
+    "authSummary": "api-key"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false,
+    "sampling": false
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "publisherId": "aiwerk",
+    "value": "WX6LE6XzBdkVW/uDv7MsUBT6GBE0JYNkfzNFoQqL59KFtivMXq5LmNvxL2JmyF0PlhulmQl0NGf09cSp8QagAw==",
+    "signedFields": [
+      "id",
+      "name",
+      "description",
+      "transports",
+      "auth",
+      "install",
+      "metadata"
+    ],
+    "signedAt": "2026-03-20T14:24:45.822Z"
+  }
+}

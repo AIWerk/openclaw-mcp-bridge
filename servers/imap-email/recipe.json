@@ -1,0 +1,103 @@
+{
+  "id": "imap-email",
+  "schemaVersion": 2,
+  "name": "IMAP Email",
+  "description": "Email tools for any IMAP/SMTP provider - list, read, search, send, manage emails",
+  "recipeVersion": "1.0.0",
+  "metadata": {
+    "category": "communication",
+    "tags": [
+      "email",
+      "imap",
+      "smtp",
+      "inbox"
+    ],
+    "country": "global",
+    "language": "en",
+    "homepage": "https://github.com/AIWerk/mcp-server-imap",
+    "license": "MIT",
+    "pricing": "free",
+    "maturity": "stable",
+    "subcategory": "email",
+    "origin": "aiwerk",
+    "countries": [
+      "global"
+    ],
+    "audience": "general",
+    "selfHosted": true,
+    "sideEffects": "read-write",
+    "authSummary": "api-key"
+  },
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@aiwerk/mcp-server-imap@1.1.8"
+      ],
+      "env": {
+        "IMAP_HOST": "${IMAP_HOST}",
+        "IMAP_PORT": "${IMAP_PORT}",
+        "IMAP_USER": "${IMAP_USER}",
+        "IMAP_PASS": "${IMAP_PASS}",
+        "SMTP_HOST": "${SMTP_HOST}",
+        "SMTP_PORT": "${SMTP_PORT}",
+        "SMTP_SEND_ENABLED": "${SMTP_SEND_ENABLED}"
+      }
+    }
+  ],
+  "auth": {
+    "required": true,
+    "type": "api-key",
+    "envVars": [
+      "IMAP_HOST",
+      "IMAP_PORT",
+      "IMAP_USER",
+      "IMAP_PASS",
+      "SMTP_HOST",
+      "SMTP_PORT",
+      "SMTP_SEND_ENABLED"
+    ],
+    "instructions": "Set your IMAP server hostname, port, username (email), and password. For Gmail use an App Password. Set SMTP_SEND_ENABLED=true to enable email sending.",
+    "bootstrap": "env-only"
+  },
+  "install": {
+    "method": "npx",
+    "package": "@aiwerk/mcp-server-imap",
+    "version": "1.1.8",
+    "toolsHash": "sha256-6ae071b777345740e7edaf319c71b57e65c657c145b68b96e6f6bcd6c0c1730a"
+  },
+  "capabilities": {
+    "toolCount": 10,
+    "toolNames": [
+      "email_list",
+      "email_read",
+      "email_search",
+      "email_folders",
+      "email_move",
+      "email_flag",
+      "email_delete",
+      "email_send",
+      "email_reply",
+      "email_attachment"
+    ],
+    "sideEffects": "external-write"
+  },
+  "repository": "https://github.com/AIWerk/mcp-server-imap",
+  "signature": {
+    "algorithm": "ed25519",
+    "publisherId": "aiwerk",
+    "value": "m6cRcAiimoEXyt9wl+69O5z0JeLWo9bUzgfo+/33H8WJamz9RTacywypQasBbBNDBjYn2QrXSnvEDOVJa1/JBg==",
+    "signedFields": [
+      "id",
+      "name",
+      "description",
+      "transports",
+      "auth",
+      "install",
+      "metadata"
+    ],
+    "signedAt": "2026-03-24T18:35:06.321Z"
+  }
+}

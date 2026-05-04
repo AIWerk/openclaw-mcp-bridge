@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "name": "hetzner",
+  "description": "cloud infrastructure",
+  "transport": "stdio",
+  "command": "node",
+  "args": [
+    "path/to/dist/index.js"
+  ],
+  "env": {
+    "HCLOUD_TOKEN": "${HETZNER_API_TOKEN}"
+  },
+  "authRequired": true,
+  "credentialsUrl": "https://console.hetzner.cloud/",
+  "homepage": "https://www.hetzner.com/cloud"
+}

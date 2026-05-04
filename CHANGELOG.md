@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.14.0] - 2026-05-04
+
+### BREAKING
+- **`@aiwerk/mcp-bridge` bumped to 3.0.0** which ships with an empty bundled `servers/` directory. The plugin now carries its own `servers/` bundle (the same 16 recipes that previous mcp-bridge versions shipped) so existing `install-server.sh apify`-style flows continue to work without changes.
+
+### Features
+- **User-installed recipes via `mcp-bridge install <name>` are picked up automatically.** Both `install-server.sh` and `list-servers.sh` now look in `~/.mcp-bridge/recipes/<name>/recipe.json` first (Universal Recipe Spec v2 format, signature-verified at install time by the standalone bridge). Found recipes are converted on the fly to the legacy OpenClaw config format and used as if they were bundled.
+- **Better usage output.** `install-server.sh` (no args) and `list-servers.sh` show user-installed recipes alongside bundled ones, with explicit labels and a tip on how to add more via the standalone bridge CLI.
+
+### Changed
+- Bump `@aiwerk/mcp-bridge` from 2.8.44 to 3.0.0 (exact pin).
+- The plugin bundle is now fully self-contained for the 16 historical recipes; no longer relies on the core package shipping them.
+
 ## [0.13.6] - 2026-04-25
 
 ### Fixed

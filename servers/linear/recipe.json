@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "id": "linear",
+  "name": "Linear",
+  "description": "Linear project management — create, update, and search issues, projects, and teams via the Linear API",
+  "repository": "https://github.com/cline/linear-mcp",
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "dist/index.js"
+      ],
+      "env": {
+        "LINEAR_API_KEY": "${LINEAR_API_KEY}"
+      }
+    }
+  ],
+  "auth": {
+    "required": true,
+    "type": "api-key",
+    "envVars": [
+      "LINEAR_API_KEY"
+    ],
+    "credentialsUrl": "https://linear.app/settings/api",
+    "instructions": "Create a Personal API key in Linear Settings > API."
+  },
+  "install": {
+    "method": "git",
+    "repository": "https://github.com/cline/linear-mcp",
+    "buildCommand": "npm install && npm run build",
+    "version": "latest"
+  },
+  "metadata": {
+    "homepage": "https://linear.app/",
+    "author": "Cline",
+    "tags": [
+      "project-management",
+      "issues",
+      "tasks",
+      "teams",
+      "agile"
+    ],
+    "category": "productivity",
+    "pricing": "byok",
+    "maturity": "stable",
+    "subcategory": "project-management",
+    "origin": "community",
+    "countries": [
+      "global"
+    ],
+    "audience": "developer",
+    "selfHosted": false,
+    "sideEffects": "read-write",
+    "authSummary": "api-key"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false,
+    "sampling": false
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "publisherId": "aiwerk",
+    "value": "qmaBgrxT3lNFEjQ4MOBeyDC0Cs7pCG487so8PU89JU6MqHUj3foZHGH40BLVcb+nIjp5N1P503LphZCQIC0jBw==",
+    "signedFields": [
+      "id",
+      "name",
+      "description",
+      "transports",
+      "auth",
+      "install",
+      "metadata"
+    ],
+    "signedAt": "2026-03-24T18:35:38.635Z"
+  }
+}

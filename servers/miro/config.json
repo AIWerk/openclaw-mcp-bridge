@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "name": "miro",
+  "description": "collaborative whiteboard",
+  "transport": "stdio",
+  "command": "npx",
+  "args": [
+    "-y",
+    "@llmindset/mcp-miro",
+    "--token",
+    "${MIRO_API_TOKEN}"
+  ],
+  "env": {
+    "MIRO_API_TOKEN": "${MIRO_API_TOKEN}"
+  },
+  "authRequired": true,
+  "credentialsUrl": "https://miro.com/app/settings/user-profile/apps",
+  "homepage": "https://miro.com/"
+}

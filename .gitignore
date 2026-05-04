@@ -10,3 +10,5 @@ Thumbs.db
 *.swp
 *.swo
 .npmrc
+# Synthesized recipe configs (built on demand by install-server.sh from ~/.mcp-bridge/recipes/)
+server-builds/_synthesized/

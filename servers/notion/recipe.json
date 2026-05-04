@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "id": "notion",
+  "name": "Notion",
+  "description": "Notion workspace integration — read, create, and update pages, databases, blocks, and comments via the official Notion MCP server",
+  "repository": "https://github.com/makenotion/notion-mcp-server",
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@notionhq/notion-mcp-server@2.2.1"
+      ],
+      "env": {
+        "NOTION_TOKEN": "${NOTION_API_KEY}"
+      }
+    }
+  ],
+  "auth": {
+    "required": true,
+    "type": "api-key",
+    "envVars": [
+      "NOTION_API_KEY"
+    ],
+    "credentialsUrl": "https://www.notion.so/my-integrations",
+    "instructions": "Create a new integration at Notion's My Integrations page and copy the Internal Integration Secret. Then share your Notion pages or databases with the integration."
+  },
+  "install": {
+    "method": "npx",
+    "package": "@notionhq/notion-mcp-server",
+    "version": "2.2.1"
+  },
+  "metadata": {
+    "homepage": "https://www.notion.so/",
+    "author": "Notion",
+    "tags": [
+      "notes",
+      "databases",
+      "wiki",
+      "knowledge-base",
+      "productivity"
+    ],
+    "category": "productivity",
+    "pricing": "byok",
+    "maturity": "stable",
+    "subcategory": "notes",
+    "origin": "official",
+    "countries": [
+      "global"
+    ],
+    "audience": "general",
+    "selfHosted": false,
+    "sideEffects": "read-write",
+    "authSummary": "api-key"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false,
+    "sampling": false
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "publisherId": "aiwerk",
+    "value": "d1UG7xnQ3ZR5qWqjMYrgDf7mju2etp6otv7RJgXsBMWw/Ia4ARwLXCDg7NTBpWL3QPlJGD+231bZx6yOhIY5AQ==",
+    "signedFields": [
+      "id",
+      "name",
+      "description",
+      "transports",
+      "auth",
+      "install",
+      "metadata"
+    ],
+    "signedAt": "2026-03-20T14:25:07.431Z"
+  }
+}

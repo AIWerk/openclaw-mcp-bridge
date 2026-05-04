@@ -1,0 +1,406 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-03-16T13:41:04.809Z",
+  "recipes": {
+    "apify": {
+      "name": "Apify",
+      "description": "Web scraping and automation platform with 3000+ ready-made actors for data extraction, browser automation, and crawling",
+      "category": "automation",
+      "subcategory": "scraping",
+      "origin": "official",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "scraping",
+        "automation",
+        "web",
+        "crawling",
+        "actors"
+      ],
+      "authType": "bearer",
+      "transports": [
+        "streamable-http"
+      ],
+      "installMethod": null,
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "atlassian": {
+      "name": "Atlassian (Confluence + Jira)",
+      "description": "Confluence wiki and Jira project management — search, create, and update pages and issues",
+      "category": "productivity",
+      "subcategory": "project-management",
+      "origin": "community",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "wiki",
+        "project-management",
+        "confluence",
+        "jira",
+        "atlassian"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "uvx",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "chrome-devtools": {
+      "name": "Chrome DevTools",
+      "description": "Control and inspect a live Chrome browser for automation, debugging, and performance analysis via the Chrome DevTools Protocol",
+      "category": "development",
+      "subcategory": "monitoring",
+      "origin": "official",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "browser",
+        "debugging",
+        "automation",
+        "devtools",
+        "chrome"
+      ],
+      "authType": "none",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "npx",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "github": {
+      "name": "GitHub",
+      "description": "GitHub repository management — repos, issues, PRs, code search, and more via the official GitHub MCP server",
+      "category": "development",
+      "subcategory": "version-control",
+      "origin": "official",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "git",
+        "repos",
+        "issues",
+        "pull-requests",
+        "code-review"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "docker",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "google-maps": {
+      "name": "Google Maps",
+      "description": "Google Maps integration for places search, geocoding, directions, and distance matrix via the @modelcontextprotocol MCP server",
+      "category": "data",
+      "subcategory": "search-engine",
+      "origin": "community",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "maps",
+        "geocoding",
+        "places",
+        "directions",
+        "navigation"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "npx",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "hetzner": {
+      "name": "Hetzner Cloud",
+      "description": "Manage Hetzner Cloud infrastructure — servers, networks, load balancers, volumes, firewalls, and more via the Hetzner Cloud API",
+      "category": "infrastructure",
+      "subcategory": "cloud",
+      "origin": "community",
+      "countries": [
+        "EU"
+      ],
+      "tags": [
+        "cloud",
+        "infrastructure",
+        "servers",
+        "vps",
+        "hetzner"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "git",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "hostinger": {
+      "name": "Hostinger",
+      "description": "Web hosting management via Hostinger API — manage domains, hosting plans, email accounts, and website settings",
+      "category": "infrastructure",
+      "subcategory": "cloud",
+      "origin": "official",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "hosting",
+        "domains",
+        "web-hosting",
+        "email",
+        "dns"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "npx",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "imap-email": {
+      "name": "IMAP Email",
+      "description": "Email tools for any IMAP/SMTP provider - list, read, search, send, manage emails",
+      "category": "communication",
+      "subcategory": "email",
+      "origin": "aiwerk",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "email",
+        "imap",
+        "smtp",
+        "inbox"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "npx",
+      "maturity": "beta",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "linear": {
+      "name": "Linear",
+      "description": "Linear project management — create, update, and search issues, projects, and teams via the Linear API",
+      "category": "productivity",
+      "subcategory": "project-management",
+      "origin": "community",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "project-management",
+        "issues",
+        "tasks",
+        "teams",
+        "agile"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "git",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "miro": {
+      "name": "Miro",
+      "description": "Collaborative whiteboard — create and manipulate Miro boards, sticky notes, cards, connectors, and shapes via the Miro API",
+      "category": "productivity",
+      "subcategory": "whiteboard",
+      "origin": "community",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "whiteboard",
+        "collaboration",
+        "diagrams",
+        "brainstorming",
+        "visual"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "npx",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "notion": {
+      "name": "Notion",
+      "description": "Notion workspace integration — read, create, and update pages, databases, blocks, and comments via the official Notion MCP server",
+      "category": "productivity",
+      "subcategory": "notes",
+      "origin": "official",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "notes",
+        "databases",
+        "wiki",
+        "knowledge-base",
+        "productivity"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "npx",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "stripe": {
+      "name": "Stripe",
+      "description": "Stripe payments and billing — manage customers, subscriptions, payment intents, invoices, and more via the official Stripe MCP server",
+      "category": "finance",
+      "subcategory": "payments",
+      "origin": "official",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "payments",
+        "billing",
+        "subscriptions",
+        "invoices",
+        "fintech"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "npx",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "tavily": {
+      "name": "Tavily",
+      "description": "AI-optimized web search — retrieve accurate, real-time search results and extract content from URLs tailored for AI agents",
+      "category": "search",
+      "subcategory": "ai-search",
+      "origin": "official",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "search",
+        "web",
+        "ai-search",
+        "research",
+        "rag"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "npx",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "todoist": {
+      "name": "Todoist",
+      "description": "Task management with natural language — create, update, complete, and search tasks and projects in Todoist",
+      "category": "productivity",
+      "subcategory": "task-management",
+      "origin": "official",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "tasks",
+        "todo",
+        "productivity",
+        "project-management",
+        "gtd"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "npx",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "wise": {
+      "name": "Wise",
+      "description": "International money transfers and multi-currency account management via the Wise (TransferWise) API",
+      "category": "finance",
+      "subcategory": "payments",
+      "origin": "community",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "payments",
+        "transfers",
+        "international",
+        "currency",
+        "fintech"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "git",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "none"
+    },
+    "firecrawl": {
+      "name": "Firecrawl",
+      "description": "Web scraping, crawling, search, and structured data extraction — turn any website into clean markdown or structured data for AI agents",
+      "category": "data",
+      "subcategory": "web-scraping",
+      "origin": "official",
+      "countries": [
+        "global"
+      ],
+      "tags": [
+        "scraping",
+        "crawling",
+        "web",
+        "extraction",
+        "search",
+        "markdown"
+      ],
+      "authType": "api-key",
+      "transports": [
+        "stdio"
+      ],
+      "installMethod": "npx",
+      "maturity": "stable",
+      "toolCount": null,
+      "authSummary": "api-key"
+    }
+  }
+}

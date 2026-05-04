@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "id": "wise",
+  "name": "Wise",
+  "description": "International money transfers and multi-currency account management via the Wise (TransferWise) API",
+  "repository": "https://github.com/Szotasz/wise-mcp",
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "dist/cli.js"
+      ],
+      "env": {
+        "WISE_API_TOKEN": "${WISE_API_TOKEN}"
+      }
+    }
+  ],
+  "auth": {
+    "required": true,
+    "type": "api-key",
+    "envVars": [
+      "WISE_API_TOKEN"
+    ],
+    "credentialsUrl": "https://wise.com/settings/api-tokens",
+    "instructions": "Generate an API token in your Wise account under Settings > API tokens. Use Read-only or Full access depending on your needs."
+  },
+  "install": {
+    "method": "git",
+    "repository": "https://github.com/Szotasz/wise-mcp",
+    "buildCommand": "npm install && npm run build",
+    "version": "latest"
+  },
+  "metadata": {
+    "homepage": "https://wise.com/",
+    "author": "Szotasz",
+    "tags": [
+      "payments",
+      "transfers",
+      "international",
+      "currency",
+      "fintech"
+    ],
+    "category": "finance",
+    "pricing": "byok",
+    "maturity": "stable",
+    "subcategory": "payments",
+    "origin": "community",
+    "countries": [
+      "global"
+    ],
+    "audience": "business",
+    "selfHosted": false,
+    "sideEffects": "billing-impact",
+    "authSummary": "api-key"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false,
+    "sampling": false
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "publisherId": "aiwerk",
+    "value": "GNdSmM2mKmejTTHTt8RwfVl4QzM/Y9f582OAuE1EUvPFS53BBze5wZQInkuRNlc3GtwsFJrR61lLZfP5Dn/QCQ==",
+    "signedFields": [
+      "id",
+      "name",
+      "description",
+      "transports",
+      "auth",
+      "install",
+      "metadata"
+    ],
+    "signedAt": "2026-03-20T14:25:22.915Z"
+  }
+}

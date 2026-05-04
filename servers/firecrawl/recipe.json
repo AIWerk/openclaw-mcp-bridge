@@ -1,0 +1,79 @@
+{
+  "schemaVersion": 2,
+  "id": "firecrawl",
+  "name": "Firecrawl",
+  "description": "Web scraping, crawling, search, and structured data extraction — turn any website into clean markdown or structured data for AI agents",
+  "repository": "https://github.com/firecrawl/firecrawl-mcp-server",
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "firecrawl-mcp@3.11.0"
+      ],
+      "env": {
+        "FIRECRAWL_API_KEY": "${FIRECRAWL_API_KEY}"
+      }
+    }
+  ],
+  "auth": {
+    "required": true,
+    "type": "api-key",
+    "envVars": [
+      "FIRECRAWL_API_KEY"
+    ],
+    "credentialsUrl": "https://www.firecrawl.dev/app/api-keys",
+    "instructions": "Sign up at firecrawl.dev and copy your API key from the dashboard."
+  },
+  "install": {
+    "method": "npx",
+    "package": "firecrawl-mcp",
+    "version": "3.12.1"
+  },
+  "metadata": {
+    "homepage": "https://www.firecrawl.dev/",
+    "author": "Firecrawl (Mendable)",
+    "tags": [
+      "scraping",
+      "crawling",
+      "web",
+      "extraction",
+      "search",
+      "markdown"
+    ],
+    "category": "data",
+    "pricing": "byok",
+    "maturity": "stable",
+    "subcategory": "web-scraping",
+    "origin": "official",
+    "countries": [
+      "global"
+    ],
+    "audience": "developer",
+    "selfHosted": false,
+    "sideEffects": "read-only",
+    "authSummary": "api-key"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false,
+    "sampling": false
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "publisherId": "aiwerk",
+    "value": "eQvGxgLGN6NVFD5KnjYWTN37ulE0rwTamMkLSHnK3Z2b8uDJz0gGIatCaN6qTCX707g75zY+COQqbpltf23NAw==",
+    "signedFields": [
+      "id",
+      "name",
+      "description",
+      "transports",
+      "auth",
+      "install",
+      "metadata"
+    ],
+    "signedAt": "2026-03-24T18:33:33.007Z"
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "name": "apify",
+  "description": "web scraping & automation",
+  "transport": "streamable-http",
+  "url": "https://mcp.apify.com/mcp",
+  "headers": {
+    "Authorization": "Bearer ${APIFY_TOKEN}"
+  },
+  "authRequired": true,
+  "credentialsUrl": "https://console.apify.com/settings/integrations",
+  "homepage": "https://apify.com/"
+}

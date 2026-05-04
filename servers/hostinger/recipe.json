@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "id": "hostinger",
+  "name": "Hostinger",
+  "description": "Web hosting management via Hostinger API — manage domains, hosting plans, email accounts, and website settings",
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "hostinger-api-mcp@0.1.28"
+      ],
+      "env": {
+        "HOSTINGER_API_TOKEN": "${HOSTINGER_API_TOKEN}"
+      }
+    }
+  ],
+  "auth": {
+    "required": true,
+    "type": "api-key",
+    "envVars": [
+      "HOSTINGER_API_TOKEN"
+    ],
+    "credentialsUrl": "https://hpanel.hostinger.com/api",
+    "instructions": "Generate an API token in the Hostinger hPanel under API section."
+  },
+  "install": {
+    "method": "npx",
+    "package": "hostinger-api-mcp",
+    "version": "0.1.28"
+  },
+  "metadata": {
+    "homepage": "https://www.hostinger.com/",
+    "author": "Anthropic / Hostinger",
+    "tags": [
+      "hosting",
+      "domains",
+      "web-hosting",
+      "email",
+      "dns"
+    ],
+    "category": "infrastructure",
+    "pricing": "byok",
+    "maturity": "stable",
+    "subcategory": "cloud",
+    "origin": "official",
+    "countries": [
+      "global"
+    ],
+    "audience": "developer",
+    "selfHosted": false,
+    "sideEffects": "billing-impact",
+    "authSummary": "api-key"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false,
+    "sampling": false
+  },
+  "repository": "https://github.com/hostinger/api-mcp-server",
+  "signature": {
+    "algorithm": "ed25519",
+    "publisherId": "aiwerk",
+    "value": "7OV7oq85Z/TQkt4GzU82cAUDul+MvWRAqVaNBXY8xjRRsOwBkGTQcWxFo+8ZYbmEH+D8C0wRoragBxSonhXPBQ==",
+    "signedFields": [
+      "id",
+      "name",
+      "description",
+      "transports",
+      "auth",
+      "install",
+      "metadata"
+    ],
+    "signedAt": "2026-03-24T18:34:37.697Z"
+  }
+}

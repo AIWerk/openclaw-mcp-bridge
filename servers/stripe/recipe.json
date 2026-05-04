@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 2,
+  "id": "stripe",
+  "name": "Stripe",
+  "description": "Stripe payments and billing — manage customers, subscriptions, payment intents, invoices, and more via the official Stripe MCP server",
+  "repository": "https://github.com/stripe/agent-toolkit",
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@stripe/mcp@0.3.1",
+        "--tools=all",
+        "--api-key=${STRIPE_API_KEY}"
+      ],
+      "env": {
+        "STRIPE_API_KEY": "${STRIPE_API_KEY}"
+      }
+    }
+  ],
+  "auth": {
+    "required": true,
+    "type": "api-key",
+    "envVars": [
+      "STRIPE_API_KEY"
+    ],
+    "credentialsUrl": "https://dashboard.stripe.com/apikeys",
+    "instructions": "Copy your Secret API key from the Stripe Dashboard > Developers > API keys. Use a restricted key for production to limit permissions."
+  },
+  "install": {
+    "method": "npx",
+    "package": "@stripe/mcp",
+    "version": "0.3.1"
+  },
+  "metadata": {
+    "homepage": "https://stripe.com/",
+    "author": "Stripe",
+    "tags": [
+      "payments",
+      "billing",
+      "subscriptions",
+      "invoices",
+      "fintech"
+    ],
+    "category": "finance",
+    "pricing": "byok",
+    "maturity": "stable",
+    "subcategory": "payments",
+    "origin": "official",
+    "countries": [
+      "global"
+    ],
+    "audience": "business",
+    "selfHosted": false,
+    "sideEffects": "billing-impact",
+    "authSummary": "api-key"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false,
+    "sampling": false
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "publisherId": "aiwerk",
+    "value": "K+265McBYk3Y8RHHEXDSUILier1i2G5MVCcXFRGjTGJjvj/rjKSPAb9yB0BkCNhEbo3Lf6+wwpfrcdNBUyXSAg==",
+    "signedFields": [
+      "id",
+      "name",
+      "description",
+      "transports",
+      "auth",
+      "install",
+      "metadata"
+    ],
+    "signedAt": "2026-03-20T14:25:11.866Z"
+  }
+}

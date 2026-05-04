@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "name": "todoist",
+  "description": "task management",
+  "transport": "stdio",
+  "command": "npx",
+  "args": [
+    "-y",
+    "@doist/todoist-ai"
+  ],
+  "env": {
+    "TODOIST_API_KEY": "${TODOIST_API_TOKEN}"
+  },
+  "authRequired": true,
+  "credentialsUrl": "https://app.todoist.com/app/settings/integrations/developer",
+  "homepage": "https://todoist.com/"
+}

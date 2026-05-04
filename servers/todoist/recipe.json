@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "id": "todoist",
+  "name": "Todoist",
+  "description": "Task management with natural language — create, update, complete, and search tasks and projects in Todoist",
+  "repository": "https://github.com/doist/todoist-mcp",
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@doist/todoist-ai@8.4.0"
+      ],
+      "env": {
+        "TODOIST_API_KEY": "${TODOIST_API_TOKEN}"
+      }
+    }
+  ],
+  "auth": {
+    "required": true,
+    "type": "api-key",
+    "envVars": [
+      "TODOIST_API_TOKEN"
+    ],
+    "credentialsUrl": "https://app.todoist.com/app/settings/integrations/developer",
+    "instructions": "Create an app integration at Todoist Developer settings and copy the API token."
+  },
+  "install": {
+    "method": "npx",
+    "package": "@doist/todoist-ai",
+    "version": "8.4.0"
+  },
+  "metadata": {
+    "homepage": "https://todoist.com/",
+    "author": "Doist",
+    "tags": [
+      "tasks",
+      "todo",
+      "productivity",
+      "project-management",
+      "gtd"
+    ],
+    "category": "productivity",
+    "pricing": "byok",
+    "maturity": "stable",
+    "subcategory": "task-management",
+    "origin": "official",
+    "countries": [
+      "global"
+    ],
+    "audience": "general",
+    "selfHosted": false,
+    "sideEffects": "read-write",
+    "authSummary": "api-key"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false,
+    "sampling": false
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "publisherId": "aiwerk",
+    "value": "soScAYYYd+k/xETeH6kSytJGW5dLW7qkPUL8ulYP0VvOwmCXlvntW0uS4TvtoJC3+FvjE7DhPUhHmW7CUfDbAw==",
+    "signedFields": [
+      "id",
+      "name",
+      "description",
+      "transports",
+      "auth",
+      "install",
+      "metadata"
+    ],
+    "signedAt": "2026-03-20T14:25:19.646Z"
+  }
+}

@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 2,
+  "id": "miro",
+  "name": "Miro",
+  "description": "Collaborative whiteboard — create and manipulate Miro boards, sticky notes, cards, connectors, and shapes via the Miro API",
+  "repository": "https://github.com/evalstate/mcp-miro",
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@llmindset/mcp-miro@0.1.1",
+        "--token",
+        "${MIRO_API_TOKEN}"
+      ],
+      "env": {
+        "MIRO_API_TOKEN": "${MIRO_API_TOKEN}"
+      }
+    }
+  ],
+  "auth": {
+    "required": true,
+    "type": "api-key",
+    "envVars": [
+      "MIRO_API_TOKEN"
+    ],
+    "credentialsUrl": "https://miro.com/app/settings/user-profile/apps",
+    "instructions": "Create a Developer App in Miro Settings > Apps and copy the OAuth token."
+  },
+  "install": {
+    "method": "npx",
+    "package": "@llmindset/mcp-miro",
+    "version": "0.1.1"
+  },
+  "metadata": {
+    "homepage": "https://miro.com/",
+    "author": "evalstate",
+    "tags": [
+      "whiteboard",
+      "collaboration",
+      "diagrams",
+      "brainstorming",
+      "visual"
+    ],
+    "category": "productivity",
+    "pricing": "byok",
+    "maturity": "stable",
+    "subcategory": "whiteboard",
+    "origin": "community",
+    "countries": [
+      "global"
+    ],
+    "audience": "business",
+    "selfHosted": false,
+    "sideEffects": "read-write",
+    "authSummary": "api-key"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false,
+    "sampling": false
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "publisherId": "aiwerk",
+    "value": "ekptOzlrjh4EmGVDQMBPpCJNchPEsRIEqFOSkMH2lM4cbMtpqVy9jWvErRTZwkLIFi4nQx2T3SGapmpBDjxhDA==",
+    "signedFields": [
+      "id",
+      "name",
+      "description",
+      "transports",
+      "auth",
+      "install",
+      "metadata"
+    ],
+    "signedAt": "2026-03-20T14:25:02.500Z"
+  }
+}

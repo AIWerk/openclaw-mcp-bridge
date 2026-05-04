@@ -1,0 +1,78 @@
+{
+  "schemaVersion": 2,
+  "id": "google-maps",
+  "name": "Google Maps",
+  "description": "Google Maps integration for places search, geocoding, directions, and distance matrix via the @modelcontextprotocol MCP server",
+  "repository": "https://github.com/modelcontextprotocol/servers",
+  "transports": [
+    {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-google-maps@0.6.2"
+      ],
+      "env": {
+        "GOOGLE_MAPS_API_KEY": "${GOOGLE_MAPS_API_KEY}"
+      }
+    }
+  ],
+  "auth": {
+    "required": true,
+    "type": "api-key",
+    "envVars": [
+      "GOOGLE_MAPS_API_KEY"
+    ],
+    "credentialsUrl": "https://console.cloud.google.com/apis/credentials",
+    "instructions": "Create an API key in Google Cloud Console and enable the Maps JavaScript API, Places API, Geocoding API, and Directions API."
+  },
+  "install": {
+    "method": "npx",
+    "package": "@modelcontextprotocol/server-google-maps",
+    "version": "0.6.2"
+  },
+  "metadata": {
+    "homepage": "https://developers.google.com/maps",
+    "author": "Anthropic / MCP Community",
+    "tags": [
+      "maps",
+      "geocoding",
+      "places",
+      "directions",
+      "navigation"
+    ],
+    "category": "data",
+    "pricing": "byok",
+    "maturity": "stable",
+    "subcategory": "search-engine",
+    "origin": "community",
+    "countries": [
+      "global"
+    ],
+    "audience": "general",
+    "selfHosted": false,
+    "sideEffects": "read-only",
+    "authSummary": "api-key"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false,
+    "sampling": false
+  },
+  "signature": {
+    "algorithm": "ed25519",
+    "publisherId": "aiwerk",
+    "value": "xS+v0iMoG9mJ7RJErekW+Kww/7p18SNL5VxnxGz/haObs2hqrg85CJgTvgXKqnVkdRD9OuQRu0oRxtQgAzzOCw==",
+    "signedFields": [
+      "id",
+      "name",
+      "description",
+      "transports",
+      "auth",
+      "install",
+      "metadata"
+    ],
+    "signedAt": "2026-03-24T18:34:05.383Z"
+  }
+}

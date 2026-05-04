@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "name": "linear",
+  "description": "project management",
+  "transport": "stdio",
+  "command": "node",
+  "args": [
+    "path/to/linear-mcp/dist/index.js"
+  ],
+  "env": {
+    "LINEAR_API_KEY": "${LINEAR_API_KEY}"
+  },
+  "authRequired": true,
+  "credentialsUrl": "https://linear.app/settings/api",
+  "homepage": "https://linear.app/"
+}
