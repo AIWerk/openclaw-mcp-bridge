@@ -106,6 +106,18 @@ Environment variables are resolved from `~/.openclaw/.env` and system env.
 #            hetzner, miro, wise, tavily, apify
 ```
 
+## Native OpenClaw Plugins
+
+Use this bridge for integrations that expose MCP servers. If an integration already ships as an OpenClaw plugin, install it directly so OpenClaw can load its plugin manifest, skills, config schema, and update flow.
+
+For example, [TweetClaw](https://github.com/Xquik-dev/tweetclaw) is published as the native OpenClaw plugin [@xquik/tweetclaw](https://www.npmjs.com/package/@xquik/tweetclaw), so install it directly instead of adding it to `servers`:
+
+```bash
+openclaw plugins install @xquik/tweetclaw
+```
+
+TweetClaw gives agents tools for search tweets, search tweet replies, post tweets, post tweet replies, follower export, user lookup, media upload and download, direct messages, monitor tweets, webhooks, and giveaway draws through its plugin config.
+
 ## Docker Sandbox
 
 If you run OpenClaw with Docker sandbox enabled (`agents.defaults.sandbox.mode: "all"` or `"non-main"`), plugin-registered tools are **not included** in the default sandbox tool allowlist. You need to explicitly allow them:
