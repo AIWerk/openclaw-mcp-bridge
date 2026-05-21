@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.14.1] - 2026-05-21
+
+### Fixed
+- **`require is not defined` under strict ESM loading** (#7, reported by @Skeptomenos + one follow-up reporter) — `index.ts` used a bare `require("./package.json")` to read the plugin version, which transpiled to a CJS `require()` in `dist/index.js`. With `package.json` declaring `"type": "module"`, OpenClaw 2026.4.22+ strict-ESM loader threw `ReferenceError: require is not defined` at plugin registration time, so the plugin loaded as a local extension never reached any tool register call. Replaced with `createRequire(import.meta.url)`.
+- **`openclaw.plugin.json` version was stale at `0.11.6`** (#8, reported by @Skeptomenos) — `package.json` had been on `0.14.0` for two weeks but the manifest never got bumped, so `openclaw plugins inspect` and `openclaw doctor` reported the wrong version and warned about a duplicate-id mismatch. Manifest now bumped to match.
+
+### Tooling
+- New `scripts/check-manifest-version.mjs` cross-checks `package.json` and `openclaw.plugin.json` versions; runs in `prepublishOnly` so the two cannot drift again.
+- New `scripts/check-esm-load.mjs` imports the built `dist/index.js` under raw Node strict ESM (same loader path OpenClaw uses post-2026.4.22). Catches CJS regressions vitest's permissive loader hides — issue #7 shipped specifically because vitest was green but production loading threw. Runs in `prepublishOnly`.
+- `prepublishOnly` now also runs `npm run build`, so `dist/` shipped to npm matches the current source (no more stale `dist` artifacts in published tarballs).
+
 ## [0.14.0] - 2026-05-04
 
 ### BREAKING
