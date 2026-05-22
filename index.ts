@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import {
   McpRouter,
   SseTransport,
@@ -21,6 +22,14 @@ import {
 import type { McpClientConfig, McpServerConfig, McpServerConnection, McpTransport, McpTool, McpRequest } from "@aiwerk/mcp-bridge";
 import type { OpenClawPluginApi, PluginClientConfig } from "./types.js";
 
+// Read our own package.json without using a bare `require(...)`, which
+// breaks under strict ESM loading (Node refuses to resolve `require` when
+// package.json declares `"type": "module"`). OpenClaw 2026.4.22+ tightened
+// its plugin loader to strict ESM, surfacing a `ReferenceError: require is
+// not defined` whenever the plugin is loaded as a local extension. See
+// https://github.com/AIWerk/openclaw-mcp-bridge/issues/7 .
+const pluginRequire = createRequire(import.meta.url);
+
 export default function activate(api: OpenClawPluginApi) {
   const config = (api.pluginConfig ?? {}) as PluginClientConfig;
 
@@ -43,7 +52,7 @@ export default function activate(api: OpenClawPluginApi) {
 
   // Fire-and-forget version checks (non-blocking) — core + plugin
   const PLUGIN_NAME = "@aiwerk/openclaw-mcp-bridge";
-  const PLUGIN_VERSION = require("./package.json").version as string;
+  const PLUGIN_VERSION = pluginRequire("./package.json").version as string;
   checkForUpdate(api.logger).catch(() => {});
   checkPluginUpdate(PLUGIN_NAME, PLUGIN_VERSION, api.logger).catch(() => {});
 

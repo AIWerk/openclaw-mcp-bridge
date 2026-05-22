@@ -1,6 +1,6 @@
 {
   "name": "@aiwerk/openclaw-mcp-bridge",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "description": "OpenClaw MCP plugin — thin wrapper around @aiwerk/mcp-bridge for seamless MCP server integration",
   "type": "module",
   "main": "index.ts",
@@ -36,7 +36,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "bash $HOME/agent-memory/commons/scripts/prepublish-safety.sh && npm run typecheck && npm test"
+    "check:manifest-version": "node scripts/check-manifest-version.mjs",
+    "check:esm-load": "node scripts/check-esm-load.mjs",
+    "build": "tsc",
+    "prepublishOnly": "bash $HOME/agent-memory/commons/scripts/prepublish-safety.sh && npm run check:manifest-version && npm run typecheck && npm test && npm run build && npm run check:esm-load"
   },
   "dependencies": {
     "@aiwerk/mcp-bridge": "3.0.0",
